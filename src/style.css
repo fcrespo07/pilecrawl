@@ -337,43 +337,6 @@ kbd {
 .btn.ghost b { font-family: var(--f-ui); font-size: 14px; background: var(--accent); color: #05060f; padding: 1px 7px; }
 .btn:disabled { opacity: 0.3; cursor: default; transform: none; }
 
-/* ───────────── inicio ───────────── */
-
-#start { gap: 18px; }
-.tag-corner { position: absolute; top: 18px; font-size: 10px; letter-spacing: 0.25em; color: var(--muted); }
-.tag-corner.tl { left: 22px; }
-.tag-corner.tr { right: 22px; }
-
-.logo {
-  font-family: var(--f-logo);
-  font-weight: 800;
-  font-size: 100px;
-  line-height: 1;
-  margin: 0 0 -4px;
-  color: var(--ink);
-  letter-spacing: -0.02em;
-}
-
-.steps { display: flex; gap: 12px; margin: 10px 0 4px; }
-.step {
-  position: relative;
-  width: 196px;
-  padding: 14px 14px 13px;
-  isolation: isolate;
-  text-align: left;
-}
-.step::before, .step::after { content: ''; position: absolute; clip-path: var(--chamfer); z-index: -1; }
-.step::before { inset: 0; background: var(--line); }
-.step::after { inset: 1px; background: var(--panel); }
-.step i { position: absolute; top: 10px; right: 12px; font-style: normal; font-family: var(--f-display); font-weight: 800; font-size: 22px; color: var(--accent); }
-.step-ico { width: 30px; height: 30px; color: var(--ink); margin-bottom: 8px; }
-.step-ico svg { width: 100%; height: 100%; }
-.step b { display: block; font-family: var(--f-display); font-weight: 800; font-size: 15px; color: var(--ink); margin-bottom: 3px; }
-.step p { margin: 0; font-size: 13px; line-height: 1.35; color: var(--muted); }
-
-#start .btn { animation: coin 1.1s steps(1) infinite; margin-top: 6px; }
-@keyframes coin { 50% { filter: drop-shadow(0 0 4px var(--accent)) brightness(0.8); } }
-.best { margin: 0; font-size: 12px; letter-spacing: 0.3em; color: var(--muted); }
 .best b { color: var(--ink); letter-spacing: 0.05em; font-size: 15px; margin-left: 6px; }
 
 /* ───────────── elección de mejoras ───────────── */
@@ -639,20 +602,14 @@ kbd {
 }
 
 /* ═════════════ Home (portada) ═════════════
-   Papel y tinta: mismos valores que los tokens del PR #2. Al integrarlo,
-   sustituir los --h-* por var(--paper), var(--ink), etc. */
+   Usa los tokens de papel y tinta del resto de la interfaz. */
 .home {
-  --h-paper: #f3ecdc;
-  --h-card: #fbf6e9;
-  --h-ink: #1b1a17;
-  --h-muted: #5d5a50;
-  --h-accent: #d7402b;
   position: fixed;
   inset: 0;
   z-index: 50;
   overflow-y: auto;
-  background: var(--h-paper);
-  color: var(--h-ink);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--f-ui);
   -webkit-overflow-scrolling: touch;
 }
@@ -666,14 +623,14 @@ kbd {
   gap: 18px;
 }
 .home-hero { text-align: center; padding: 24px 0 12px; }
-.home-kicker { margin: 0; letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; color: var(--h-muted); }
+.home-kicker { margin: 0; letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; color: var(--muted); }
 .home-title {
   margin: 6px 0 10px;
   font-family: var(--f-display);
   font-size: clamp(44px, 12vw, 96px);
   line-height: 1;
   letter-spacing: 0.02em;
-  color: var(--h-ink);
+  color: var(--ink);
 }
 .home-lead { max-width: 520px; margin: 0 auto 22px; font-size: 17px; line-height: 1.5; }
 .home-cta { display: grid; justify-items: center; gap: 10px; }
@@ -683,20 +640,20 @@ kbd {
   font-size: 22px;
   padding: 14px 40px;
   min-height: 48px;
-  color: var(--h-paper);
-  background: var(--h-ink);
-  border: 2px solid var(--h-ink);
-  box-shadow: 4px 4px 0 var(--h-accent);
+  color: var(--paper);
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--accent);
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
 }
-.home-btn:hover, .home-btn:focus-visible { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--h-accent); outline: none; }
+.home-btn:hover, .home-btn:focus-visible { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--accent); outline: none; }
 .home-btn kbd { margin-left: 10px; font-size: 12px; opacity: 0.7; }
-.home-best { margin: 0; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--h-muted); }
-.home-best b { color: var(--h-ink); font-size: 16px; }
+.home-best { margin: 0; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+.home-best b { color: var(--ink); font-size: 16px; }
 .home-card {
-  background: var(--h-card);
-  border: 2px solid var(--h-ink);
+  background: var(--panel-hi);
+  border: 2px solid var(--ink);
   padding: 18px 20px;
 }
 .home-card h2 { margin: 0 0 10px; font-family: var(--f-display); font-size: 18px; letter-spacing: 0.05em; }
@@ -705,18 +662,18 @@ kbd {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px;
 }
-.home-keys li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--h-muted); }
+.home-keys li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
 .home-keys li span { min-width: 84px; }
 .home kbd {
   display: inline-block; padding: 1px 6px; margin-right: 3px;
   font: 700 12px var(--f-ui);
-  color: var(--h-ink); background: var(--h-paper);
-  border: 1.5px solid var(--h-ink); border-radius: 3px;
+  color: var(--ink); background: var(--paper);
+  border: 1.5px solid var(--ink); border-radius: 3px;
 }
-.home-btn kbd { color: var(--h-paper); background: transparent; border-color: currentColor; }
-.home-note { margin: 12px 0 0; font-size: 13px; color: var(--h-muted); line-height: 1.5; }
+.home-btn kbd { color: var(--paper); background: transparent; border-color: currentColor; }
+.home-note { margin: 12px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
 .home-ranking { border-style: dashed; text-align: center; }
-.home-soon { margin: 0; font-family: var(--f-display); font-size: 20px; color: var(--h-accent); }
+.home-soon { margin: 0; font-family: var(--f-display); font-size: 20px; color: var(--accent); }
 .home-ranking .home-note { margin-top: 6px; }
 @media (max-width: 520px) {
   .home-inner { padding: 24px 16px 40px; }
