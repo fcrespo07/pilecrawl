@@ -35,7 +35,7 @@ describe('perks', () => {
     expect(picks).toEqual([...left].sort());
   });
 
-  it('siempre hay al menos tres mejoras disponibles para elegir', () => {
+  it('la elección nunca se queda sin opciones', () => {
     // Dados es acumulable sin límite: la elección nunca puede quedarse sin opciones.
     const owned = new Map<string, number>();
     for (const p of PERKS) owned.set(p.id, p.max);

@@ -215,8 +215,9 @@ export class Game {
       if (!this.collides(def, x, y - 1, 0)) this.active.y = y - 1;
       else if (!this.collides(def, x, 0, 0)) this.active.y = 0;
       else {
+        // con una vida se reintenta la misma pieza: si no, se pierde al revivir (p. ej. desde hold)
         if (!this.topOut()) return false;
-        return this.spawn();
+        return this.spawn(s);
       }
     }
     this.gravityAcc = 0;
@@ -428,7 +429,7 @@ export class Game {
       for (const [x, y] of cells) if (y >= 0) this.board[y][x] = value;
       this.events.emit('lock', { cells, color: a.def.color });
       this.resolveClears(spin, a.def, cells);
-      // una pieza fijada por completo fuera del tablero es un bloqueo fuera: cuenta como topOut
+      // una pieza con algún bloque por encima del búfer oculto es un bloqueo fuera: cuenta como topOut
       if (cells.some(([, y]) => y < 0) && !this.topOut()) return;
     }
 
