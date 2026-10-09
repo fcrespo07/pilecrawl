@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
-import { AdvancedBloomFilter, CRTFilter, RGBSplitFilter, ShockwaveFilter } from 'pixi-filters';
+import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
@@ -7,6 +7,13 @@ import {
   accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W,
 } from './layout';
 import { Particles } from './particles';
+
+// paleta de papel y tinta (igual que los tokens de style.css)
+// oro oscuro para textos flotantes: el GOLD_COLOR de las piezas no se lee sobre el papel
+const GOLD_ON_PAPER = 0x8a6d00;
+const INK = 0x1b1a17;
+const PAPER = 0xf3ecdc;
+const PAPER_PANEL = 0xfbf6ea;
 
 /** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
 const REDUCED_MOTION =
@@ -131,8 +138,8 @@ function makeTrailTexture(): Texture {
 function makeBackground(): Texture {
   return canvasTex(W / 4, H / 4, (c) => {
     const g = c.createLinearGradient(0, 0, 0, H / 4);
-    g.addColorStop(0, '#05060f');
-    g.addColorStop(1, '#0d0a20');
+    g.addColorStop(0, '#e9e1cc');
+    g.addColorStop(1, '#e2d8bf');
     c.fillStyle = g;
     c.fillRect(0, 0, W / 4, H / 4);
   });
@@ -198,9 +205,6 @@ export class Renderer {
   private vignette!: Sprite;
   private screenFlash!: Sprite;
 
-  private bloom!: AdvancedBloomFilter;
-  private rgb!: RGBSplitFilter;
-  private crt!: CRTFilter;
   private shocks: Shock[] = [];
   highQuality = true;
 
@@ -212,8 +216,6 @@ export class Renderer {
   private trauma = 0;
   private kickY = 0;
   private punch = 0;
-  private rgbAmt = 0;
-  private bloomBoost = 0;
   private accent = accentFor(1);
   private accentTarget = accentFor(1);
   private visX = 0;
@@ -234,7 +236,7 @@ export class Renderer {
       resolution,
       autoDensity: true,
       antialias: true,
-      background: '#05060f',
+      background: '#e9e1cc',
       preference: 'webgl',
     });
 
@@ -259,9 +261,9 @@ export class Renderer {
 
     this.cells = new Pool(this.cellLayer, this.tex.cell);
     this.ghosts = new Pool(this.cellLayer, this.tex.ghost);
-    this.trails = new Pool(this.fxLayer, this.tex.trail, 'add');
-    this.flashes = new Pool(this.fxLayer, Texture.WHITE, 'add');
-    this.glows = new Pool(this.fxLayer, this.tex.dot, 'add');
+    this.trails = new Pool(this.fxLayer, this.tex.trail, 'normal');
+    this.flashes = new Pool(this.fxLayer, Texture.WHITE);
+    this.glows = new Pool(this.fxLayer, this.tex.dot, 'normal');
     this.particles = new Particles({ dot: this.tex.dot, spark: this.tex.dot, square: Texture.WHITE });
     this.fxLayer.addChild(this.particles.container);
 
@@ -273,7 +275,7 @@ export class Renderer {
     this.screenFlash.width = W;
     this.screenFlash.height = H;
     this.screenFlash.alpha = 0;
-    this.screenFlash.blendMode = 'add';
+    this.screenFlash.blendMode = 'normal';
     this.overlay.addChild(this.vignette, this.screenFlash);
 
     this.drawBoardBg();
@@ -292,65 +294,34 @@ export class Renderer {
     bgSprite.width = W;
     bgSprite.height = H;
     this.bg.addChild(bgSprite);
-    const big = makeDotTexture(128);
-    for (let i = 0; i < 5; i++) {
-      const s = new Sprite(big);
-      s.anchor.set(0.5);
-      s.width = s.height = 500 + Math.random() * 300;
-      s.alpha = 0.10;
-      s.blendMode = 'add';
-      this.bg.addChild(s);
-      this.blobs.push({ s, ph: Math.random() * 10, sp: 0.05 + Math.random() * 0.08 });
-    }
-    for (let i = 0; i < 110; i++) {
-      const s = new Sprite(this.tex.dot);
-      s.anchor.set(0.5);
-      const depth = Math.random();
-      s.width = s.height = 2 + depth * 5;
-      s.alpha = 0.15 + depth * 0.5;
-      s.x = Math.random() * W;
-      s.y = Math.random() * H;
-      s.blendMode = 'add';
-      this.bg.addChild(s);
-      this.stars.push({ s, speed: 6 + depth * 30 });
-    }
   }
 
   private drawBoardBg() {
     const g = this.boardBg;
     g.clear();
-    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: 0x03040a, alpha: 0.85 });
+    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: PAPER_PANEL, alpha: 1 });
     for (let x = 1; x < COLS; x++) {
       g.moveTo(BOARD_X + x * CELL, BOARD_Y).lineTo(BOARD_X + x * CELL, BOARD_Y + BOARD_H);
     }
     for (let y = 1; y < VISIBLE; y++) {
       g.moveTo(BOARD_X, BOARD_Y + y * CELL).lineTo(BOARD_X + BOARD_W, BOARD_Y + y * CELL);
     }
-    g.stroke({ width: 1, color: 0xffffff, alpha: 0.05 });
+    g.stroke({ width: 1, color: INK, alpha: 0.12 });
   }
 
   private setupFilters() {
-    this.bloom = new AdvancedBloomFilter({ threshold: 0.42, bloomScale: 0.9, brightness: 1, blur: 7, quality: 5 });
-    this.rgb = new RGBSplitFilter({ red: { x: 0, y: 0 }, green: { x: 0, y: 0 }, blue: { x: 0, y: 0 } });
-    this.crt = new CRTFilter({
-      curvature: 1, lineWidth: 1.2, lineContrast: 0.1, noise: 0.05, noiseSize: 1,
-      vignetting: 0.32, vignettingAlpha: 0.75, vignettingBlur: 0.35,
-    });
     for (let i = 0; i < 3; i++) {
       const f = new ShockwaveFilter({ center: { x: W / 2, y: H / 2 }, amplitude: 28, wavelength: 140, speed: 620, brightness: 1.25, radius: 700 });
       f.enabled = false;
       this.shocks.push({ f, t: 0, dur: 1.2 });
     }
-    const all = [this.bloom, this.rgb, ...this.shocks.map((s) => s.f), this.crt];
-    for (const f of all) f.resolution = 'inherit';
-    this.rgb.enabled = false;
+    for (const s of this.shocks) s.f.resolution = 'inherit';
     this.applyQuality();
   }
 
   applyQuality() {
-    this.bloom.enabled = this.highQuality;
-    this.crt.enabled = this.highQuality;
-    this.root.filters = [this.bloom, ...this.shocks.map((s) => s.f), this.rgb, this.crt];
+    // F apaga las ondas de choque, el único efecto de pantalla que queda.
+    this.root.filters = this.highQuality ? this.shocks.map((s) => s.f) : [];
   }
 
   // ───────────── coordenadas ─────────────
@@ -369,7 +340,7 @@ export class Renderer {
     this.trailList = [];
     this.flashList = [];
     for (const s of this.shocks) s.f.enabled = false;
-    this.trauma = this.kickY = this.punch = this.rgbAmt = this.bloomBoost = 0;
+    this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
     this.accentTarget = accentFor(1);
     this.snapPiece = true;
@@ -398,13 +369,13 @@ export class Renderer {
     s.f.enabled = true;
   }
 
-  flash(color = 0xffffff, alpha = 0.35) {
+  flash(color = INK, alpha = 0.35) {
     this.screenFlash.tint = color;
-    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, REDUCED_MOTION ? alpha * 0.4 : alpha);
+    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha * (REDUCED_MOTION ? 0.2 : 0.4));
   }
 
   floatText(str: string, x: number, y: number, o: { color?: number; size?: number; life?: number; vy?: number; delay?: number; font?: string } = {}) {
-    const color = o.color ?? 0xffffff;
+    const color = o.color ?? INK;
     const t = new Text({
       text: str,
       style: {
@@ -412,8 +383,7 @@ export class Renderer {
         fontWeight: 'normal',
         fontSize: (o.size ?? 28) * 0.9,
         fill: color,
-        stroke: { color: 0x05060f, width: Math.max(3, (o.size ?? 28) / 7) },
-        dropShadow: { color, blur: 14, distance: 0, alpha: 0.9 },
+        stroke: { color: PAPER, width: Math.max(3, (o.size ?? 28) / 7) },
         letterSpacing: 1,
         align: 'center',
       },
@@ -462,7 +432,7 @@ export class Renderer {
     });
 
     ev.on('lock', ({ cells }) => {
-      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: 0xffffff, life: 0.16, max: 0.16 });
+      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: INK, life: 0.16, max: 0.16 });
     });
 
     ev.on('clear', (c) => {
@@ -474,7 +444,7 @@ export class Renderer {
       const big = c.lines >= 4 || c.spin !== null || c.perfect;
 
       c.rows.forEach((row, ri) => {
-        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: 0xffffff, life: 0.35, max: 0.35 });
+        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: INK, life: 0.35, max: 0.35 });
         c.rowValues[ri].forEach((v, x) => {
           const color = isGold(v) ? GOLD_COLOR : colorOfId(cellType(v));
           this.particles.emit({
@@ -490,38 +460,35 @@ export class Renderer {
       let label = c.lines >= 4 ? 'CUÁDRUPLE' : lineNames[c.lines];
       if (c.spin) label = `${c.spinName}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
       if (c.cascade > 0) label = `CADENA ×${c.cascade + 1}`;
-      const color = c.lines >= 4 ? 0x2ef2ff : c.spin ? 0xd36bff : c.cascade ? 0xff8a3d : 0xffffff;
+      const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : INK;
       if (c.lines >= 2 || c.spin || c.cascade) this.floatText(label, cxMid, cyMid - 10, { color, size: big ? 40 : 28, life: 1.4 });
-      if (c.b2b) this.floatText('BACK-TO-BACK', cxMid, cyMid - 52, { color: 0xffb13d, size: 18, life: 1.4 });
+      if (c.b2b) this.floatText('BACK-TO-BACK', cxMid, cyMid - 52, { color: 0xb06a14, size: 18, life: 1.4 });
       let below = cyMid + (big ? 38 : 30);
       if (c.combo >= 1 && c.cascade === 0) {
-        this.floatText(`COMBO ×${c.combo}`, cxMid, below, { color: 0x9dff4d, size: 20 + Math.min(c.combo, 10) * 1.5, life: 1.2 });
+        this.floatText(`COMBO ×${c.combo}`, cxMid, below, { color: 0x4c7d1c, size: 20 + Math.min(c.combo, 10) * 1.5, life: 1.2 });
         below += 32;
       }
-      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: 0xffffff, size: 16, life: 1.1, vy: -30 });
+      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: INK, size: 16, life: 1.1, vy: -30 });
       below += 28;
-      if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_COLOR, size: 18, life: 1.3, vy: -30 });
+      if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_ON_PAPER, size: 18, life: 1.3, vy: -30 });
 
       if (c.perfect) {
-        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: 0xffe14d, size: 46, life: 2.2, vy: -10 });
-        this.flash(0xffffff, 0.3);
+        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: INK, size: 46, life: 2.2, vy: -10 });
+        this.flash(INK, 0.3);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
-        this.bloomBoost = 0.6;
       }
 
       this.shake(c.lines >= 4 ? 0.55 : c.spin ? 0.4 : 0.12 + c.lines * 0.08);
       this.punch = big ? 0.035 : 0.012 * c.lines;
       if (big) {
         this.shockwave(cxMid, cyRows, { amplitude: c.lines >= 4 ? 18 : 12 });
-        this.rgbAmt = c.lines >= 4 ? 5 : 3;
-        this.bloomBoost = Math.max(this.bloomBoost, 0.35);
-        this.flash(c.lines >= 4 ? 0x2ef2ff : 0xc04dff, 0.12);
+        this.flash(c.lines >= 4 ? 0x1f5fa8 : 0x7a3fa0, 0.12);
       }
     });
 
     ev.on('spinNoLines', ({ spinName, cells }) => {
       const [x, y] = cells[0];
-      this.floatText(spinName, this.cx(x), this.cy(y) - 20, { color: 0xd36bff, size: 22 });
+      this.floatText(spinName, this.cx(x), this.cy(y) - 20, { color: 0x7a3fa0, size: 22 });
       this.shake(0.12);
     });
 
@@ -537,8 +504,7 @@ export class Renderer {
       this.shockwave(x, y, { amplitude: 22, wavelength: 130, speed: 700 });
       this.shake(0.7);
       this.flash(0xff6a2a, 0.2);
-      this.rgbAmt = 6;
-      this.floatText('¡BOOM!', x, y - 20, { color: 0xff6a2a, size: 40 });
+      this.floatText('¡BOOM!', x, y - 20, { color: 0xb4541a, size: 40 });
       this.floatText(`+${points.toLocaleString('es-ES')}`, x, y + 22, { size: 16, vy: -70 });
     });
 
@@ -550,10 +516,9 @@ export class Renderer {
       });
       const [x, y] = cells[0];
       this.shockwave(this.cx(x), this.cy(y), { amplitude: 14, wavelength: 150, speed: 500 });
-      this.flash(0xffffff, 0.3);
+      this.flash(INK, 0.3);
       this.shake(0.4);
-      this.rgbAmt = 6;
-      this.floatText(`PRISMA ×${removed.length}`, this.cx(x), this.cy(y) - 30, { color: 0xff7ad9, size: 30 });
+      this.floatText(`PRISMA ×${removed.length}`, this.cx(x), this.cy(y) - 30, { color: 0xb8336a, size: 30 });
       this.floatText(`+${points.toLocaleString('es-ES')}`, this.cx(x), this.cy(y) + 10, { size: 16, vy: -70 });
     });
 
@@ -567,14 +532,14 @@ export class Renderer {
       });
       this.particles.emit({ x: BOARD_X, y: this.cy(row), color: 0xffa13d, count: 40, speed: 900, angle: 0, spread: 0.3, life: 0.4, size: 6, gravity: 0, shape: 'spark' });
       this.shake(0.2);
-      this.floatText('TALADRO', BOARD_X + BOARD_W / 2, this.cy(row) - 30, { color: 0xffa13d, size: 20 });
+      this.floatText('TALADRO', BOARD_X + BOARD_W / 2, this.cy(row) - 30, { color: 0xb06a14, size: 20 });
     });
 
     ev.on('quake', ({ chain }) => {
       this.shake(0.9);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H, { amplitude: 20, wavelength: 160, speed: 500 });
       for (let x = 0; x < COLS; x++) this.particles.emit({ x: this.cx(x), y: BOARD_Y + BOARD_H, color: 0xff8a3d, count: 6, speed: 300, angle: -Math.PI / 2, spread: 1, life: 0.8, size: 8, gravity: 600 });
-      this.floatText(chain > 1 ? `TERREMOTO ×${chain}` : 'TERREMOTO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xff8a3d, size: 30 });
+      this.floatText(chain > 1 ? `TERREMOTO ×${chain}` : 'TERREMOTO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xb4541a, size: 30 });
     });
 
     // la caída tras una bomba o un prisma: un temblor corto para que el salto de bloques se note
@@ -591,28 +556,26 @@ export class Renderer {
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
       this.flash(accentFor(level), 0.15);
-      this.bloomBoost = Math.max(this.bloomBoost, 0.4);
     });
 
     ev.on('interest', ({ amount }) => {
-      this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_COLOR, size: 18, delay: 0.3 });
+      this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_ON_PAPER, size: 18, delay: 0.3 });
     });
 
     ev.on('revive', () => {
-      this.flash(0xffffff, 0.5);
+      this.flash(INK, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
-      this.floatText('¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xff4d6a, size: 34, life: 2 });
+      this.floatText('¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
     });
 
     ev.on('gameover', () => {
       this.overT = 0;
       this.shake(0.5);
-      this.rgbAmt = 10;
     });
 
     ev.on('perk', ({ perk }) => {
-      this.flash(0xffffff, 0.25);
+      this.flash(INK, 0.25);
       this.floatText(perk.name.toUpperCase(), BOARD_X + BOARD_W / 2, BOARD_Y + 160, { color: this.accent, size: 26, life: 1.4 });
     });
   }
@@ -700,23 +663,23 @@ export class Renderer {
     const c = 10; // esquina cortada, igual que los paneles del HUD
     const x = QUEUE_X, y = QUEUE_Y, w = QUEUE_W, h = QUEUE_H;
     const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
-    p.poly(shape).fill({ color: 0x090b18, alpha: 0.88 });
-    p.poly(shape).stroke({ width: 1.5, color: this.accent, alpha: 0.45 });
+    p.poly(shape).fill({ color: PAPER_PANEL, alpha: 1 });
+    p.poly(shape).stroke({ width: 2, color: INK, alpha: 1 });
     // separador entre reserva y cola
-    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: this.accent, alpha: 0.3 });
-    for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: this.accent, alpha: 0.35 });
+    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: INK, alpha: 0.3 });
+    for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: INK, alpha: 0.35 });
     next.forEach((sl, i) => {
-      p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: this.accent, alpha: i === 0 ? 0.9 : 0.25 });
+      p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : INK, alpha: i === 0 ? 1 : 0.35 });
     });
     // flecha: la primera de la cola es la que entra
     const ax = next[0].x - 14, ay = next[0].y + next[0].s / 2;
-    p.poly([ax, ay - 6, ax + 8, ay, ax, ay + 6]).fill({ color: this.accent, alpha: 0.8 });
+    p.poly([ax, ay - 6, ax + 8, ay, ax, ay + 6]).fill({ color: this.accent, alpha: 1 });
 
     if (!this.labels.length) {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: 0xffffff, letterSpacing: 3 },
+          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: INK, letterSpacing: 3 },
           resolution: 2,
         });
         t.anchor.set(0, 0.5);
@@ -734,9 +697,9 @@ export class Renderer {
     const g = this.game;
     const f = this.frame;
     f.clear();
-    const dangerCol = lerpColor(this.accent, 0xff1e3c, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
-    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 0.95 });
-    f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.3 });
+    const dangerCol = lerpColor(INK, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
+    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 1 });
+    f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.4 });
 
     // medidor de basura
     const gp = g.garbageProgress();
@@ -747,7 +710,7 @@ export class Renderer {
     }
     // progreso de nivel (barra fina debajo del tablero)
     const lp = g.linesIntoLevel / g.linesNeeded();
-    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: 0xffffff, alpha: 0.08 });
+    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: INK, alpha: 0.15 });
     f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W * lp, 4).fill({ color: this.accent, alpha: 1 });
   }
 
@@ -913,19 +876,6 @@ export class Renderer {
       s.t += sec;
       s.f.time = s.t;
       if (s.t >= s.dur) s.f.enabled = false;
-    }
-    this.rgbAmt *= Math.exp(-sec * 5);
-    if (this.rgbAmt > 0.3) {
-      this.rgb.enabled = true;
-      this.rgb.red = { x: -this.rgbAmt, y: 0 };
-      this.rgb.blue = { x: this.rgbAmt, y: this.rgbAmt * 0.3 };
-    } else this.rgb.enabled = false;
-    this.bloomBoost *= Math.exp(-sec * 3);
-    this.bloom.bloomScale = 0.75 + this.bloomBoost;
-    this.bloom.brightness = 1 + this.bloomBoost * 0.1;
-    if (this.crt.enabled) {
-      this.crt.time += sec * 60;
-      this.crt.seed = Math.random();
     }
   }
 
