@@ -317,15 +317,15 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'blackout', name: 'Apagón', rarity: 'rare', max: 1,
-    pros: () => ['<b>+40%</b> a toda la puntuación', 'La interfaz pasa a <b>modo noche</b>'],
+    pros: () => ['<b>+25%</b> a toda la puntuación', 'La interfaz pasa a <b>modo noche</b>'],
     cons: () => ['<b>No ves la pieza fantasma</b>'],
-    apply: (m) => { m.scoreMult *= 1.4; m.noGhost = true; m.skin = 'apagon'; },
+    apply: (m) => { m.scoreMult *= 1.25; m.noGhost = true; m.skin = 'apagon'; },
   },
   {
     id: 'terminal', name: 'Terminal', rarity: 'rare', max: 1,
     pros: () => ['Ves <b>+2 piezas</b> en la cola', 'La interfaz pasa a <b>pantalla de fósforo</b>'],
-    cons: () => ['Todas las piezas se ven <b>del mismo color</b>'],
-    apply: (m) => { m.preview += 2; m.monochrome = true; m.skin = 'terminal'; },
+    cons: () => ['Todas las piezas se ven <b>del mismo color</b>', '<b>−15%</b> a toda la puntuación'],
+    apply: (m) => { m.preview += 2; m.monochrome = true; m.scoreMult *= 0.85; m.skin = 'terminal'; },
   },
   // ───────── Épicas ─────────
   {

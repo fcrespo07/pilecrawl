@@ -114,6 +114,8 @@ function showHome(show: boolean) {
   // detrás de la portada nada debe recibir foco ni dibujarse
   stage.inert = show;
   if (show) {
+    // la portada siempre en papel: la piel es de la partida y el ticker (que la pone) se para
+    document.body.dataset.skin = 'papel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
     home.scrollTop = 0;

@@ -21,7 +21,8 @@ export const SKINS: Record<SkinId, Skin> = {
   apagon: { bg0: 0x14161f, bg1: 0x0c0d13, ink: 0xd9d4c4, paper: 0x14161f, panel: 0x1b1e29, dark: true },
   terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true },
   neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true },
-  plano: { bg0: 0x1d4f86, bg1: 0x163f6d, ink: 0xeaf2ff, paper: 0x1d4f86, panel: 0x235b98, dark: true },
+  // panel muy oscuro: las piezas azules tienen que destacar sobre el plano
+  plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true },
 };
 
 export const skinOf = (id: SkinId | null | undefined): Skin => SKINS[id ?? 'papel'];

@@ -344,7 +344,7 @@ describe('perks con piel', () => {
     const play = (skin: boolean) => {
       const g = new Game();
       g.start(7);
-      if (skin) g.mods.skin = 'neon';
+      if (skin) Object.assign(g.mods, { skin: 'neon', noGhost: true, monochrome: true });
       for (let i = 0; i < 30 && g.state === 'playing'; i++) {
         g.move(i % 3 - 1);
         g.hardDrop();
