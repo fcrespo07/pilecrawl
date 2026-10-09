@@ -34,10 +34,15 @@ describe('piezas', () => {
     }
   });
 
-  it('la I tiene 4 bloques y la O no rota', () => {
+  it('la I tiene 4 bloques y la O no rota (la T sí, como control)', () => {
     expect(PIECES.I.shapes[0]).toHaveLength(4);
-    expect(PIECES.O.kicks).toBe('O');
-    expect(new Game().rotate(1)).toBe(false);
+    const g = playing();
+    setActive(g, PIECES.O, 4, 5);
+    expect(g.rotate(1)).toBe(false);
+    expect(g.active!.rot).toBe(0);
+    setActive(g, PIECES.T, 4, 5);
+    expect(g.rotate(1)).toBe(true);
+    expect(g.active!.rot).toBe(1);
   });
 });
 
@@ -117,8 +122,21 @@ describe('basura', () => {
   });
 });
 
+describe('revivir con una vida', () => {
+  it('reintenta la misma pieza en vez de sacar otra de la cola', () => {
+    const g = playing();
+    g.lives = 1;
+    for (let y = 0; y < 3; y++) g.board[y].fill(PIECES.T.id);
+    g.queue = [{ def: PIECES.I, bomb: false, prism: false, gold: false }];
+    const t: PieceSpec = { def: PIECES.T, bomb: false, prism: false, gold: false };
+    g['spawn'](t);
+    expect(g.lives).toBe(0);
+    expect(g.active?.def.name).toBe('T');
+  });
+});
+
 describe('bloqueo fuera del tablero', () => {
-  it('una pieza que se fija por completo encima del tablero es game over', () => {
+  it('una pieza con algún bloque por encima del tablero oculto es game over', () => {
     const g = playing();
     setActive(g, PIECES.I, 3, -2);
     g['lockPiece']();
