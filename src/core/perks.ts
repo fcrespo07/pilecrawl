@@ -58,7 +58,7 @@ export interface Mods {
   collector: number;
   /** al revivir se vacía todo el tablero y la puntuación sube (Fénix) */
   phoenix: boolean;
-  /** piel de la interfaz (solo aspecto); null = papel */
+  /** piel de la interfaz (solo aspecto); null = la de base (píxel) */
   skin: SkinId | null;
   /** sin pieza fantasma (Apagón; solo se deja de dibujar) */
   noGhost: boolean;

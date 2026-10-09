@@ -9,9 +9,9 @@ import {
 import { Particles } from './particles';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
 
-// paleta de papel y tinta (igual que los tokens de style.css)
-// oro oscuro para textos flotantes: el GOLD_COLOR de las piezas no se lee sobre el papel
-const GOLD_ON_PAPER = 0x8a6d00;
+// estilo píxel: fuente de recreativa y oro claro para los textos flotantes sobre fondo oscuro
+const PIXEL_FONT = '"Press Start 2P", monospace';
+const GOLD_TEXT = 0xffc83d;
 
 /** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
 const REDUCED_MOTION =
@@ -47,29 +47,31 @@ function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => 
   return Texture.from(cv);
 }
 
+/** Bloque de 8×8 "píxeles": borde oscuro, brillo arriba a la izquierda y sombra escalonada abajo a la derecha. */
 function makeCellTexture(): Texture {
-  const s = 64;
+  const s = 64, p = 8;
   return canvasTex(s, s, (c) => {
-    const g = c.createLinearGradient(0, 0, s, s);
-    g.addColorStop(0, '#ffffff');
-    g.addColorStop(0.5, '#d6d6d6');
-    g.addColorStop(1, '#8c8c8c');
-    c.fillStyle = g;
-    c.fillRect(2, 2, s - 4, s - 4);
-    // biseles
-    c.fillStyle = 'rgba(255,255,255,0.9)';
-    c.fillRect(2, 2, s - 4, 5);
-    c.fillRect(2, 2, 5, s - 4);
-    c.fillStyle = 'rgba(40,40,40,0.55)';
-    c.fillRect(2, s - 7, s - 4, 5);
-    c.fillRect(s - 7, 2, 5, s - 4);
-    // brillo interior
-    c.fillStyle = 'rgba(255,255,255,0.22)';
-    c.fillRect(12, 12, s - 24, (s - 24) * 0.45);
-    // borde oscuro exterior
-    c.strokeStyle = 'rgba(0,0,0,0.6)';
-    c.lineWidth = 2;
-    c.strokeRect(1, 1, s - 2, s - 2);
+    c.fillStyle = '#ffffff';
+    c.fillRect(0, 0, s, s);
+    c.fillStyle = '#5a5a5a';
+    c.fillRect(0, s - p, s, p);
+    c.fillRect(s - p, 0, p, s);
+    c.fillStyle = '#9c9c9c';
+    c.fillRect(p, s - 2 * p, s - 2 * p, p);
+    c.fillRect(s - 2 * p, p, p, s - 2 * p);
+    c.fillStyle = '#ffffff';
+    c.fillRect(0, 0, s - p, p);
+    c.fillRect(0, 0, p, s - p);
+    c.fillStyle = '#e8e8e8';
+    c.fillRect(p, p, s - 3 * p, s - 3 * p);
+    c.fillStyle = '#ffffff';
+    c.fillRect(p, p, 2 * p, p);
+    c.fillRect(p, 2 * p, p, p);
+    c.fillStyle = '#202020';
+    c.fillRect(0, 0, s, 2);
+    c.fillRect(0, 0, 2, s);
+    c.fillRect(0, s - 2, s, 2);
+    c.fillRect(s - 2, 0, 2, s);
   });
 }
 
@@ -134,12 +136,27 @@ function makeTrailTexture(): Texture {
 }
 
 function makeBackground(skin: Skin): Texture {
-  return canvasTex(W / 4, H / 4, (c) => {
-    const g = c.createLinearGradient(0, 0, 0, H / 4);
+  const w = W / 2, h = H / 2;
+  return canvasTex(w, h, (c) => {
+    const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, hex(skin.bg0));
     g.addColorStop(1, hex(skin.bg1));
     c.fillStyle = g;
-    c.fillRect(0, 0, W / 4, H / 4);
+    c.fillRect(0, 0, w, h);
+    if (!skin.stars) return;
+    // cielo de estrellas con semilla fija (sale igual siempre) y colinas escalonadas al pie
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let k = 0; k < 140; k++) {
+      c.fillStyle = rnd() < 0.2 ? 'rgba(255,210,63,0.8)' : 'rgba(255,255,255,0.55)';
+      const sz = rnd() < 0.15 ? 2 : 1;
+      c.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), sz, sz);
+    }
+    c.fillStyle = 'rgba(80,60,160,0.35)';
+    for (let x = 0; x < w; x += 4) {
+      const hh = 24 + Math.round(10 * Math.sin(x / 37) + 6 * Math.sin(x / 13)) * 2;
+      c.fillRect(x, h - hh, 4, hh);
+    }
   });
 }
 
@@ -221,8 +238,8 @@ export class Renderer {
   private snapPiece = true;
   private overT = 0;
   private dangerAmt = 0;
-  private skinId: SkinId = 'papel';
-  private skin: Skin = SKINS.papel;
+  private skinId: SkinId = 'pixel';
+  private skin: Skin = SKINS.pixel;
   private bgSprite!: Sprite;
   private panelKey = '';
   private labels: Text[] = [];
@@ -297,9 +314,9 @@ export class Renderer {
     this.bg.addChild(this.bgSprite);
   }
 
-  /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve al papel). */
+  /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve a la de base). */
   private updateSkin() {
-    const id = this.game.mods.skin ?? 'papel';
+    const id = this.game.mods.skin ?? 'pixel';
     if (id === this.skinId) return;
     this.skinId = id;
     this.skin = skinOf(id);
@@ -309,10 +326,11 @@ export class Renderer {
     this.app.renderer.background.color = this.skin.bg0;
     this.drawBoardBg();
     this.panelKey = '';
-    this.accentTarget = this.tone(accentFor(this.game.level));
+    this.accentTarget = accentFor(this.game.level);
   }
 
-  /** En las pieles oscuras, los colores pensados para papel se aclaran para que se lean. */
+  /** Los colores fijos de los textos y destellos se aclaran para que se lean sobre fondo oscuro.
+   *  Los acentos de nivel (ACCENTS) ya son claros y no pasan por aquí. */
   tone(c: number): number {
     return this.skin.dark ? lerpColor(c, 0xffffff, 0.45) : c;
   }
@@ -368,7 +386,7 @@ export class Renderer {
     for (const s of this.shocks) s.f.enabled = false;
     this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
-    this.accentTarget = this.tone(accentFor(1));
+    this.accentTarget = accentFor(1);
     this.snapPiece = true;
   }
 
@@ -405,9 +423,10 @@ export class Renderer {
     const t = new Text({
       text: str,
       style: {
-        fontFamily: o.font ?? 'Bungee, sans-serif',
+        fontFamily: o.font ?? PIXEL_FONT,
         fontWeight: 'normal',
-        fontSize: (o.size ?? 28) * 0.9,
+        // la fuente de píxeles es muy ancha: se reduce para que los textos quepan en el tablero
+        fontSize: Math.round((o.size ?? 28) * 0.48),
         fill: color,
         stroke: { color: this.skin.paper, width: Math.max(3, (o.size ?? 28) / 7) },
         letterSpacing: 1,
@@ -496,7 +515,7 @@ export class Renderer {
       }
       this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: this.skin.ink, size: 16, life: 1.1, vy: -30 });
       below += 28;
-      if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_ON_PAPER, size: 18, life: 1.3, vy: -30 });
+      if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_TEXT, size: 18, life: 1.3, vy: -30 });
 
       if (c.perfect) {
         this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: this.skin.ink, size: 46, life: 2.2, vy: -10 });
@@ -578,14 +597,14 @@ export class Renderer {
     });
 
     ev.on('levelup', ({ level }) => {
-      this.accentTarget = this.tone(accentFor(level));
+      this.accentTarget = accentFor(level);
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
       this.flash(accentFor(level), 0.15);
     });
 
     ev.on('interest', ({ amount }) => {
-      this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_ON_PAPER, size: 18, delay: 0.3 });
+      this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
     });
 
     ev.on('breather', ({ rows }) => {
@@ -740,11 +759,10 @@ export class Renderer {
     const { hold, next, sep } = this.queueSlots();
     const p = this.panels;
     p.clear();
-    const c = 10; // esquina cortada, igual que los paneles del HUD
     const x = QUEUE_X, y = QUEUE_Y, w = QUEUE_W, h = QUEUE_H;
-    const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
-    p.poly(shape).fill({ color: this.skin.panel, alpha: 1 });
-    p.poly(shape).stroke({ width: 2, color: this.skin.ink, alpha: 1 });
+    // marco de 4 px como los paneles del HUD
+    p.rect(x, y, w, h).fill({ color: this.skin.panel, alpha: 1 });
+    p.rect(x, y, w, h).stroke({ width: 4, color: this.skin.ink, alpha: 1 });
     // separador entre reserva y cola
     p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: this.skin.ink, alpha: 0.3 });
     for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: this.skin.ink, alpha: 0.35 });
@@ -759,7 +777,7 @@ export class Renderer {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: 0xffffff, letterSpacing: 3 },
+          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 8, fill: 0xffffff, letterSpacing: 1 },
           resolution: 2,
         });
         t.anchor.set(0, 0.5);
@@ -770,8 +788,7 @@ export class Renderer {
     }
     this.labels[0].x = hold[0].x;
     this.labels[1].x = next[0].x;
-    // en papel, casi tinta (como siempre); en las pieles oscuras, el acento aclarado
-    for (const t of this.labels) t.tint = this.skin.dark ? this.accent : lerpColor(this.skin.ink, this.accent, 0.12);
+    for (const t of this.labels) t.tint = this.accent;
   }
 
   private drawFrame() {
@@ -779,8 +796,7 @@ export class Renderer {
     const f = this.frame;
     f.clear();
     const dangerCol = lerpColor(this.skin.ink, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
-    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 1 });
-    f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.4 });
+    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 4, color: dangerCol, alpha: 1 });
 
     // medidor de basura
     const gp = g.garbageProgress();

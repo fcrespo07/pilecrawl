@@ -1,66 +1,91 @@
 /* ═══════════════════════════════════════════════════════════
-   BLOCK ROGUE — boletín impreso: papel crema, tinta negra, sello rojo
+   BLOCK ROGUE — estilo píxel: consola de 16 bits, cielo nocturno,
+   bordes de 4 px y títulos de recreativa. Las reglas de la capa
+   «Estilo píxel» del final pisan las de la base con los mismos selectores.
    ═══════════════════════════════════════════════════════════ */
 
-/* Fuentes autoalojadas (Google Fonts, SIL OFL; licencias en src/fonts/OFL.txt).
-   Bungee y Chakra Petch se cargan desde fonts.css, que también usa el lienzo de Pixi. */
-@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 600; font-display: swap; src: url(./fonts/fraunces-latin-600.woff2) format('woff2'); }
-@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 800; font-display: swap; src: url(./fonts/fraunces-latin-800.woff2) format('woff2'); }
-@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/ibm-plex-mono-latin-400.woff2) format('woff2'); }
-@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url(./fonts/ibm-plex-mono-latin-600.woff2) format('woff2'); }
+/* Fuentes autoalojadas (Google Fonts, SIL OFL; licencias en src/fonts/OFL.txt). El lienzo de Pixi usa la misma. */
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/press-start-2p-latin-400.woff2) format('woff2'); }
+@font-face { font-family: 'VT323'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/vt323-latin-400.woff2) format('woff2'); }
 
 :root {
-  --accent: #d7402b;
-  --bg: #e9e1cc;
-  --panel: #f3ecdc;
-  --panel-hi: #fbf6ea;
-  --line: #1b1a17;
-  --text: #1b1a17;
-  --muted: #5d5a50;
-  --ink: #1b1a17;
-  --paper: #f3ecdc;
-  --pro: #2f7d4f;
-  --con: #c0392b;
-  --common: #6b6759;
-  --rare: #2d6a9f;
-  --epic: #7a3fa0;
-  --legendary: #b7791f;
-  --curse: #8e1b3a;
-  --hyper: #6a2fb8;
-  --danger: #c0392b;
+  --accent: #ffd23f;
+  --bg: #11132a;
+  --panel: #1d2142;
+  --panel-hi: #232852;
+  --line: #f4f0e6;
+  --text: #f4f0e6;
+  --muted: #9aa0c8;
+  --ink: #f4f0e6;
+  --paper: #11132a;
+  --pro: #3ee06a;
+  --con: #ff5a74;
+  --common: #c0c4dc;
+  --rare: #2fb4ff;
+  --epic: #c07aff;
+  --legendary: #ffd23f;
+  --curse: #ff4f7b;
+  --hyper: #b07aff;
+  --danger: #ff3b5c;
+  /* píxel: amarillo de títulos, azul secundario, rojo de alerta y los dos tonos del relieve */
+  --hi: #ffd23f;
+  --hi-deep: #c99a10;
+  --hi-light: #fff2a8;
+  --on-hi: #1d2142;
+  --hi2: #2fb4ff;
+  --hot: #ff3b5c;
+  --shade: #171a3a;
+  --raise: #2a3060;
+  --raise-hi: #3c4380;
+  --page:
+    radial-gradient(1px 1px at 12% 18%, #fff 99%, transparent), radial-gradient(1px 1px at 72% 12%, #ffd23f 99%, transparent),
+    radial-gradient(2px 2px at 40% 70%, #fff 99%, transparent), radial-gradient(1px 1px at 88% 60%, #fff 99%, transparent),
+    radial-gradient(1px 1px at 25% 85%, #fff 99%, transparent), radial-gradient(2px 2px at 60% 35%, #9a7bff 99%, transparent),
+    linear-gradient(#1d2142, #11132a);
   --cut: 0px;
-  --chamfer: none;
-  --f-display: 'Fraunces', Georgia, serif;
-  --f-ui: 'IBM Plex Mono', ui-monospace, monospace;
-  --f-logo: 'Fraunces', Georgia, serif;
-  --veil-a: rgba(233, 225, 204, 0.8);
-  --veil-b: rgba(233, 225, 204, 0.97);
+  /* esquinas de píxel: se quita un cuadrado de 4 px en cada esquina */
+  --chamfer: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 4px 4px);
+  --f-display: 'Press Start 2P', monospace;
+  --f-ui: 'VT323', monospace;
+  --f-logo: 'Press Start 2P', monospace;
+  /* VT323 es pequeña para su cuerpo: se iguala su altura de x para que se lea con los tamaños de siempre */
+  font-size-adjust: 0.52;
+  --veil-a: rgba(17, 19, 42, 0.8);
+  --veil-b: rgba(17, 19, 42, 0.97);
 }
 
-/* Pieles que ponen algunos perks (src/fx/skins.ts). Solo cambian colores; el lienzo de Pixi
-   lee los suyos de SKINS. Todas las de fondo oscuro aclaran los colores de rareza para que se lean. */
+/* Pieles que ponen algunos perks (src/fx/skins.ts). Cambian los colores y conservan los bloques
+   de píxeles; el lienzo de Pixi lee los suyos de SKINS. */
 body[data-skin='apagon'] {
   --bg: #0c0d13; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
   --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(12, 13, 19, 0.8); --veil-b: rgba(12, 13, 19, 0.96);
+  --accent: #e8e2d0; --hi: #e8e2d0; --hi-deep: #9a958a; --hi-light: #ffffff; --on-hi: #0c0d13; --hi2: #b9b4a6; --hot: #ff7a6b;
+  --shade: #101219; --raise: #262a38; --raise-hi: #343a4c;
 }
 body[data-skin='terminal'] {
   --bg: #020803; --panel: #0a1a0e; --panel-hi: #0f2414; --line: #6dff8e; --text: #6dff8e; --muted: #3fae5b;
   --ink: #6dff8e; --paper: #0a1a0e; --accent: #6dff8e; --veil-a: rgba(2, 8, 3, 0.82); --veil-b: rgba(2, 8, 3, 0.96);
+  --hi: #6dff8e; --hi-deep: #2f8a45; --hi-light: #c4ffd0; --on-hi: #020803; --hi2: #3fae5b; --hot: #6dff8e;
+  --shade: #04100a; --raise: #12301a; --raise-hi: #1c4426;
 }
 body[data-skin='neon'] {
   --bg: #05030b; --panel: #120c22; --panel-hi: #1a1130; --line: #ff4dd2; --text: #f2e9ff; --muted: #a99bc4;
   --ink: #f2e9ff; --paper: #120c22; --accent: #2ef2ff; --veil-a: rgba(5, 3, 11, 0.8); --veil-b: rgba(5, 3, 11, 0.96);
+  --hi: #2ef2ff; --hi-deep: #138c96; --hi-light: #c8fcff; --on-hi: #05030b; --hi2: #ff4dd2; --hot: #ff4dd2;
+  --shade: #0a0616; --raise: #241640; --raise-hi: #34205a;
 }
 body[data-skin='plano'] {
   --bg: #133457; --panel: #0f2f55; --panel-hi: #163c69; --line: #eaf2ff; --text: #eaf2ff; --muted: #b5cbe8;
   --ink: #eaf2ff; --paper: #0f2f55; --veil-a: rgba(19, 52, 87, 0.8); --veil-b: rgba(19, 52, 87, 0.96);
+  --accent: #ffffff; --hi: #ffffff; --hi-deep: #9fb8d8; --hi-light: #ffffff; --on-hi: #0f2f55; --hi2: #9fd0ff; --hot: #ffd23f;
+  --shade: #0a2445; --raise: #1e4a80; --raise-hi: #2a5c98;
 }
 body[data-skin='apagon'], body[data-skin='terminal'], body[data-skin='neon'], body[data-skin='plano'] {
+  --page: var(--bg);
   --pro: #6fd39a; --con: #ff7a6b; --common: #b9b4a6; --rare: #79b4ea; --epic: #c79bea; --legendary: #f0c060; --curse: #ff6f93; --danger: #ff7a6b;
 }
-body:is([data-skin='apagon'], [data-skin='terminal'], [data-skin='neon'], [data-skin='plano']) kbd { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.08); }
 kbd[hidden] { display: none; }
-body[data-skin='neon'] .panel, body[data-skin='neon'] .card-front { box-shadow: 0 0 14px rgba(255, 77, 210, 0.35); }
+body[data-skin='neon'] .panel, body[data-skin='neon'] .card-front { filter: drop-shadow(0 0 7px rgba(255, 77, 210, 0.45)); }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -671,7 +696,7 @@ kbd {
 }
 
 /* ═════════════ Home (portada) ═════════════
-   Usa los tokens de papel y tinta del resto de la interfaz. */
+   Usa los mismos tokens que el resto de la interfaz. */
 .home {
   position: fixed;
   inset: 0;
@@ -791,3 +816,132 @@ kbd {
 /* cuenta atrás del contrarreloj en sus últimos segundos */
 #time-box.urgent .num { color: var(--danger); animation: urgent 0.5s steps(1) infinite; }
 @keyframes urgent { 50% { opacity: 0.35; } }
+
+/* ═══════════════════════════════════════════════════════════
+   Estilo píxel. Va al final para pisar la base con los mismos selectores.
+   Todo sale de tokens para que las pieles de los perks lo recoloreen.
+   ═══════════════════════════════════════════════════════════ */
+
+body, .home { background: var(--page); }
+body::before { display: none; }
+
+/* los textos con la fuente de recreativa no se ajustan: solo VT323 lo necesita */
+:is(.panel > header, .num-big, .lvl, .num, .home-title, .home-kicker, .home-card h2, .mode-opt b, .btn, .home-btn,
+  .stripe-title, .perk-title, .big-title, .card-band, .card-name, .home-soon, .btn.ghost b, .hy-name, .final-score,
+  .over-stats b, .build-row .b-name, #tooltip .tt-name, .touch-pad button) { font-size-adjust: none; }
+
+/* paneles: marco de 4 px con esquinas de píxel y franja de luz arriba */
+.panel::after { inset: 4px; background: var(--panel); clip-path: none; box-shadow: inset 0 4px 0 var(--raise); }
+.panel > header { font-family: var(--f-display); font-size: 8px; letter-spacing: 0.08em; color: var(--hi); margin-bottom: 6px; }
+.panel > header::before { width: 6px; height: 6px; background: var(--hot); }
+.panel.mini > header { font-size: 7px; }
+.panel.mini > header::before { width: 5px; height: 5px; }
+.num-big { font-family: var(--f-display); font-size: 16px; line-height: 1.6; }
+.lvl { font-family: var(--f-display); font-size: 30px; color: var(--hi); }
+.num, .panel.mini .num { font-family: var(--f-display); font-size: 12px; line-height: 2; }
+.sub, .keys li { font-size: 13px; }
+/* la fuente y las teclas de 4 px ocupan más: se aprieta la lista para que no pise el panel de la hiperperk */
+.keys { gap: 2px; }
+.keys li kbd { border-bottom-width: 3px; padding: 1px 4px 0; }
+.keys.toggles { margin-top: 6px; padding-top: 6px; }
+.segs i { border: 0; background: var(--raise); }
+.segs i.on { background: var(--pro); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
+.keys.toggles { border-top: 2px dashed var(--raise-hi); }
+kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; background: var(--raise); color: var(--ink); font-family: var(--f-ui); font-size: 11px; }
+
+/* hiperperk */
+.hy-name { font-family: var(--f-display); font-size: 9px; line-height: 1.5; }
+.hy-bar { height: 10px; border: 2px solid var(--ink); background: var(--shade); }
+.hy-state { font-size: 13px; letter-spacing: 0.02em; }
+
+/* chips de mejoras */
+.chip, .chip::before { clip-path: var(--chamfer); }
+.chip::before { inset: 3px; background: var(--panel); }
+.chip-wrap { filter: none; }
+.chip-wrap i { font-family: var(--f-display); font-size: 7px; line-height: 13px; clip-path: none; color: var(--on-hi); }
+
+/* botones: bloque amarillo con relieve de 4 px */
+.btn, .home-btn {
+  font-family: var(--f-display); font-weight: 400; font-size: 14px; letter-spacing: 0; color: var(--on-hi); background: var(--hi);
+  border: 0; border-radius: 0; clip-path: var(--chamfer); padding: 16px 26px 14px;
+  box-shadow: inset -4px -4px 0 var(--hi-deep), inset 4px 4px 0 var(--hi-light);
+}
+.btn:hover, .home-btn:hover, .home-btn:focus-visible { transform: translateY(-2px); filter: brightness(1.1); box-shadow: inset -4px -4px 0 var(--hi-deep), inset 4px 4px 0 var(--hi-light); }
+.btn kbd, .home-btn kbd { color: var(--on-hi); border-color: var(--on-hi); background: transparent; opacity: 0.75; }
+.btn.small { font-size: 11px; padding: 12px 18px 10px; }
+.btn.ghost { background: var(--raise); color: var(--hi); box-shadow: inset -4px -4px 0 var(--shade), inset 4px 4px 0 var(--raise-hi); }
+.btn.ghost kbd { color: var(--ink); border-color: var(--ink); }
+.btn.ghost b { font-family: var(--f-display); font-size: 10px; background: var(--hot); color: #fff; }
+
+/* tooltip */
+#tooltip { background: var(--panel-hi); border-left-width: 4px; box-shadow: 4px 4px 0 var(--shade); }
+#tooltip .tt-name { font-size: 10px; line-height: 1.5; }
+
+/* títulos de los overlays */
+.stripe-title { font-family: var(--f-display); font-size: 10px; letter-spacing: 0.1em; color: var(--hi2); }
+.stripe-title::before, .stripe-title::after { background: repeating-linear-gradient(90deg, var(--hi2) 0 6px, transparent 6px 12px); height: 4px; opacity: 1; }
+.perk-title, .big-title { font-weight: 400; font-size: 40px; line-height: 1.3; text-shadow: 4px 4px 0 var(--hot); }
+.perk-title span { color: var(--hi); }
+.perk-sub { font-size: 15px; letter-spacing: 0.12em; max-width: 640px; line-height: 1.3; }
+.stripe-title.danger::before, .stripe-title.danger::after { background: repeating-linear-gradient(90deg, var(--danger) 0 6px, transparent 6px 12px); }
+#perks.cursed .stripe-title::before, #perks.cursed .stripe-title::after { background: repeating-linear-gradient(90deg, var(--curse) 0 6px, transparent 6px 12px); }
+#perks.cursed .perk-title { text-shadow: 4px 4px 0 var(--shade); }
+#perks.hyper .perk-title { text-shadow: 4px 4px 0 var(--shade); }
+
+/* cartas: marco de 4 px del color de la rareza */
+.card { height: 372px; }
+.card-face { clip-path: var(--chamfer); }
+.card-front { background: var(--panel); box-shadow: inset 0 0 0 4px var(--c), inset 0 0 0 8px var(--paper), inset 0 -14px 0 var(--shade); }
+#perks.cursed .card-front { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--curse) 14%, transparent) 0 4px, transparent 4px 12px), var(--panel); }
+.card-glow { display: none; }
+.card-band { background: var(--c); color: var(--paper); font-family: var(--f-display); font-size: 8px; letter-spacing: 0.06em; padding: 10px 12px 8px 14px; }
+.card-band kbd { color: var(--paper); border-color: var(--paper); background: transparent; }
+.card-icon { flex-shrink: 0; clip-path: var(--chamfer); background: var(--paper); filter: none; box-shadow: inset 0 0 0 4px var(--c); }
+.card-name { font-family: var(--f-display); font-size: 12px; line-height: 1.5; }
+.card-sep { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 8px); height: 2px; }
+.card-back { background: repeating-linear-gradient(45deg, var(--raise) 0 4px, transparent 4px 12px), var(--panel); box-shadow: inset 0 0 0 4px var(--hi); }
+.card-back span { color: var(--hi); font-size: 56px; }
+.fx li { font-size: 15px; }
+.fx li b { color: #fff; }
+.fx li.pro b, .fx li.con b { text-shadow: none; }
+.fx li.pro::before { content: '+'; font-family: var(--f-display); font-size: 9px; }
+.fx li.con::before { content: '-'; font-family: var(--f-display); font-size: 9px; }
+.pip { transform: none; border-width: 2px; }
+
+/* pausa y fin de partida */
+.build-row { border-left-width: 4px; }
+.build-row .b-name { font-family: var(--f-display); font-size: 9px; line-height: 1.5; }
+.final-score { font-weight: 400; font-size: 36px; line-height: 1.4; color: var(--hi); }
+.over-best.record { font-family: var(--f-display); font-size: 12px; }
+.over-stats div::before { background: var(--ink); }
+.over-stats div::after { inset: 3px; }
+.over-stats b { font-family: var(--f-display); font-size: 14px; line-height: 1.8; }
+
+/* controles táctiles */
+@media (pointer: coarse) {
+  .touch-pad { background: var(--shade); box-shadow: 0 -4px 0 var(--raise); }
+  .touch-pad button {
+    font: 400 14px var(--f-display); color: var(--ink); background: var(--raise); border: 0; border-radius: 0;
+    clip-path: var(--chamfer); box-shadow: inset -4px -4px 0 var(--shade), inset 4px 4px 0 var(--raise-hi);
+  }
+  .touch-pad button:active { background: var(--panel-hi); transform: translateY(2px); box-shadow: inset 4px 4px 0 var(--shade); }
+  .touch-pad button[data-touch='hyper'].ready { color: var(--paper); background: var(--hyper); box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.3), inset 4px 4px 0 rgba(255, 255, 255, 0.35); }
+}
+
+/* portada */
+.home-title { font-size: clamp(30px, 8vw, 64px); line-height: 1.2; color: var(--hi); text-shadow: 6px 6px 0 var(--hot), 12px 12px 0 var(--raise); margin: 18px 0 26px; }
+.home-kicker { font-family: var(--f-display); font-size: 10px; letter-spacing: 0.2em; color: var(--hi2); }
+.home-lead { font-size: 18px; }
+.home-card, .mode-opt { background: var(--panel); border: 0; clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); }
+.home-card h2 { font-size: 13px; letter-spacing: 0; color: var(--hi); }
+.home-ranking { border-style: none; }
+.mode-opt b { font-size: 11px; font-weight: 400; line-height: 1.6; }
+.mode-opt span { font-size: 14px; }
+.mode-opt:hover { transform: none; box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); }
+.mode-opt:has(input:checked) { background: var(--raise); box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); }
+.mode-opt:has(input:checked) b { color: var(--hi); }
+.mode-opt:has(input:checked) small em { color: var(--ink); }
+.mode-opt:has(input:checked) span, .mode-opt:has(input:checked) small { color: var(--muted); }
+.home kbd { border-radius: 0; background: var(--raise); color: var(--ink); border: 2px solid var(--ink); font-family: var(--f-ui); }
+.home-btn kbd { background: transparent; color: var(--on-hi); border-color: var(--on-hi); }
+.home-soon { font-size: 14px; color: var(--hot); }

@@ -4,7 +4,6 @@ import { HYPER_LEVEL, type HyperDef } from '../core/hypers';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
-import { skinOf } from '../fx/skins';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { loadBest, submitScore } from '../records';
@@ -303,10 +302,9 @@ export class UI {
 
   // ───────────── HUD ─────────────
 
-  /** Color del nivel; en las pieles oscuras, aclarado para que se lea. */
+  /** Color del nivel: los acentos ya están pensados para fondo oscuro. */
   private levelColor(level: number): string {
-    const c = hex(accentFor(level));
-    return skinOf(this.game.mods.skin).dark ? `color-mix(in srgb, ${c} 55%, white)` : c;
+    return hex(accentFor(level));
   }
 
   /** Panel de la hiperperk: sin elegir, cargando, lista o activa. */
@@ -337,7 +335,7 @@ export class UI {
   }
 
   update(dt: number) {
-    const skin = this.game.mods.skin ?? 'papel';
+    const skin = this.game.mods.skin ?? 'pixel';
     if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
     const g = this.game;
 
