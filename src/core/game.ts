@@ -82,7 +82,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
 export type ReplayAction =

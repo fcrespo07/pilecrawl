@@ -4,16 +4,14 @@ import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, ty
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
-  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W,
+  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W, hex,
 } from './layout';
 import { Particles } from './particles';
+import { skinOf, SKINS, type Skin, type SkinId } from './skins';
 
 // paleta de papel y tinta (igual que los tokens de style.css)
 // oro oscuro para textos flotantes: el GOLD_COLOR de las piezas no se lee sobre el papel
 const GOLD_ON_PAPER = 0x8a6d00;
-const INK = 0x1b1a17;
-const PAPER = 0xf3ecdc;
-const PAPER_PANEL = 0xfbf6ea;
 
 /** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
 const REDUCED_MOTION =
@@ -135,11 +133,11 @@ function makeTrailTexture(): Texture {
   });
 }
 
-function makeBackground(): Texture {
+function makeBackground(skin: Skin): Texture {
   return canvasTex(W / 4, H / 4, (c) => {
     const g = c.createLinearGradient(0, 0, 0, H / 4);
-    g.addColorStop(0, '#e9e1cc');
-    g.addColorStop(1, '#e2d8bf');
+    g.addColorStop(0, hex(skin.bg0));
+    g.addColorStop(1, hex(skin.bg1));
     c.fillStyle = g;
     c.fillRect(0, 0, W / 4, H / 4);
   });
@@ -223,6 +221,9 @@ export class Renderer {
   private snapPiece = true;
   private overT = 0;
   private dangerAmt = 0;
+  private skinId: SkinId = 'papel';
+  private skin: Skin = SKINS.papel;
+  private bgSprite!: Sprite;
   private panelKey = '';
   private labels: Text[] = [];
 
@@ -290,23 +291,48 @@ export class Renderer {
   // ───────────── construcción ─────────────
 
   private buildBackground() {
-    const bgSprite = new Sprite(makeBackground());
-    bgSprite.width = W;
-    bgSprite.height = H;
-    this.bg.addChild(bgSprite);
+    this.bgSprite = new Sprite(makeBackground(this.skin));
+    this.bgSprite.width = W;
+    this.bgSprite.height = H;
+    this.bg.addChild(this.bgSprite);
+  }
+
+  /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve al papel). */
+  private updateSkin() {
+    const id = this.game.mods.skin ?? 'papel';
+    if (id === this.skinId) return;
+    this.skinId = id;
+    this.skin = skinOf(id);
+    const old = this.bgSprite.texture;
+    this.bgSprite.texture = makeBackground(this.skin);
+    old.destroy(true);
+    this.app.renderer.background.color = this.skin.bg0;
+    this.drawBoardBg();
+    this.panelKey = '';
+    this.accentTarget = this.tone(accentFor(this.game.level));
+  }
+
+  /** En las pieles oscuras, los colores pensados para papel se aclaran para que se lean. */
+  tone(c: number): number {
+    return this.skin.dark ? lerpColor(c, 0xffffff, 0.45) : c;
+  }
+
+  /** Color de una pieza: con Terminal, todas del color de la tinta. */
+  private pieceColor(c: number): number {
+    return this.game.mods.monochrome ? this.skin.ink : c;
   }
 
   private drawBoardBg() {
     const g = this.boardBg;
     g.clear();
-    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: PAPER_PANEL, alpha: 1 });
+    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: this.skin.panel, alpha: 1 });
     for (let x = 1; x < COLS; x++) {
       g.moveTo(BOARD_X + x * CELL, BOARD_Y).lineTo(BOARD_X + x * CELL, BOARD_Y + BOARD_H);
     }
     for (let y = 1; y < VISIBLE; y++) {
       g.moveTo(BOARD_X, BOARD_Y + y * CELL).lineTo(BOARD_X + BOARD_W, BOARD_Y + y * CELL);
     }
-    g.stroke({ width: 1, color: INK, alpha: 0.12 });
+    g.stroke({ width: 1, color: this.skin.ink, alpha: 0.12 });
   }
 
   private setupFilters() {
@@ -342,7 +368,7 @@ export class Renderer {
     for (const s of this.shocks) s.f.enabled = false;
     this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
-    this.accentTarget = accentFor(1);
+    this.accentTarget = this.tone(accentFor(1));
     this.snapPiece = true;
   }
 
@@ -369,13 +395,13 @@ export class Renderer {
     s.f.enabled = true;
   }
 
-  flash(color = INK, alpha = 0.35) {
+  flash(color = this.skin.ink, alpha = 0.35) {
     this.screenFlash.tint = color;
     this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha * (REDUCED_MOTION ? 0.2 : 0.4));
   }
 
   floatText(str: string, x: number, y: number, o: { color?: number; size?: number; life?: number; vy?: number; delay?: number; font?: string } = {}) {
-    const color = o.color ?? INK;
+    const color = o.color === undefined ? this.skin.ink : this.tone(o.color);
     const t = new Text({
       text: str,
       style: {
@@ -383,7 +409,7 @@ export class Renderer {
         fontWeight: 'normal',
         fontSize: (o.size ?? 28) * 0.9,
         fill: color,
-        stroke: { color: PAPER, width: Math.max(3, (o.size ?? 28) / 7) },
+        stroke: { color: this.skin.paper, width: Math.max(3, (o.size ?? 28) / 7) },
         letterSpacing: 1,
         align: 'center',
       },
@@ -432,7 +458,7 @@ export class Renderer {
     });
 
     ev.on('lock', ({ cells }) => {
-      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: INK, life: 0.16, max: 0.16 });
+      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: this.skin.ink, life: 0.16, max: 0.16 });
     });
 
     ev.on('clear', (c) => {
@@ -444,7 +470,7 @@ export class Renderer {
       const big = c.lines >= 4 || c.spin !== null || c.perfect;
 
       c.rows.forEach((row, ri) => {
-        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: INK, life: 0.35, max: 0.35 });
+        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: this.skin.ink, life: 0.35, max: 0.35 });
         c.rowValues[ri].forEach((v, x) => {
           const color = isGold(v) ? GOLD_COLOR : colorOfId(cellType(v));
           this.particles.emit({
@@ -460,7 +486,7 @@ export class Renderer {
       let label = c.lines >= 4 ? 'CUÁDRUPLE' : lineNames[c.lines];
       if (c.spin) label = `${c.spinName}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
       if (c.cascade > 0) label = `CADENA ×${c.cascade + 1}`;
-      const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : INK;
+      const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : this.skin.ink;
       if (c.lines >= 2 || c.spin || c.cascade) this.floatText(label, cxMid, cyMid - 10, { color, size: big ? 40 : 28, life: 1.4 });
       if (c.b2b) this.floatText('BACK-TO-BACK', cxMid, cyMid - 52, { color: 0xb06a14, size: 18, life: 1.4 });
       let below = cyMid + (big ? 38 : 30);
@@ -468,13 +494,13 @@ export class Renderer {
         this.floatText(`COMBO ×${c.combo}`, cxMid, below, { color: 0x4c7d1c, size: 20 + Math.min(c.combo, 10) * 1.5, life: 1.2 });
         below += 32;
       }
-      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: INK, size: 16, life: 1.1, vy: -30 });
+      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: this.skin.ink, size: 16, life: 1.1, vy: -30 });
       below += 28;
       if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_ON_PAPER, size: 18, life: 1.3, vy: -30 });
 
       if (c.perfect) {
-        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: INK, size: 46, life: 2.2, vy: -10 });
-        this.flash(INK, 0.3);
+        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: this.skin.ink, size: 46, life: 2.2, vy: -10 });
+        this.flash(this.skin.ink, 0.3);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
       }
 
@@ -516,7 +542,7 @@ export class Renderer {
       });
       const [x, y] = cells[0];
       this.shockwave(this.cx(x), this.cy(y), { amplitude: 14, wavelength: 150, speed: 500 });
-      this.flash(INK, 0.3);
+      this.flash(this.skin.ink, 0.3);
       this.shake(0.4);
       this.floatText(`PRISMA ×${removed.length}`, this.cx(x), this.cy(y) - 30, { color: 0xb8336a, size: 30 });
       this.floatText(`+${points.toLocaleString('es-ES')}`, this.cx(x), this.cy(y) + 10, { size: 16, vy: -70 });
@@ -552,7 +578,7 @@ export class Renderer {
     });
 
     ev.on('levelup', ({ level }) => {
-      this.accentTarget = accentFor(level);
+      this.accentTarget = this.tone(accentFor(level));
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
       this.flash(accentFor(level), 0.15);
@@ -584,7 +610,7 @@ export class Renderer {
     });
 
     ev.on('revive', () => {
-      this.flash(INK, 0.5);
+      this.flash(this.skin.ink, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
       this.floatText(this.game.mods.phoenix ? '¡FÉNIX!' : '¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
@@ -596,7 +622,7 @@ export class Renderer {
     });
 
     ev.on('perk', ({ perk }) => {
-      this.flash(INK, 0.25);
+      this.flash(this.skin.ink, 0.25);
       this.floatText(perk.name.toUpperCase(), BOARD_X + BOARD_W / 2, BOARD_Y + 160, { color: this.accent, size: 26, life: 1.4 });
     });
   }
@@ -608,6 +634,7 @@ export class Renderer {
     this.time += sec;
     const g = this.game;
 
+    this.updateSkin();
     this.accent = lerpColor(this.accent, this.accentTarget, 1 - Math.exp(-sec * 3));
 
     this.updateBackground(sec);
@@ -667,6 +694,7 @@ export class Renderer {
     x = sep + 22;
     for (let i = 0; i < g.mods.preview; i++) {
       const s = i === 0 ? 64 : 48;
+      if (x + s > QUEUE_X + QUEUE_W - 10) break; // con muchas piezas en la cola, las que no caben no se dibujan
       next.push({ x, y: top + (64 - s) / 2, s });
       x += s + 8;
     }
@@ -675,7 +703,7 @@ export class Renderer {
 
   private updatePanels() {
     const g = this.game;
-    const key = `${g.mods.holdSlots}|${g.mods.preview}|${this.accent}`;
+    const key = `${g.mods.holdSlots}|${g.mods.preview}|${this.accent}|${this.skinId}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
     const { hold, next, sep } = this.queueSlots();
@@ -684,13 +712,13 @@ export class Renderer {
     const c = 10; // esquina cortada, igual que los paneles del HUD
     const x = QUEUE_X, y = QUEUE_Y, w = QUEUE_W, h = QUEUE_H;
     const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
-    p.poly(shape).fill({ color: PAPER_PANEL, alpha: 1 });
-    p.poly(shape).stroke({ width: 2, color: INK, alpha: 1 });
+    p.poly(shape).fill({ color: this.skin.panel, alpha: 1 });
+    p.poly(shape).stroke({ width: 2, color: this.skin.ink, alpha: 1 });
     // separador entre reserva y cola
-    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: INK, alpha: 0.3 });
-    for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: INK, alpha: 0.35 });
+    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: this.skin.ink, alpha: 0.3 });
+    for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: this.skin.ink, alpha: 0.35 });
     next.forEach((sl, i) => {
-      p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : INK, alpha: i === 0 ? 1 : 0.35 });
+      p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : this.skin.ink, alpha: i === 0 ? 1 : 0.35 });
     });
     // flecha: la primera de la cola es la que entra
     const ax = next[0].x - 14, ay = next[0].y + next[0].s / 2;
@@ -700,7 +728,7 @@ export class Renderer {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: INK, letterSpacing: 3 },
+          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: 0xffffff, letterSpacing: 3 },
           resolution: 2,
         });
         t.anchor.set(0, 0.5);
@@ -711,14 +739,15 @@ export class Renderer {
     }
     this.labels[0].x = hold[0].x;
     this.labels[1].x = next[0].x;
-    for (const t of this.labels) t.tint = this.accent;
+    // en papel, casi tinta (como siempre); en las pieles oscuras, el acento aclarado
+    for (const t of this.labels) t.tint = this.skin.dark ? this.accent : lerpColor(this.skin.ink, this.accent, 0.12);
   }
 
   private drawFrame() {
     const g = this.game;
     const f = this.frame;
     f.clear();
-    const dangerCol = lerpColor(INK, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
+    const dangerCol = lerpColor(this.skin.ink, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
     f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 1 });
     f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.4 });
 
@@ -731,7 +760,7 @@ export class Renderer {
     }
     // progreso de nivel (barra fina debajo del tablero)
     const lp = g.linesIntoLevel / g.linesNeeded();
-    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: INK, alpha: 0.15 });
+    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: this.skin.ink, alpha: 0.15 });
     f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W * lp, 4).fill({ color: this.accent, alpha: 1 });
   }
 
@@ -756,7 +785,7 @@ export class Renderer {
       for (let x = 0; x < COLS; x++) {
         const v = row[x];
         if (!v) continue;
-        let color = colorOfId(cellType(v));
+        let color = this.pieceColor(colorOfId(cellType(v)));
         if (isGold(v)) color = lerpColor(GOLD_COLOR, 0xffffff, 0.25 + 0.25 * Math.sin(this.time * 4 + x * 0.7 + y * 0.5));
         if (y >= grayRow) color = lerpColor(color, 0x30323c, 0.85);
         this.placeCell(this.cells, this.px(x), this.py(y), CELL, color);
@@ -768,7 +797,7 @@ export class Renderer {
     if (spec.bomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
     if (spec.prism) return hsv((this.time * 0.6 + i * 0.12) % 1, 0.75, 1);
     if (spec.gold) return lerpColor(GOLD_COLOR, 0xffffff, 0.2 + 0.2 * Math.sin(this.time * 5 + i));
-    return spec.def.color;
+    return this.pieceColor(spec.def.color);
   }
 
   private drawActive(sec: number) {
@@ -790,8 +819,8 @@ export class Renderer {
     }
 
     const shape = a.def.shapes[a.rot];
-    // ghost
-    const gy = g.ghostY();
+    // ghost (Apagón lo esconde)
+    const gy = g.mods.noGhost ? -99 : g.ghostY();
     shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;

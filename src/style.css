@@ -31,7 +31,34 @@
   --f-display: 'Fraunces', Georgia, serif;
   --f-ui: 'IBM Plex Mono', ui-monospace, monospace;
   --f-logo: 'Fraunces', Georgia, serif;
+  --veil-a: rgba(233, 225, 204, 0.8);
+  --veil-b: rgba(233, 225, 204, 0.97);
 }
+
+/* Pieles que ponen algunos perks (src/fx/skins.ts). Solo cambian colores; el lienzo de Pixi
+   lee los suyos de SKINS. Todas las de fondo oscuro aclaran los colores de rareza para que se lean. */
+body[data-skin='apagon'] {
+  --bg: #0c0d13; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
+  --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(12, 13, 19, 0.8); --veil-b: rgba(12, 13, 19, 0.96);
+}
+body[data-skin='terminal'] {
+  --bg: #020803; --panel: #0a1a0e; --panel-hi: #0f2414; --line: #6dff8e; --text: #6dff8e; --muted: #3fae5b;
+  --ink: #6dff8e; --paper: #0a1a0e; --accent: #6dff8e; --veil-a: rgba(2, 8, 3, 0.82); --veil-b: rgba(2, 8, 3, 0.96);
+}
+body[data-skin='neon'] {
+  --bg: #05030b; --panel: #120c22; --panel-hi: #1a1130; --line: #ff4dd2; --text: #f2e9ff; --muted: #a99bc4;
+  --ink: #f2e9ff; --paper: #120c22; --accent: #2ef2ff; --veil-a: rgba(5, 3, 11, 0.8); --veil-b: rgba(5, 3, 11, 0.96);
+}
+body[data-skin='plano'] {
+  --bg: #163f6d; --panel: #235b98; --panel-hi: #2a66a8; --line: #eaf2ff; --text: #eaf2ff; --muted: #b5cbe8;
+  --ink: #eaf2ff; --paper: #235b98; --veil-a: rgba(22, 63, 109, 0.8); --veil-b: rgba(22, 63, 109, 0.96);
+}
+body[data-skin='apagon'], body[data-skin='terminal'], body[data-skin='neon'], body[data-skin='plano'] {
+  --pro: #6fd39a; --con: #ff7a6b; --common: #b9b4a6; --rare: #79b4ea; --epic: #c79bea; --legendary: #f0c060; --danger: #ff7a6b;
+}
+body:is([data-skin='apagon'], [data-skin='terminal'], [data-skin='neon'], [data-skin='plano']) kbd { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.08); }
+kbd[hidden] { display: none; }
+body[data-skin='neon'] .panel, body[data-skin='neon'] .card-front { box-shadow: 0 0 14px rgba(255, 77, 210, 0.35); }
 
 * { box-sizing: border-box; }
 
@@ -279,7 +306,7 @@ kbd {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background: radial-gradient(ellipse at center, rgba(233, 225, 204, 0.8), rgba(233, 225, 204, 0.97) 75%);
+  background: radial-gradient(ellipse at center, var(--veil-a), var(--veil-b) 75%);
   backdrop-filter: blur(3px);
   opacity: 0;
   pointer-events: none;

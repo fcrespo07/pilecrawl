@@ -267,6 +267,8 @@ export class UI {
   // ───────────── HUD ─────────────
 
   update(dt: number) {
+    const skin = this.game.mods.skin ?? 'papel';
+    if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
     const g = this.game;
 
     if (this.perksOpen && this.choiceDelay > 0) {

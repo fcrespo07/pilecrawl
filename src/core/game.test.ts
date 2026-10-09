@@ -328,3 +328,29 @@ describe('perks nuevos', () => {
     expect(g.scoreMultNow()).toBeCloseTo(1.5);
   });
 });
+
+describe('perks con piel', () => {
+  it('cada perk con piel la pone y una partida nueva la quita', () => {
+    const g = playing();
+    for (const [id, skin] of [['blueprint', 'plano'], ['blackout', 'apagon'], ['terminal', 'terminal'], ['neon', 'neon']] as const) {
+      PERK_BY_ID[id].apply(g.mods, g);
+      expect(g.mods.skin).toBe(skin);
+    }
+    g.start(1);
+    expect(g.mods.skin).toBeNull();
+  });
+
+  it('la piel no cambia la partida: misma semilla y acciones, mismo resultado', () => {
+    const play = (skin: boolean) => {
+      const g = new Game();
+      g.start(7);
+      if (skin) g.mods.skin = 'neon';
+      for (let i = 0; i < 30 && g.state === 'playing'; i++) {
+        g.move(i % 3 - 1);
+        g.hardDrop();
+      }
+      return [g.score, g.lines, g.board.map((r) => r.join('')).join('|')];
+    };
+    expect(play(true)).toEqual(play(false));
+  });
+});

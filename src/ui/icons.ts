@@ -41,6 +41,10 @@ const PATHS: Record<string, string> = {
   anchor: `<circle cx="16" cy="6" r="2.5"/><path d="M16 8.5V28M10 13h12"/><path d="M5 19c0 5 5 9 11 9s11-4 11-9"/><path d="M3 21l2-3 3 2M29 21l-2-3-3 2"/>`,
   collector: `<rect x="4" y="4" width="10" height="10" rx="2"/><rect x="18" y="4" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="4" y="18" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="18" y="18" width="10" height="10" rx="2" stroke-dasharray="3 2.5"/>`,
   phoenix: `<path d="M16 29c-5-3-6-8-4-13-4 1-7-2-9-6 4 0 7 1 9 3 0-4 2-7 4-10 2 3 4 6 4 10 2-2 5-3 9-3-2 4-5 7-9 6 2 5 1 10-4 13z"/><path d="M16 15v10" stroke-opacity=".6"/>`,
+  blueprint: `<rect x="4" y="5" width="24" height="22" rx="1"/><path d="M4 11h24M10 5v22" stroke-opacity=".45"/><path d="M14 22l4-7 5 7z"/><circle cx="20" cy="11" r="1.4" fill="currentColor"/>`,
+  blackout: `<path d="M24 20.5A10 10 0 0 1 11.5 8 10 10 0 1 0 24 20.5z"/><path d="M22 5v4M20 7h4M27 11v3M25.5 12.5h3" stroke-opacity=".6"/>`,
+  terminal: `<rect x="3" y="5" width="26" height="19" rx="2"/><path d="M8 11l4 3-4 3M14 18h6"/><path d="M11 28h10M16 24v4"/>`,
+  neon: `<path d="M5 25V8l10 17V8"/><path d="M20 8h7M20 16.5h6M20 25h7M20 8v17"/><path d="M5 25V8l10 17V8M20 8v17" stroke-opacity=".3" stroke-width="5"/>`,
   prism: `<path d="M15 5l10 18H5z"/><path d="M1 17.5l9.5-2"/><path d="M20 13.5l11-5M21.2 15.7H31M20.5 18l10.5 4.5" stroke-opacity=".75"/>`,
 };
 
