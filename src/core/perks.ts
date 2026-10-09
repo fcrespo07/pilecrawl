@@ -284,8 +284,14 @@ export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
   return bestLevel >= UNLOCK_LEVEL[p.rarity];
 }
 
-/** Saca `n` perks distintos ponderados por rareza (y suerte). `bestLevel` filtra por desbloqueos. */
-export function rollPerks(owned: Map<string, number>, luck: number, n = 3, bestLevel = Infinity): PerkDef[] {
+/** Saca `n` perks distintos ponderados por rareza (y suerte). `bestLevel` filtra por desbloqueos; `rand` permite usar una semilla. */
+export function rollPerks(
+  owned: Map<string, number>,
+  luck: number,
+  n = 3,
+  bestLevel = Infinity,
+  rand: () => number = Math.random,
+): PerkDef[] {
   const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
   const weight = (p: PerkDef) => {
     const base = RARITY_WEIGHT[p.rarity];
@@ -295,7 +301,7 @@ export function rollPerks(owned: Map<string, number>, luck: number, n = 3, bestL
   const picks: PerkDef[] = [];
   while (picks.length < n && pool.length) {
     const total = pool.reduce((s, p) => s + weight(p), 0);
-    let r = Math.random() * total;
+    let r = rand() * total;
     let idx = 0;
     for (; idx < pool.length - 1; idx++) {
       r -= weight(pool[idx]);

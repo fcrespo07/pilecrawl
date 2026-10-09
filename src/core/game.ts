@@ -1,6 +1,7 @@
 import { Emitter } from './emitter';
 import { baseMods, PERK_BY_ID, rollPerks, type Mods, type PerkDef } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
+import { makeRng, randomSeed, type Rng } from './rng';
 
 // Tablero propio de 11×18 visibles (no el 10×20 clásico del género)
 export const COLS = 11;
@@ -68,6 +69,35 @@ export interface GameEvents {
   perk: { perk: PerkDef; stacks: number };
 }
 
+/**
+ * Paso fijo de la simulación (ms). `main.ts` acumula el tiempo real y llama a `step()`
+ * tantas veces como toque, así la partida no depende de los fotogramas y se puede rejugar.
+ */
+export const STEP_MS = 1000 / 120;
+
+/** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
+export const RULES_VERSION = 1;
+
+/** Acción del jugador grabada con el paso de simulación en que ocurrió. */
+export type ReplayAction =
+  | [step: number, op: 'move', dx: number]
+  | [step: number, op: 'rotate', dir: 1 | -1 | 2]
+  | [step: number, op: 'drop']
+  | [step: number, op: 'hold']
+  | [step: number, op: 'soft', on: 0 | 1]
+  | [step: number, op: 'pick', index: number]
+  | [step: number, op: 'reroll'];
+
+/** Todo lo necesario para volver a jugar una partida idéntica (ver `replay.ts`). */
+export interface Replay {
+  version: number;
+  seed: number;
+  bestLevel: number;
+  actions: ReplayAction[];
+  /** Pasos simulados al terminar la partida. */
+  steps: number;
+}
+
 const LINE_SCORES = [0, 100, 300, 500, 800];
 const SPIN_SCORES = [400, 800, 1200, 1600];
 const MINI_SCORES = [100, 200, 400, 600];
@@ -105,7 +135,17 @@ export class Game {
   /** Mejor nivel de partidas anteriores: decide qué rarezas pueden salir. */
   bestLevel = Infinity;
 
-  softDropping = false;
+  /** Semilla de la partida: con ella y las acciones grabadas se reproduce entera. */
+  seed = 0;
+  /** Pasos de simulación ejecutados (solo avanzan jugando, no en pausa ni eligiendo perk). */
+  steps = 0;
+  /** Acciones del jugador en esta partida. */
+  actions: ReplayAction[] = [];
+  /** Azar de la cola, el oro y la basura. */
+  private rng: Rng = makeRng(0);
+  /** Azar de las cartas, aparte para que elegir o descartar no cambie las piezas que vienen. */
+  private perkRng: Rng = makeRng(0);
+  private soft = false;
   private gravityAcc = 0;
   private lockTimer = 0;
   private lockResets = 0;
@@ -144,10 +184,20 @@ export class Game {
     this.perkOrder = [];
     this.choices = [];
     this.pendingLevelUps = 0;
+    this.steps = 0;
+    this.actions = [];
+    this.soft = false;
+    this.gravityAcc = 0;
+    this.lockTimer = 0;
   }
 
-  start() {
+  /** Empieza una partida. Sin semilla se elige una al azar. */
+  start(seed = randomSeed()) {
     this.reset();
+    this.seed = seed >>> 0;
+    this.rng = makeRng(this.seed);
+    this.perkRng = makeRng((this.seed ^ 0x9e3779b9) >>> 0);
+    this.lastHole = Math.floor(this.rng() * COLS);
     this.state = 'playing';
     this.fillQueue();
     this.spawn();
@@ -160,9 +210,9 @@ export class Game {
       // con la cruz, la T sale sustituida por la X: la bolsa no crece
       const bag = this.mods.crossSwap ? STANDARD.filter((k) => k !== 'T') : [...STANDARD];
       if (this.mods.crossSwap) bag.push('X5');
-      for (const k of this.mods.extraPieces) bag.push(k === 'SZ' ? (Math.random() < 0.5 ? 'S' : 'Z') : k);
+      for (const k of this.mods.extraPieces) bag.push(k === 'SZ' ? (this.rng() < 0.5 ? 'S' : 'Z') : k);
       for (let i = bag.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(this.rng() * (i + 1));
         [bag[i], bag[j]] = [bag[j], bag[i]];
       }
       for (const k of bag) this.queue.push(this.makeSpec(PIECES[k]));
@@ -174,7 +224,7 @@ export class Game {
     const m = this.mods;
     const bomb = m.bombEvery > 0 && this.generated % m.bombEvery === 0;
     const prism = !bomb && m.prismEvery > 0 && this.generated % m.prismEvery === 0;
-    const gold = !bomb && !prism && Math.random() < m.goldChance;
+    const gold = !bomb && !prism && this.rng() < m.goldChance;
     return { def, bomb, prism, gold };
   }
 
@@ -248,6 +298,7 @@ export class Game {
 
   move(dx: number): boolean {
     if (this.state !== 'playing' || !this.active) return false;
+    this.record([this.steps, 'move', dx]);
     const a = this.active;
     if (this.collides(a.def, a.x + dx, a.y, a.rot)) return false;
     a.x += dx;
@@ -259,6 +310,7 @@ export class Game {
 
   rotate(dir: 1 | -1 | 2): boolean {
     if (this.state !== 'playing' || !this.active) return false;
+    this.record([this.steps, 'rotate', dir]);
     const a = this.active;
     if (a.def.kicks === 'O') return false;
     const to = (a.rot + dir + 4) % 4;
@@ -293,6 +345,7 @@ export class Game {
 
   hardDrop() {
     if (this.state !== 'playing' || !this.active) return;
+    this.record([this.steps, 'drop']);
     const a = this.active;
     const from = this.cellsOf(a);
     let dist = 0;
@@ -309,6 +362,7 @@ export class Game {
   holdPiece() {
     if (this.state !== 'playing' || !this.active) return;
     if (this.holdUsed && !this.mods.infiniteHold) return;
+    this.record([this.steps, 'hold']);
     const a = this.active;
     const spec: PieceSpec = { def: a.def, bomb: a.bomb, prism: a.prism, gold: a.gold };
     let next: PieceSpec | undefined;
@@ -337,7 +391,9 @@ export class Game {
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     t /= speed;
-    return Math.max(t, 1);
+    // redondeado a microsegundos: Math.pow puede variar en el último bit entre motores de JS,
+    // y una repetición tiene que dar lo mismo en el navegador y en el servidor
+    return Math.max(Math.round(t * 1000) / 1000, 1);
   }
 
   stackHeight(): number {
@@ -347,6 +403,35 @@ export class Game {
 
   inDanger(): boolean {
     return this.stackHeight() >= VISIBLE * 0.7;
+  }
+
+  /** La caída rápida es parte de la partida: se graba cada vez que cambia. */
+  get softDropping(): boolean {
+    return this.soft;
+  }
+
+  set softDropping(on: boolean) {
+    if (on === this.soft) return;
+    this.soft = on;
+    this.record([this.steps, 'soft', on ? 1 : 0]);
+  }
+
+  private record(a: ReplayAction) {
+    this.actions.push(a);
+  }
+
+  /** Un paso fijo de simulación. Es lo único que debe hacer avanzar el tiempo de la partida. */
+  step() {
+    if (this.state !== 'playing' || !this.active) return;
+    this.steps++;
+    this.update(STEP_MS);
+  }
+
+  /** Datos para rejugar la partida en el servidor o en un reproductor. */
+  replay(): Replay {
+    // Infinity no sobrevive a JSON (sale null): cualquier nivel alto desbloquea lo mismo
+    const bestLevel = Math.min(this.bestLevel, 9999);
+    return { version: RULES_VERSION, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps };
   }
 
   update(dt: number) {
@@ -670,12 +755,12 @@ export class Game {
     return this.garbageCounter / this.garbageInterval();
   }
 
-  private lastHole = Math.floor(Math.random() * COLS);
+  private lastHole = 0;
   /** Sube el tablero una fila. Devuelve false si la partida termina. */
   private addGarbage(): boolean {
     // si hay bloques en la fila de arriba, subir el tablero los empujaría fuera
     if (this.board[0].some((v) => v !== 0) && !this.topOut()) return false;
-    const hole = Math.random() < 0.7 ? this.lastHole : Math.floor(Math.random() * COLS);
+    const hole = this.rng() < 0.7 ? this.lastHole : Math.floor(this.rng() * COLS);
     this.lastHole = hole;
     this.board.shift();
     const row = new Array(COLS).fill(GARBAGE_ID);
@@ -726,13 +811,14 @@ export class Game {
 
   private beginChoice() {
     this.state = 'choosing';
-    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
+    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
   }
 
   reroll(): boolean {
     if (this.state !== 'choosing' || this.rerolls <= 0) return false;
     this.rerolls--;
-    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
+    this.record([this.steps, 'reroll']);
+    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
     return true;
   }
 
@@ -740,6 +826,7 @@ export class Game {
     if (this.state !== 'choosing') return;
     const perk = this.choices[index];
     if (!perk) return;
+    this.record([this.steps, 'pick', index]);
     const stacks = (this.perks.get(perk.id) ?? 0) + 1;
     this.perks.set(perk.id, stacks);
     if (!this.perkOrder.includes(perk.id)) this.perkOrder.push(perk.id);
@@ -748,7 +835,7 @@ export class Game {
     this.events.emit('perk', { perk, stacks });
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
-      this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
+      this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
       return;
     }
     this.choices = [];
