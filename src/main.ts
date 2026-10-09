@@ -1,7 +1,7 @@
 import './fonts.css';
 import './style.css';
 import './storage';
-import { Game } from './core/game';
+import { Game, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
@@ -37,6 +37,7 @@ function layout() {
 }
 
 let hitstop = 0;
+let stepAcc = 0;
 
 function wireAudioAndFeel() {
   const ev = game.events;
@@ -103,6 +104,7 @@ function startRun() {
   audio.startMusic();
   input.releaseAll();
   hitstop = 0;
+  stepAcc = 0;
   renderer.reset();
   game.bestLevel = loadMeta().bestLevel;
   game.start();
@@ -189,7 +191,14 @@ async function boot() {
     }
     input.update(dt);
     if (hitstop > 0) hitstop -= dt;
-    else game.update(dt);
+    else {
+      // la partida avanza a paso fijo para que se pueda rejugar igual en cualquier equipo
+      stepAcc += dt;
+      while (stepAcc >= STEP_MS) {
+        stepAcc -= STEP_MS;
+        game.step();
+      }
+    }
     renderer.render(dt);
     ui.update(dt);
   });
