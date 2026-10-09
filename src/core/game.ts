@@ -67,6 +67,9 @@ export interface GameEvents {
   garbageWarn: { progress: number };
   levelup: { level: number };
   interest: { amount: number };
+  breather: { rows: number[][] };
+  lifeline: void;
+  harvest: { rerolls: number };
   revive: { livesLeft: number };
   gameover: { reason: EndReason };
   perk: { perk: PerkDef; stacks: number };
@@ -79,7 +82,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 1;
+export const RULES_VERSION = 2;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
 export type ReplayAction =
@@ -150,6 +153,11 @@ export class Game {
   time = 0;
   maxCombo = 0;
   quads = 0;
+  /** Bonus acumulado de Fénix (+0,25 por cada vez que revives). */
+  phoenixBonus = 0;
+  private harvestLines = 0;
+  private lifelineReadyAt = 0;
+  private pieceStart = 0;
 
   mods: Mods = baseMods();
   perks = new Map<string, number>();
@@ -205,6 +213,10 @@ export class Game {
     this.time = 0;
     this.maxCombo = 0;
     this.quads = 0;
+    this.phoenixBonus = 0;
+    this.harvestLines = 0;
+    this.lifelineReadyAt = 0;
+    this.pieceStart = 0;
     this.mods = baseMods();
     this.perks.clear();
     this.perkOrder = [];
@@ -291,8 +303,14 @@ export class Game {
   }
 
   private spawn(spec?: PieceSpec): boolean {
-    const s = spec ?? this.queue.shift()!;
+    let s = spec ?? this.queue.shift()!;
     this.fillQueue();
+    // Salvavidas: con el montón alto, la pieza que toca se cambia por una I (no afecta a la reserva)
+    if (!spec && this.mods.lifeline && s.def.name !== 'I' && this.inDanger(0.7) && this.piecesLocked >= this.lifelineReadyAt) {
+      s = { ...s, def: PIECES.I };
+      this.lifelineReadyAt = this.piecesLocked + 12;
+      this.events.emit('lifeline', undefined);
+    }
     const def = s.def;
     const x = Math.floor((COLS - def.size) / 2);
     // aparece en la primera fila visible si cabe, si no un poco más arriba
@@ -315,6 +333,7 @@ export class Game {
     this.lowestY = this.active.y;
     this.lastWasRotate = false;
     this.holdUsed = false;
+    this.pieceStart = this.time;
     this.events.emit('spawn', undefined);
     return true;
   }
@@ -432,8 +451,8 @@ export class Game {
     return 0;
   }
 
-  inDanger(): boolean {
-    return this.stackHeight() >= VISIBLE * 0.7;
+  inDanger(ratio = 0.7): boolean {
+    return this.stackHeight() >= VISIBLE * ratio;
   }
 
   /** La caída rápida es parte de la partida: se graba cada vez que cambia. */
@@ -540,8 +559,19 @@ export class Game {
     return this.board[y][x] !== 0;
   }
 
+  /** Multiplicador total: el fijo de los perks y los que dependen del estado de la partida. */
+  scoreMultNow(): number {
+    const m = this.mods;
+    let mult = m.scoreMult;
+    if (m.savings > 0) mult *= 1 + m.savings * Math.min(this.rerolls, 5);
+    if (m.vertigo > 0 && this.inDanger(0.5)) mult *= 1 + m.vertigo;
+    if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.length;
+    if (this.phoenixBonus > 0) mult *= 1 + this.phoenixBonus;
+    return mult;
+  }
+
   private addScore(base: number, useMult = true): number {
-    const pts = Math.round(useMult ? base * this.mods.scoreMult : base);
+    const pts = Math.round(useMult ? base * this.scoreMultNow() : base);
     this.score += pts;
     return pts;
   }
@@ -552,6 +582,9 @@ export class Game {
     const spin = this.detectSpin();
     this.active = null;
     this.piecesLocked++;
+    if (this.mods.reflexPoints > 0 && this.time - this.pieceStart < 1500) {
+      this.addScore(this.mods.reflexPoints * this.level);
+    }
 
     if (a.bomb) {
       this.explode(cells);
@@ -604,6 +637,7 @@ export class Game {
 
     const rowValues = rows.map((y) => [...this.board[y]]);
     const gold = rowValues.flat().filter(isGold).length;
+    const garbageRows = rowValues.filter((r) => r.some((v) => cellType(v) === GARBAGE_ID)).length;
 
     let base: number;
     if (spin === 'full') base = SPIN_SCORES[Math.min(lines, 3)];
@@ -639,14 +673,15 @@ export class Game {
     let total = base;
     if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;
     total += gold * 300 * lvl;
+    total += garbageRows * 200 * this.mods.recycle * lvl;
 
     this.removeRows(rows);
     const perfect = this.board.every((r) => r.every((v) => v === 0));
     if (perfect) total += 3500 * lvl;
 
     const points = this.addScore(total);
-    this.lines += lines;
-    let counted = lines;
+    this.addLines(lines);
+    let counted = lines + garbageRows * this.mods.recycle;
     if (lines >= 4 || spin) counted += this.mods.expBonus;
     this.addLevelProgress(counted);
 
@@ -766,14 +801,16 @@ export class Game {
       if (bottom.some((v) => v !== 0)) {
         const values = [...bottom];
         this.removeRows([ROWS - 1]);
-        this.lines++;
+        this.addLines(1);
         const points = this.addScore(150 * this.level);
         this.addLevelProgress(1);
         this.events.emit('drill', { values, points });
       }
     }
 
-    if (this.level >= 4) {
+    // Ancla: con un combo de dos o más piezas seguidas, la basura no avanza
+    const anchored = m.anchor && this.combo >= 1;
+    if (this.level >= 4 && !anchored) {
       this.garbageCounter++;
       const interval = this.garbageInterval();
       this.events.emit('garbageWarn', { progress: this.garbageCounter / interval });
@@ -784,10 +821,41 @@ export class Game {
     }
 
     if (this.pendingLevelUps > 0) {
+      if (m.levelClearRows > 0) this.breathe(m.levelClearRows * this.pendingLevelUps);
       this.beginChoice();
       return;
     }
     this.spawn();
+  }
+
+  /** Respiro: borra las `n` filas de abajo que tengan bloques. No puntúa ni cuenta como línea. */
+  private breathe(n: number) {
+    const rows: number[] = [];
+    for (let y = ROWS - 1; y >= 0 && rows.length < n; y--) {
+      if (this.board[y].some((v) => v !== 0)) rows.push(y);
+      else break;
+    }
+    if (rows.length === 0) return;
+    const values = rows.map((y) => [...this.board[y]]);
+    this.removeRows(rows);
+    this.events.emit('breather', { rows: values });
+  }
+
+  /** Suma líneas al total y, con Cosecha, da un reroll cada cierto número. */
+  private addLines(n: number) {
+    this.lines += n;
+    const every = this.mods.harvestEvery;
+    if (every <= 0) return;
+    this.harvestLines += n;
+    let gained = 0;
+    while (this.harvestLines >= every) {
+      this.harvestLines -= every;
+      gained++;
+    }
+    if (gained > 0) {
+      this.rerolls += gained;
+      this.events.emit('harvest', { rerolls: gained });
+    }
   }
 
   garbageInterval(): number {
@@ -818,8 +886,10 @@ export class Game {
   private topOut(): boolean {
     if (this.lives > 0) {
       this.lives--;
-      // deja sólo las 5 filas de abajo
-      for (let y = 0; y < ROWS - 5; y++) this.board[y].fill(0);
+      // deja sólo las 5 filas de abajo; con Fénix, nada
+      const keep = this.mods.phoenix ? 0 : 5;
+      for (let y = 0; y < ROWS - keep; y++) this.board[y].fill(0);
+      if (this.mods.phoenix) this.phoenixBonus += 0.25;
       this.combo = -1;
       this.events.emit('revive', { livesLeft: this.lives });
       return true;
@@ -862,14 +932,14 @@ export class Game {
 
   private beginChoice() {
     this.state = 'choosing';
-    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
+    this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
   }
 
   reroll(): boolean {
     if (this.state !== 'choosing' || this.rerolls <= 0) return false;
     this.rerolls--;
     this.record([this.steps, 'reroll']);
-    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
+    this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
     return true;
   }
 
@@ -881,7 +951,7 @@ export class Game {
     this.grantPerk(perk);
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
-      this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
+      this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
       return;
     }
     this.choices = [];

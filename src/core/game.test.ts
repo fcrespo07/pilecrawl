@@ -194,3 +194,108 @@ describe('cruz y prisma', () => {
     expect(g.combo).toBe(2);
   });
 });
+
+describe('perks nuevos', () => {
+  const take = (g: Game, id: string) => PERK_BY_ID[id].apply(g.mods, g);
+
+  it('Respiro borra las filas de abajo al subir de nivel', () => {
+    const g = playing();
+    take(g, 'breather');
+    for (let y = ROWS - 4; y < ROWS; y++) { g.board[y].fill(GARBAGE_ID); g.board[y][0] = 0; }
+    g['addLevelProgress'](g.linesNeeded());
+    g['afterLock']();
+    expect(g.state).toBe('choosing');
+    // se van las 3 filas de abajo y queda solo la cuarta
+    expect(g.board.filter((r) => r.some((v) => v !== 0))).toHaveLength(1);
+  });
+
+  it('Abanico ofrece 4 cartas', () => {
+    const g = playing();
+    take(g, 'fan');
+    g.linesIntoLevel = g.linesNeeded() - 1;
+    clearBottomLineWithI(g);
+    expect(g.choices).toHaveLength(4);
+  });
+
+  it('Reciclaje cuenta líneas extra por cada fila de basura', () => {
+    const g = playing();
+    take(g, 'recycle');
+    for (let x = 0; x < COLS - 4; x++) g.board[ROWS - 1][x] = GARBAGE_ID;
+    setActive(g, PIECES.I, COLS - 4, 0);
+    g.hardDrop();
+    expect(g.lines).toBe(1);
+    expect(g.linesIntoLevel).toBe(2);
+  });
+
+  it('Cosecha da un reroll cada 10 líneas', () => {
+    const g = playing();
+    take(g, 'harvest');
+    const before = g.rerolls;
+    g['addLines'](9);
+    expect(g.rerolls).toBe(before);
+    g['addLines'](1);
+    expect(g.rerolls).toBe(before + 1);
+  });
+
+  it('Ahorro y Coleccionista suben el multiplicador según el estado', () => {
+    const g = playing();
+    take(g, 'savings');
+    g.rerolls = 3;
+    expect(g.scoreMultNow()).toBeCloseTo(1.3);
+    g.rerolls = 0;
+    expect(g.scoreMultNow()).toBeCloseTo(1);
+  });
+
+  it('Vértigo solo multiplica con el montón por encima de la mitad', () => {
+    const g = playing();
+    take(g, 'vertigo');
+    expect(g.scoreMultNow()).toBeCloseTo(1);
+    g.board[ROWS - 10][0] = PIECES.T.id;
+    expect(g.scoreMultNow()).toBeCloseTo(1.5);
+  });
+
+  it('Salvavidas cambia la siguiente pieza por una I con el montón alto, y espera para repetir', () => {
+    const g = playing();
+    take(g, 'lifeline');
+    for (let y = ROWS - 14; y < ROWS; y++) { g.board[y].fill(GARBAGE_ID); g.board[y][0] = 0; }
+    g.queue.unshift({ def: PIECES.O, bomb: false, prism: false, gold: false });
+    g['spawn']();
+    expect(g.active?.def.name).toBe('I');
+    g.queue.unshift({ def: PIECES.O, bomb: false, prism: false, gold: false });
+    g['spawn']();
+    expect(g.active?.def.name).toBe('O');
+  });
+
+  it('Ancla para la basura mientras dura el combo', () => {
+    const g = playing();
+    take(g, 'anchor');
+    g.level = 4;
+    g.combo = 0;
+    g.garbageCounter = 0;
+    clearBottomLineWithI(g);
+    expect(g.combo).toBe(1);
+    expect(g.garbageCounter).toBe(0);
+    // una pieza que no limpia corta el combo y la basura vuelve a avanzar
+    setActive(g, PIECES.O, 0, 0);
+    g.hardDrop();
+    expect(g.garbageCounter).toBe(1);
+  });
+
+  it('Fénix vacía todo el tablero al revivir y sube la puntuación', () => {
+    const g = playing();
+    take(g, 'phoenix');
+    for (let y = 0; y < ROWS; y++) { g.board[y].fill(GARBAGE_ID); g.board[y][0] = 0; }
+    expect(g['topOut']()).toBe(true);
+    expect(g.board.every((r) => r.every((v) => v === 0))).toBe(true);
+    expect(g.scoreMultNow()).toBeCloseTo(1.25);
+  });
+
+  it('Reflejos premia fijar la pieza rápido', () => {
+    const g = playing();
+    take(g, 'reflex');
+    setActive(g, PIECES.O, 0, ROWS - 2);
+    const before = g.score;
+    g.hardDrop();
+    expect(g.score - before).toBe(25);
+  });
+});

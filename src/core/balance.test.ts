@@ -73,7 +73,7 @@ const summarize = (results: GameResult[]) => ({
 });
 
 describe('bot de equilibrio', () => {
-  const GAMES = 30;
+  const GAMES = 60;
 
   // El bot coloca con hard drop, así que la gravedad y el lock delay no le afectan:
   // estos números miden reglas de líneas, niveles, basura y perks, no el ritmo de caída.
@@ -88,15 +88,17 @@ describe('bot de equilibrio', () => {
   }, 120_000);
 
   // El nivel mediano satura por el tope de piezas, así que la dificultad se mide con las partidas
-  // perdidas antes del tope. Con el tablero 11×18 son 10 de 30 en los dos casos (con 10×20 eran 5 y 10).
+  // perdidas antes del tope. Con 30 partidas el ruido de las cartas al azar llenaba la banda entera
+  // (una tanda de 150 daba 69 y 38 perdidas donde las 30 primeras daban 10 y 10), así que se juegan 60.
+  // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13. La banda es la de siempre: 20-47%.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
     const firstRun = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i, 1500, 0));
     const lost = (rs: GameResult[]) => rs.filter((r) => r.overByTopOut).length;
     for (const n of [lost(unlocked), lost(firstRun)]) {
-      expect(n).toBeGreaterThanOrEqual(6);
-      expect(n).toBeLessThanOrEqual(14);
+      expect(n).toBeGreaterThanOrEqual(12);
+      expect(n).toBeLessThanOrEqual(28);
     }
   }, 120_000);
 });

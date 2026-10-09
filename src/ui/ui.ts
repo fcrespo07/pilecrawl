@@ -155,6 +155,8 @@ export class UI {
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
     const box = $('cards');
     box.innerHTML = '';
+    box.classList.toggle('four', g.choices.length > 3);
+    $('key4').hidden = g.choices.length < 4;
     g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i)));
     // re-dispara la animación del título
     const title = document.querySelector<HTMLElement>('.perk-title')!;

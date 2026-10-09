@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Game, GRAVITY_MS, type Replay } from './game';
+import { Game, GRAVITY_MS, RULES_VERSION, type Replay } from './game';
 import { runReplay } from './replay';
 import { bestPlacement } from './bot';
 import { makeRng } from './rng';
@@ -93,14 +93,14 @@ describe('repeticiones', () => {
   });
 
   it('rechaza acciones que el juego real no produce', () => {
-    const base: Replay = { version: 1, seed: 42, bestLevel: 0, steps: 1, actions: [] };
+    const base: Replay = { version: RULES_VERSION, seed: 42, bestLevel: 0, steps: 1, actions: [] };
     expect(runReplay(base).ok).toBe(true);
     const bad: unknown[] = [
       [0, 'move', 3],
       [0, 'move', 0.5],
       [0, 'rotate', 3],
       [0, 'soft', 2],
-      [0, 'pick', 3],
+      [0, 'pick', 4],
       [0, 'drop', 1],
       [-1, 'drop'],
       [0.5, 'hold'],
