@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.5.0 — 2026-10-09
 - Modos de juego: **desafío diario** (misma semilla y mejora inicial para todos cada día) y **contrarreloj** (tres minutos). Selector en la portada y récord por modo (#12).
 
 ## 0.4.0 — 2026-10-09
