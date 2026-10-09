@@ -122,6 +122,8 @@ export interface PerkDef {
   pros: (stacks: number) => string[];
   cons?: (stacks: number) => string[];
   apply: (m: Mods, g: Game) => void;
+  /** Maldición: solo sale en las ofertas malditas y no tiene ventaja (sus efectos van en `cons`). */
+  curse?: boolean;
 }
 
 export const RARITY_WEIGHT: Record<Rarity, number> = { common: 60, rare: 28, epic: 10, legendary: 3 };
@@ -409,7 +411,54 @@ export const PERKS: PerkDef[] = [
   },
 ];
 
-export const PERK_BY_ID: Record<string, PerkDef> = Object.fromEntries(PERKS.map((p) => [p.id, p]));
+/**
+ * Maldiciones: en una oferta maldita las tres cartas son malas y hay que quedarse con la menos mala.
+ * Son de distinto tipo a propósito, para que la elección dependa de cómo juegas y de lo que ya tienes.
+ */
+export const CURSES: PerkDef[] = [
+  {
+    id: 'c_lead', name: 'Plomo', rarity: 'common', max: 3, curse: true,
+    pros: () => [], cons: () => ['Las piezas caen un <b>10% más rápido</b>'],
+    apply: (m) => { m.gravitySpeed *= 1.1; },
+  },
+  {
+    id: 'c_fog', name: 'Niebla', rarity: 'common', max: 2, curse: true,
+    pros: () => [], cons: () => ['Ves <b>1 pieza menos</b> en la cola'],
+    apply: (m) => { m.preview = Math.max(1, m.preview - 1); },
+  },
+  {
+    id: 'c_rust', name: 'Óxido', rarity: 'common', max: 2, curse: true,
+    pros: () => [], cons: () => ['<b>−120 ms</b> antes de que la pieza se fije'],
+    apply: (m) => { m.lockDelay = Math.max(150, m.lockDelay - 120); },
+  },
+  {
+    id: 'c_debt', name: 'Deuda', rarity: 'common', max: 3, curse: true,
+    pros: () => [], cons: () => ['<b>−15%</b> a toda la puntuación'],
+    apply: (m) => { m.scoreMult *= 0.85; },
+  },
+  {
+    id: 'c_tide', name: 'Marea', rarity: 'common', max: 2, curse: true,
+    pros: () => [], cons: () => ['La basura sube <b>1 pieza antes</b>'],
+    apply: (m) => { m.garbageDelay -= 1; },
+  },
+  {
+    id: 'c_slope', name: 'Cuesta', rarity: 'common', max: 3, curse: true,
+    pros: () => [], cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.linesReduction -= 1; },
+  },
+  {
+    id: 'c_crack', name: 'Grieta', rarity: 'common', max: 3, curse: true,
+    pros: () => [], cons: () => ['Pierdes <b>1 reroll</b> (si no tienes, no pasa nada)'],
+    apply: (_m, g) => { g.rerolls = Math.max(0, g.rerolls - 1); },
+  },
+  {
+    id: 'c_ballast', name: 'Lastre', rarity: 'common', max: 1, curse: true,
+    pros: () => [], cons: () => ['Cada bolsa trae <b>una S o Z extra</b>'],
+    apply: (m) => { m.extraPieces.push('SZ'); },
+  },
+];
+
+export const PERK_BY_ID: Record<string, PerkDef> = Object.fromEntries([...PERKS, ...CURSES].map((p) => [p.id, p]));
 
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
@@ -443,4 +492,64 @@ export function rollPerks(
     pool.splice(idx, 1);
   }
   return picks;
+}
+
+const RARITIES: Rarity[] = ['common', 'rare', 'epic', 'legendary'];
+
+/** Peso de una rareza con la suerte de Trébol (lo mismo que usa `rollPerks` carta a carta). */
+function rarityWeight(r: Rarity, luck: number): number {
+  const base = RARITY_WEIGHT[r];
+  if (r === 'common') return base;
+  return base * (1 + luck * (r === 'rare' ? 0.35 : r === 'epic' ? 0.7 : 1));
+}
+
+/** Saca `n` cartas distintas de `pool` sin reponer, con igual probabilidad. */
+function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] {
+  const left = [...pool];
+  const out: PerkDef[] = [];
+  while (out.length < n && left.length) out.push(left.splice(Math.floor(rand() * left.length), 1)[0]);
+  return out;
+}
+
+/**
+ * Oferta de una subida de nivel: primero se sortea una rareza (con sus pesos, la suerte, los
+ * desbloqueos y cuántas cartas quedan de ella) y las cartas son todas de esa rareza. Si no quedan bastantes, se completa con
+ * las rarezas de al lado, empezando por las de abajo.
+ */
+export function rollOffer(
+  owned: Map<string, number>,
+  luck: number,
+  n = 3,
+  bestLevel = Infinity,
+  rand: () => number = Math.random,
+  /** Tras una oferta maldita la siguiente es rara o mejor (si hay alguna disponible). */
+  blessed = false,
+): PerkDef[] {
+  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
+  const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
+  let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
+  if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
+  if (!rarities.length) return [];
+  // peso por carta × cartas disponibles: cada rareza sale tan a menudo como cuando se sorteaba carta a carta
+  const w = (r: Rarity) => rarityWeight(r, luck) * byRarity(r).length;
+  const total = rarities.reduce((s, r) => s + w(r), 0);
+  let x = rand() * total;
+  let idx = 0;
+  for (; idx < rarities.length - 1; idx++) {
+    x -= w(rarities[idx]);
+    if (x <= 0) break;
+  }
+  const picks = drawUniform(byRarity(rarities[idx]), n, rand);
+  // relleno: primero las rarezas más bajas cercanas, luego las más altas
+  const order = [...rarities.slice(0, idx).reverse(), ...rarities.slice(idx + 1)];
+  for (const r of order) {
+    if (picks.length >= n) break;
+    picks.push(...drawUniform(byRarity(r), n - picks.length, rand));
+  }
+  return picks;
+}
+
+/** Oferta maldita: `n` maldiciones distintas que aún no estén al máximo. */
+export function rollCurses(owned: Map<string, number>, n = 3, rand: () => number = Math.random): PerkDef[] {
+  return drawUniform(CURSES.filter((p) => (owned.get(p.id) ?? 0) < p.max), n, rand);
 }

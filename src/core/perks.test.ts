@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { baseMods } from './perks';
-import { isUnlocked, PERKS, PERK_BY_ID, rollPerks } from './perks';
+import { CURSES, isUnlocked, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
+import { makeRng } from './rng';
 import { Game } from './game';
 
 describe('perks', () => {
@@ -59,5 +60,65 @@ describe('perks', () => {
     expect(isUnlocked(epic, 4)).toBe(true);
     expect(isUnlocked(legendary, 6)).toBe(false);
     expect(isUnlocked(legendary, 7)).toBe(true);
+  });
+});
+
+describe('ofertas', () => {
+  it('las tres cartas de una oferta son de la misma rareza', () => {
+    const r = makeRng(5);
+    for (let i = 0; i < 300; i++) {
+      const picks = rollOffer(new Map(), 0, 3, Infinity, r);
+      expect(picks).toHaveLength(3);
+      expect(new Set(picks.map((p) => p.rarity)).size).toBe(1);
+      expect(new Set(picks.map((p) => p.id)).size).toBe(3);
+    }
+  });
+
+  it('sin progreso solo salen ofertas comunes y raras', () => {
+    const r = makeRng(6);
+    for (let i = 0; i < 300; i++) for (const p of rollOffer(new Map(), 0, 3, 0, r)) expect(['common', 'rare']).toContain(p.rarity);
+  });
+
+  it('si no quedan bastantes de una rareza, se completa con otras', () => {
+    const owned = new Map<string, number>();
+    for (const p of PERKS) owned.set(p.id, p.max);
+    for (const id of ['quake', 'vision', 'feather']) owned.set(id, 0);
+    const picks = rollOffer(owned, 0, 3, Infinity, makeRng(1)).map((p) => p.id).sort();
+    expect(picks).toEqual(['feather', 'quake', 'vision']);
+  });
+
+  it('las maldiciones solo tienen desventajas y no salen en las ofertas normales', () => {
+    for (const c of CURSES) {
+      expect(c.curse).toBe(true);
+      expect(c.pros(1)).toHaveLength(0);
+      expect(c.cons!(1).length).toBeGreaterThan(0);
+    }
+    const r = makeRng(9);
+    for (let i = 0; i < 200; i++) for (const p of rollOffer(new Map(), 0, 3, Infinity, r)) expect(p.curse).toBeFalsy();
+  });
+
+  it('una partida tiene ofertas malditas desde el nivel 5 y nunca dos seguidas', () => {
+    let cursed = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = new Game();
+      g.start(seed);
+      let prev = false;
+      for (let lvl = 0; lvl < 15; lvl++) {
+        g['addLevelProgress'](g.linesNeeded());
+        g['beginChoice']();
+        if (g.cursedOffer) {
+          cursed++;
+          expect(g.offerLevel()).toBeGreaterThanOrEqual(5);
+          expect(prev).toBe(false);
+          expect(g.choices.every((p) => p.curse)).toBe(true);
+        }
+        // la oferta que sigue a una maldita es rara o mejor
+        if (prev) expect(g.choices.every((p) => p.rarity !== 'common')).toBe(true);
+        prev = g.cursedOffer;
+        g.pendingLevelUps = 1;
+        g.choosePerk(0);
+      }
+    }
+    expect(cursed).toBeGreaterThan(0);
   });
 });

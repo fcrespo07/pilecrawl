@@ -42,6 +42,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Niveles:** `linesNeeded()` en `game.ts`. 8 líneas al principio, +1 cada dos niveles, tope 16. Se resta `linesReduction` de los perks.
 - **Perks:** cada uno tiene `pros` y `cons` (se muestran en verde y rojo) y un `apply(mods, game)`. Los efectos se leen de `Mods` (`perks.ts`). Los que dependen del estado (Ahorro, Vértigo, Coleccionista, Fénix) se calculan en `scoreMultNow()`. `mods.choices` es el número de cartas (Abanico = 4).
 - **Pieles:** `mods.skin` (Plano, Apagón, Terminal, Neón) cambia el aspecto: `src/fx/skins.ts` para el lienzo y `body[data-skin]` en `style.css` para el DOM. Son solo cosméticas; nunca deben cambiar reglas. En pieles oscuras el renderer aclara los colores con `tone()`.
+- **Ofertas:** `rollOffer` sortea una rareza (peso × cartas que quedan) y saca todas las cartas de ella. Desde `CURSE_FROM_LEVEL` hay ofertas malditas con probabilidad `CURSE_CHANCE`, nunca dos seguidas, con cartas de `CURSES` (`curse: true`, solo `cons`); la oferta siguiente es rara o mejor (`blessedOffer`).
 - **Piezas extra:** cada perk de pieza mete una pieza en `mods.extraPieces`. Las piezas están en `pieces.ts` (M1, D2, V3, I3, X5, P5).
 - **Basura:** desde el nivel 4 sube una fila cada `garbageInterval()` piezas.
 - **Bombas, taladro y prisma:** se marcan en la cola (`makeSpec`) y se resuelven en `lockPiece`.

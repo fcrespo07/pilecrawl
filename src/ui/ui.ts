@@ -9,6 +9,9 @@ import { dailyNumber, MODES } from '../core/modes';
 import { loadBest, submitScore } from '../records';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
+/** Las maldiciones llevan su propio color y etiqueta en vez de la rareza. */
+const rarityKey = (p: PerkDef) => (p.curse ? 'curse' : p.rarity);
+const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]);
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
@@ -30,7 +33,7 @@ export function effectsHTML(p: PerkDef, stacks: number): string {
 
 function chipHTML(id: string, stacks: number): string {
   const p = Game.perkDef(id);
-  return `<div class="chip-wrap r-${p.rarity}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
+  return `<div class="chip-wrap r-${rarityKey(p)}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
 }
 
 export class UI {
@@ -98,7 +101,7 @@ export class UI {
           .map((id) => {
             const p = Game.perkDef(id);
             const n = g.perkStacks(id);
-            return `<div class="build-row r-${p.rarity}">
+            return `<div class="build-row r-${rarityKey(p)}">
               <div class="b-ico">${perkIcon(id)}</div>
               <div><div class="b-name">${p.name}${n > 1 ? `<small>×${n}</small>` : ''}</div>${effectsHTML(p, n)}</div>
             </div>`;
@@ -160,6 +163,14 @@ export class UI {
     $('key4').hidden = g.choices.length < 4;
     g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i)));
     // re-dispara la animación del título
+    // oferta maldita: aviso claro en el título y el color de las maldiciones
+    $('perks').classList.toggle('cursed', g.cursedOffer);
+    $('perk-stripe').textContent = g.cursedOffer ? 'Oferta maldita' : 'Subida de nivel';
+    $('perk-sub').textContent = g.cursedOffer
+      ? 'Todas son malas: elige la menos mala. La siguiente será rara o mejor'
+      : g.blessedOffer
+        ? 'Recompensa por la maldición: rara o mejor'
+        : 'Elige una mejora';
     const title = document.querySelector<HTMLElement>('.perk-title')!;
     title.style.animation = 'none';
     void title.offsetWidth;
@@ -177,7 +188,7 @@ export class UI {
   private makeCard(p: PerkDef, i: number): HTMLElement {
     const cur = this.game.perkStacks(p.id);
     const el = document.createElement('div');
-    el.className = `card r-${p.rarity}`;
+    el.className = `card r-${rarityKey(p)}`;
     el.style.setProperty('--i', String(i));
     el.innerHTML = `
       <div class="card-tilt">
@@ -185,7 +196,7 @@ export class UI {
         <div class="card-flip">
           <div class="card-face card-back"><span>T</span></div>
           <div class="card-face card-front">
-            <div class="card-band"><span>${RARITY_LABEL[p.rarity]}</span><kbd>${i + 1}</kbd></div>
+            <div class="card-band"><span>${rarityLabel(p)}</span><kbd>${i + 1}</kbd></div>
             <div class="card-icon">${perkIcon(p.id)}</div>
             <div class="card-name">${p.name}</div>
             <div class="card-sep"></div>
@@ -218,7 +229,7 @@ export class UI {
     if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !g.choices[i]) return;
     this.picking = true;
     const perk = g.choices[i];
-    audio.pick(RARITY_RANK[perk.rarity]);
+    audio.pick(perk.curse ? 0 : RARITY_RANK[perk.rarity]);
     const cards = [...$('cards').children] as HTMLElement[];
     cards.forEach((c, j) => c.classList.add(j === i ? 'chosen' : 'discarded'));
     setTimeout(() => {
@@ -251,7 +262,7 @@ export class UI {
       const n = Math.max(1, this.game.perkStacks(id));
       const tip = $('tooltip');
       tip.style.setProperty('--c', `var(--${p.rarity})`);
-      tip.innerHTML = `<div class="tt-head"><span class="tt-name">${p.name}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${RARITY_LABEL[p.rarity]}</span></div>${effectsHTML(p, n)}`;
+      tip.innerHTML = `<div class="tt-head"><span class="tt-name">${p.name}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${rarityLabel(p)}</span></div>${effectsHTML(p, n)}`;
       const r = chip.getBoundingClientRect();
       const stage = $('stage').getBoundingClientRect();
       const scale = stage.width / 960;
