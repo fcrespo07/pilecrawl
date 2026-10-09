@@ -1,4 +1,4 @@
-// Definiciones de piezas y tablas de rotación SRS.
+// Definiciones de piezas y tablas de rotación con rebotes (kicks).
 // Coordenadas: x hacia la derecha, y hacia abajo (fila 0 = arriba del tablero).
 
 export type KickTable = 'JLSTZ' | 'I' | 'O';
@@ -66,7 +66,7 @@ export function colorOfId(id: number): number {
   return PIECE_BY_ID[id]?.color ?? 0xffffff;
 }
 
-// Tablas SRS en notación oficial (y hacia arriba); se invierte la y al usarlas.
+// Tablas de rebotes en la notación habitual (y hacia arriba); se invierte la y al usarlas.
 const K_JLSTZ: Record<string, [number, number][]> = {
   '0>1': [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
   '1>0': [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],

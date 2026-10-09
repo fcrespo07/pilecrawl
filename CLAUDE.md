@@ -21,8 +21,8 @@ Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se 
 ```
 index.html              HUD, overlays (inicio, perks, pausa, fin)
 src/main.ts             bucle principal, conecta juego, input, render, UI y audio
-src/core/game.ts        lógica: tablero, piezas, SRS, líneas, niveles, perks aplicados
-src/core/pieces.ts      piezas y tablas de kicks SRS
+src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas, niveles, perks aplicados
+src/core/pieces.ts      piezas y tablas de rebotes (kicks)
 src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, roll
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
