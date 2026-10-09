@@ -1,4 +1,5 @@
 import { Game, RULES_VERSION, type Replay, type ReplayAction } from './game';
+import { isModeId } from './modes';
 
 export interface ReplayResult {
   game: Game;
@@ -38,8 +39,10 @@ export function runReplay(r: Replay): ReplayResult {
   if (!Number.isInteger(r.seed) || r.seed < 0 || r.seed > 0xffffffff) return { game, ok: false, reason: 'semilla no válida' };
   if (typeof r.bestLevel !== 'number' || Number.isNaN(r.bestLevel)) return { game, ok: false, reason: 'bestLevel no válido' };
   if (!isStep(r.steps) || !Array.isArray(r.actions)) return { game, ok: false, reason: 'formato no válido' };
+  const mode = r.mode ?? 'normal';
+  if (!isModeId(mode)) return { game, ok: false, reason: 'modo no válido' };
   game.bestLevel = r.bestLevel;
-  game.start(r.seed);
+  game.start(r.seed, mode);
 
   const advanceTo = (step: number): boolean => {
     while (game.steps < step) {
