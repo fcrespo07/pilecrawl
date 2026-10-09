@@ -47,7 +47,6 @@ export class UI {
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
-    $('best-start').textContent = fmt(loadBest('normal', ''));
     $('b2b-ico').innerHTML = UI_ICONS.flame;
     document.querySelectorAll<HTMLElement>('[data-icon]').forEach((el) => {
       el.innerHTML = perkIcon(el.dataset.icon!);
@@ -72,7 +71,7 @@ export class UI {
     this.date = date;
     this.timedKey = '';
     window.clearTimeout(this.overTimer);
-    for (const id of ['start', 'over', 'pause', 'perks']) this.hide(id);
+    for (const id of ['over', 'pause', 'perks']) this.hide(id);
     this.perksOpen = false;
     this.picking = false;
     this.shownScore = 0;
@@ -135,7 +134,6 @@ export class UI {
       stat('Mejor nivel', loadMeta().bestLevel) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
-    $('best-start').textContent = fmt(loadBest('normal', ''));
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);
   }
