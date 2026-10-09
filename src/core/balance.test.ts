@@ -95,7 +95,8 @@ describe('bot de equilibrio', () => {
   // El nivel mediano satura por el tope de piezas, así que la dificultad se mide con las partidas
   // perdidas antes del tope. Con 30 partidas el ruido de las cartas al azar llenaba la banda entera
   // (una tanda de 150 daba 69 y 38 perdidas donde las 30 primeras daban 10 y 10), así que se juegan 60.
-  // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13. La banda es la de siempre: 20-47%.
+  // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13; con las hiperperks (el bot las suelta en
+  // cuanto se cargan), 15 y 12. La banda es la de siempre: 20-47%.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
