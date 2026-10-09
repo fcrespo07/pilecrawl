@@ -98,6 +98,25 @@ export interface Replay {
   steps: number;
 }
 
+/**
+ * Milisegundos por fila según el nivel (índice 0 = nivel 1). Es la curva
+ * `pow(max(0.05, 0.8 - (gl - 1) * 0.007), gl - 1) * 1000` con `gl = 1 + (nivel - 1) * 0.8`,
+ * precalculada: Math.pow puede variar en el último bit entre motores de JS y una repetición
+ * tiene que dar lo mismo en el navegador y en el servidor. A partir del nivel 36 baja de 0,001 ms
+ * y el tope de 1 ms manda, así que basta con repetir el último valor.
+ */
+export const GRAVITY_MS = [
+  1000, 831.8238885347129, 684.1432447679812, 556.2812592712187,
+  447.11578875116174, 355.19692825600004, 278.8601015198181, 216.32903949260634,
+  165.80464009656242, 125.53735114344816, 93.88224890421264, 69.33728856380014,
+  50.566212141249586, 36.4082873560642, 25.877425966872945, 18.153328543517738,
+  12.567178840435696, 8.584127854099467, 5.784428305428814, 3.8446612803569895,
+  2.5200839695077955, 1.628754036710081, 1.0377725058088998, 0.6517421964448413,
+  0.4033625882088899, 0.2459680572025006, 0.14775440786951327, 0.08741665214219692,
+  0.050927364340798496, 0.029209273457675194, 0.016489590811433415, 0.009160588535172952,
+  0.005006840207751825, 0.0026917271023923135, 0.0014230588699773597, 0.0007396636587124455,
+];
+
 const LINE_SCORES = [0, 100, 300, 500, 800];
 const SPIN_SCORES = [400, 800, 1200, 1600];
 const MINI_SCORES = [100, 200, 400, 600];
@@ -384,16 +403,12 @@ export class Game {
   // ─────────────────────────── Bucle ───────────────────────────
 
   gravityMs(): number {
-    const gl = 1 + (this.level - 1) * 0.8;
-    const t0 = Math.pow(Math.max(0.05, 0.8 - (gl - 1) * 0.007), gl - 1) * 1000;
-    let t = t0;
+    let t = GRAVITY_MS[Math.min(this.level, GRAVITY_MS.length) - 1];
     let speed = this.mods.gravitySpeed;
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     t /= speed;
-    // redondeado a microsegundos: Math.pow puede variar en el último bit entre motores de JS,
-    // y una repetición tiene que dar lo mismo en el navegador y en el servidor
-    return Math.max(Math.round(t * 1000) / 1000, 1);
+    return Math.max(t, 1);
   }
 
   stackHeight(): number {

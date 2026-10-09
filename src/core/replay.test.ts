@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Game, type Replay } from './game';
+import { Game, GRAVITY_MS, type Replay } from './game';
 import { runReplay } from './replay';
 import { bestPlacement } from './bot';
 import { makeRng } from './rng';
@@ -90,5 +90,36 @@ describe('repeticiones', () => {
   it('rechaza repeticiones de otra versión de las reglas', () => {
     const r = playHuman(3).replay();
     expect(runReplay({ ...r, version: r.version + 1 }).ok).toBe(false);
+  });
+
+  it('rechaza acciones que el juego real no produce', () => {
+    const base: Replay = { version: 1, seed: 42, bestLevel: 0, steps: 1, actions: [] };
+    expect(runReplay(base).ok).toBe(true);
+    const bad: unknown[] = [
+      [0, 'move', 3],
+      [0, 'move', 0.5],
+      [0, 'rotate', 3],
+      [0, 'soft', 2],
+      [0, 'pick', 3],
+      [0, 'drop', 1],
+      [-1, 'drop'],
+      [0.5, 'hold'],
+      [0, 'teleport'],
+      'move',
+    ];
+    for (const a of bad) {
+      const r = runReplay({ ...base, actions: [a as Replay['actions'][number]] });
+      expect(r.ok, JSON.stringify(a)).toBe(false);
+    }
+    // pasos que van hacia atrás
+    expect(runReplay({ ...base, steps: 10, actions: [[5, 'drop'], [3, 'drop']] }).ok).toBe(false);
+    expect(runReplay({ ...base, seed: -1 }).ok).toBe(false);
+  });
+
+  it('la tabla de gravedad es la curva de siempre', () => {
+    GRAVITY_MS.forEach((ms, i) => {
+      const gl = 1 + i * 0.8;
+      expect(ms).toBeCloseTo(Math.pow(Math.max(0.05, 0.8 - (gl - 1) * 0.007), gl - 1) * 1000, 9);
+    });
   });
 });
