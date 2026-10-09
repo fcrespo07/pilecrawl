@@ -1,5 +1,6 @@
 import './fonts.css';
 import './style.css';
+import './storage';
 import { Game } from './core/game';
 import { audio } from './fx/audio';
 import { H, W } from './fx/layout';

@@ -1,6 +1,6 @@
-# Tetrogue — contexto del proyecto
+# Derrumbe — contexto del proyecto
 
-Tetris roguelite en web. Cada cierto número de líneas se sube de nivel y el jugador elige 1 de 3 mejoras (perks) que cambian las reglas. Las mejoras se acumulan y pueden combinarse.
+Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se sube de nivel y el jugador elige 1 de 3 mejoras (perks) que cambian las reglas. Las mejoras se acumulan y pueden combinarse.
 
 ## Stack
 
@@ -21,8 +21,8 @@ Tetris roguelite en web. Cada cierto número de líneas se sube de nivel y el ju
 ```
 index.html              HUD, overlays (inicio, perks, pausa, fin)
 src/main.ts             bucle principal, conecta juego, input, render, UI y audio
-src/core/game.ts        lógica: tablero, piezas, SRS, líneas, niveles, perks aplicados
-src/core/pieces.ts      piezas y tablas de kicks SRS
+src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas, niveles, perks aplicados
+src/core/pieces.ts      piezas y tablas de rebotes (kicks)
 src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, roll
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
@@ -49,12 +49,12 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Sin emojis en la interfaz. Los iconos son SVG propios.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
 - Efectos visuales pesados (bloom, CRT) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
-- Récord en `localStorage` (`tetrogue.best`). Se envuelve en try/catch.
+- Récord en `localStorage` (`derrumbe.best`). Se envuelve en try/catch.
 
 ## Estado
 
 - Tipado y build limpios.
-- Probado en navegador: inicio, Tetris, subida de nivel, elección de perks, pausa, fin de partida, bomba, prisma, terremoto, vida extra.
+- Probado en navegador: inicio, cuádruple, subida de nivel, elección de perks, pausa, fin de partida, bomba, prisma, terremoto, vida extra.
 - **Sin equilibrar:** no se han jugado partidas reales. Las cifras (líneas por nivel, fuerza de los perks, velocidad de la basura) son estimaciones.
 - **Sin probar:** el audio no se ha oído.
 - **Pendiente sugerido:** jefes cada X niveles, sinergias entre perks, mejoras permanentes entre partidas.
@@ -63,5 +63,6 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 
 - Código y comentarios en español cuando explican el juego. Identificadores en inglés.
 - No añadir emojis a la interfaz.
+- Nada que lo relacione con Tetris: ni la palabra (tampoco T-spin, Perfect Clear), ni el nombre, ni la paleta oficial de piezas, ni la melodía Korobeiniki. Es marca registrada y The Tetris Company la defiende. Para 4 líneas se dice "cuádruple"; para los spins, "giro".
 - Antes de dar algo por hecho, `npm run typecheck` y comprobar en el navegador.
 - Los scripts de PowerShell van en ASCII puro: PowerShell 5.1 se rompe con caracteres como el guion largo.
