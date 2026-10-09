@@ -77,7 +77,8 @@ export class SoundEngine {
     // eco suave: uno para los efectos y otro para la música, que sale por su bus
     // (así al silenciar la música no sigue sonando su cola)
     this.echo = this.makeEcho(ctx, this.master);
-    this.musicEcho = this.makeEcho(ctx, this.musicBus);
+    // el bus de música baja a 0,32: el eco de la música compensa esa ganancia para sonar igual que antes
+    this.musicEcho = this.makeEcho(ctx, this.musicBus, 0.35 / 0.32);
 
     const len = ctx.sampleRate;
     this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -85,13 +86,13 @@ export class SoundEngine {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   }
 
-  private makeEcho(ctx: AudioContext, out: AudioNode): DelayNode {
+  private makeEcho(ctx: AudioContext, out: AudioNode, gain = 0.35): DelayNode {
     const delay = ctx.createDelay(1);
     delay.delayTime.value = 0.27;
     const fb = ctx.createGain();
     fb.gain.value = 0.32;
     const echoOut = ctx.createGain();
-    echoOut.gain.value = 0.35;
+    echoOut.gain.value = gain;
     const echoLp = ctx.createBiquadFilter();
     echoLp.type = 'lowpass';
     echoLp.frequency.value = 2400;

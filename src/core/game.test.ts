@@ -173,4 +173,24 @@ describe('cruz y prisma', () => {
     expect(g.board[21][5]).toBe(PIECES.T.id);
     expect(g.board[20][5]).toBe(0);
   });
+
+  it('tras una bomba solo caen las columnas afectadas, no los huecos de las demás', () => {
+    const g = playing();
+    g.board[20][8] = PIECES.T.id; // bloque de encima en la misma columna: debe caer
+    g.board[20][0] = PIECES.T.id; // columna 0 con un hueco debajo: no debe rellenarse
+    g['settleAfterBlast']([{ x: 8, y: 21 }]); // la bomba ya ha vaciado (8,21)
+    expect(g.board[21][8]).toBe(PIECES.T.id);
+    expect(g.board[21][0]).toBe(0);
+    expect(g.board[20][0]).toBe(PIECES.T.id);
+  });
+
+  it('las líneas tras una bomba no cuentan para el combo', () => {
+    const g = playing();
+    g.combo = 2;
+    for (let x = 0; x < COLS; x++) g.board[21][x] = PIECES.O.id;
+    g.board[21][0] = 0;
+    g.board[20][0] = PIECES.T.id;
+    g['settleAfterBlast']([{ x: 0, y: 21 }]);
+    expect(g.combo).toBe(2);
+  });
 });
