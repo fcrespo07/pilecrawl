@@ -16,7 +16,7 @@ const HOLD = ['KeyC', 'ShiftLeft', 'ShiftRight'];
 const ALL = [...LEFT, ...RIGHT, ...DOWN, ...HARD, ...CW, ...CCW, ...R180, ...HOLD];
 
 /** Acciones de juego que pueden venir de botones táctiles en pantalla. */
-export type TouchAction = 'left' | 'right' | 'down' | 'hard' | 'cw' | 'ccw' | 'hold';
+export type TouchAction = 'left' | 'right' | 'down' | 'hard' | 'cw' | 'ccw' | 'r180' | 'hold';
 
 /** Tecla que representa cada acción táctil, para reutilizar la misma lógica que el teclado. */
 const TOUCH_CODE: Record<TouchAction, string> = {
@@ -26,6 +26,7 @@ const TOUCH_CODE: Record<TouchAction, string> = {
   hard: 'Space',
   cw: 'ArrowUp',
   ccw: 'KeyZ',
+  r180: 'KeyA',
   hold: 'KeyC',
 };
 
