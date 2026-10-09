@@ -25,7 +25,7 @@
     </div>
   </nav>
     <!-- ═════════════ Home: portada antes de la partida ═════════════ -->
-    <main id="home" class="home" aria-label="Inicio de Derrumbe">
+    <main id="home" class="home" tabindex="-1" aria-label="Inicio de Derrumbe">
       <div class="home-inner">
         <header class="home-hero">
           <p class="home-kicker">Roguelite de bloques</p>
@@ -123,21 +123,6 @@
         </section>
       </div>
       <div id="tooltip"></div>
-
-      <!-- ═════════════ Inicio ═════════════ -->
-      <div id="start" class="overlay">
-        <div class="tag-corner tl">DRMB // BUILD 0.2</div>
-        <div class="tag-corner tr">ROGUELITE // 1P</div>
-        <h1 class="logo">Derrumbe</h1>
-        <div class="stripe-title"><span>Roguelite de bloques</span></div>
-        <div class="steps">
-          <div class="step"><i>01</i><div class="step-ico" data-icon="exp"></div><b>Limpia líneas</b><p>El clásico de bloques que caen: rotación con rebotes, reserva y giros.</p></div>
-          <div class="step"><i>02</i><div class="step-ico" data-icon="shortcut"></div><b>Sube de nivel</b><p>Cada pocas líneas. La basura empieza en el nivel 4.</p></div>
-          <div class="step"><i>03</i><div class="step-ico" data-icon="dice"></div><b>Elige 1 de 3</b><p>Mejoras que rompen las reglas. Algunas tienen precio.</p></div>
-        </div>
-        <button id="start-btn" class="btn"><span>Insertar ficha</span><kbd>Enter</kbd></button>
-        <p class="best">RÉCORD <b id="best-start">0</b></p>
-      </div>
 
       <!-- ═════════════ Elección de mejoras ═════════════ -->
       <div id="perks" class="overlay">

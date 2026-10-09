@@ -75,13 +75,12 @@ export class UI {
 
   /** Refleja el récord en el inicio y en la portada. */
   refreshBest() {
-    $('best-start').textContent = fmt(this.best);
     $('best-home').textContent = fmt(this.best);
   }
 
   startGame() {
     window.clearTimeout(this.overTimer);
-    for (const id of ['start', 'over', 'pause', 'perks']) this.hide(id);
+    for (const id of ['over', 'pause', 'perks']) this.hide(id);
     this.perksOpen = false;
     this.picking = false;
     this.shownScore = 0;

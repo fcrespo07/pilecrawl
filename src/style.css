@@ -651,14 +651,14 @@ kbd {
 }
 
 /* ═════════════ Home (portada) ═════════════
-   Papel y tinta: colores propios en variables --h-* para poder
-   alinearlos con el resto de la interfaz cuando se unifique el estilo. */
+   Papel y tinta: mismos valores que los tokens del PR #2. Al integrarlo,
+   sustituir los --h-* por var(--paper), var(--ink), etc. */
 .home {
-  --h-paper: #f3ead6;
+  --h-paper: #f3ecdc;
   --h-card: #fbf6e9;
-  --h-ink: #1d1a16;
-  --h-muted: #6b6254;
-  --h-accent: #c8402a;
+  --h-ink: #1b1a17;
+  --h-muted: #5d5a50;
+  --h-accent: #d7402b;
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -669,6 +669,7 @@ kbd {
   -webkit-overflow-scrolling: touch;
 }
 .home.hidden { display: none; }
+.home:focus { outline: none; }
 .home-inner {
   max-width: 880px;
   margin: 0 auto;
@@ -734,3 +735,4 @@ kbd {
   .home-lead { font-size: 16px; }
   .home-btn { width: 100%; }
 }
+@media (pointer: coarse) { .home-btn kbd { display: none; } }

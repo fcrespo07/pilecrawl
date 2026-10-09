@@ -101,10 +101,14 @@ const home = document.getElementById('home')!;
 
 function showHome(show: boolean) {
   home.classList.toggle('hidden', !show);
+  // detrás de la portada nada debe recibir foco ni dibujarse
+  stage.inert = show;
   if (show) {
+    renderer.app.ticker.stop();
     ui.refreshBest();
     home.scrollTop = 0;
-  }
+    home.focus({ preventScroll: true });
+  } else renderer.app.ticker.start();
 }
 
 function startRun() {
@@ -133,7 +137,9 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if (st === 'ready' || st === 'over') {
-    if ((e.code === 'Enter' || e.code === 'Space') && !e.repeat) {
+    // con la portada visible, Espacio desplaza la página: solo Enter arranca
+    const homeOpen = !home.classList.contains('hidden');
+    if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
       startRun();
     }
@@ -186,13 +192,13 @@ async function boot() {
       ui.setPaused(true);
     }
   });
-  document.getElementById('start-btn')!.addEventListener('click', startRun);
   document.getElementById('home-play')!.addEventListener('click', startRun);
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', startRun);
 
   wireAudioAndFeel();
   wireTouch();
+  showHome(true);
 
   renderer.app.ticker.add((t) => {
     const dt = Math.min(t.deltaMS, 50);
