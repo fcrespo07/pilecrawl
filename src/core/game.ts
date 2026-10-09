@@ -100,6 +100,8 @@ export class Game {
   perkOrder: string[] = [];
   choices: PerkDef[] = [];
   pendingLevelUps = 0;
+  /** Mejor nivel de partidas anteriores: decide qué rarezas pueden salir. */
+  bestLevel = Infinity;
 
   softDropping = false;
   private gravityAcc = 0;
@@ -682,13 +684,13 @@ export class Game {
 
   private beginChoice() {
     this.state = 'choosing';
-    this.choices = rollPerks(this.perks, this.mods.luck);
+    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
   }
 
   reroll(): boolean {
     if (this.state !== 'choosing' || this.rerolls <= 0) return false;
     this.rerolls--;
-    this.choices = rollPerks(this.perks, this.mods.luck);
+    this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
     return true;
   }
 
@@ -704,7 +706,7 @@ export class Game {
     this.events.emit('perk', { perk, stacks });
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
-      this.choices = rollPerks(this.perks, this.mods.luck);
+      this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel);
       return;
     }
     this.choices = [];

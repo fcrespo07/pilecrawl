@@ -4,6 +4,7 @@ import { Game } from './core/game';
 import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
+import { loadMeta } from './core/meta';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 
@@ -96,6 +97,7 @@ function startRun() {
   input.releaseAll();
   hitstop = 0;
   renderer.reset();
+  game.bestLevel = loadMeta().bestLevel;
   game.start();
   ui.startGame();
 }

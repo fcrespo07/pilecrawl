@@ -3,6 +3,7 @@ import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
+import { loadMeta, saveMeta } from '../core/meta';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
@@ -116,6 +117,11 @@ export class UI {
       this.best = g.score;
       saveBest(this.best);
     }
+    // progresión: el mejor nivel desbloquea perks más raros en las siguientes partidas
+    const meta = loadMeta();
+    meta.bestLevel = Math.max(meta.bestLevel, g.level);
+    meta.runs++;
+    saveMeta(meta);
     $('over-score').textContent = fmt(g.score);
     $('over-best').textContent = isBest ? '¡Nuevo récord!' : `Récord ${fmt(this.best)}`;
     $('over-best').classList.toggle('record', isBest);
@@ -125,7 +131,8 @@ export class UI {
       stat('Líneas', g.lines) +
       stat('Tetris', g.tetrises) +
       stat('Combo máx.', Math.max(0, g.maxCombo)) +
-      stat('Tiempo', clock(g.time));
+      stat('Tiempo', clock(g.time)) +
+      stat('Mejor nivel', meta.bestLevel);
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     $('best-start').textContent = fmt(this.best);
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
