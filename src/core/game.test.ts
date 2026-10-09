@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS } from './game';
+import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
+import { HYPER_BY_ID, HYPER_LEVEL, type HyperId } from './hypers';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { PERK_BY_ID } from './perks';
 import type { PieceSpec } from './game';
@@ -363,5 +364,117 @@ describe('suelo de la basura', () => {
     for (let i = 0; i < PERK_BY_ID.c_tide.max; i++) PERK_BY_ID.c_tide.apply(g.mods, g);
     g.level = 40;
     expect(g.garbageInterval()).toBe(GARBAGE_MIN_INTERVAL);
+  });
+});
+
+describe('hiperperks', () => {
+  /** Partida con la hiperperk `id` ya elegida y cargada. */
+  function withHyper(id: HyperId): Game {
+    const g = playing();
+    g.hyper = HYPER_BY_ID[id];
+    g.hyperCharge = g.hyper.charge;
+    return g;
+  }
+
+  it('al subir al nivel 4 se elige hiperperk y después la mejora normal', () => {
+    const g = playing();
+    g.level = HYPER_LEVEL - 1;
+    g.linesIntoLevel = g.linesNeeded() - 1;
+    clearBottomLineWithI(g);
+    expect(g.state).toBe('choosing');
+    expect(g.choosingHyper).toBe(true);
+    expect(g.hyperChoices).toHaveLength(3);
+    const offered = g.hyperChoices[1];
+    g.choosePerk(1);
+    expect(g.hyper).toBe(offered);
+    expect(g.state).toBe('choosing');
+    expect(g.choosingHyper).toBe(false);
+    expect(g.choices).toHaveLength(3);
+    g.choosePerk(0);
+    expect(g.state).toBe('playing');
+    expect(g.perkOrder).toHaveLength(1);
+  });
+
+  it('solo se ofrece una vez por partida', () => {
+    const g = playing();
+    g.hyper = HYPER_BY_ID.frenzy;
+    g.level = HYPER_LEVEL - 1;
+    g.linesIntoLevel = g.linesNeeded() - 1;
+    clearBottomLineWithI(g);
+    expect(g.choosingHyper).toBe(false);
+  });
+
+  it('se carga con líneas y no se puede soltar a medias', () => {
+    const g = playing();
+    g.hyper = HYPER_BY_ID.slowmo;
+    expect(g.activateHyper()).toBe(false);
+    clearBottomLineWithI(g);
+    expect(g.hyperCharge).toBe(1);
+    g.hyperCharge = g.hyper.charge;
+    expect(g.hyperReady()).toBe(true);
+    expect(g.activateHyper()).toBe(true);
+    expect(g.hyperCharge).toBe(0);
+    expect(g.actions.at(-1)).toEqual([g.steps, 'hyper']);
+    // activa no carga
+    clearBottomLineWithI(g);
+    expect(g.hyperCharge).toBe(0);
+  });
+
+  it('Cámara lenta frena la caída y se acaba a su tiempo, sin gastarse en pausa', () => {
+    const g = withHyper('slowmo');
+    const normal = g.gravityMs();
+    g.activateHyper();
+    expect(g.gravityMs()).toBeGreaterThan(normal * 5);
+    g.togglePause();
+    for (let i = 0; i < 100; i++) g.step();
+    expect(g.hyperLeft).toBe(Math.round(12_000 / STEP_MS));
+    g.togglePause();
+    let ended = false;
+    g.events.on('hyperEnd', () => (ended = true));
+    // la pieza se queda en el aire: con 12 s y la caída tan lenta no llega al suelo
+    for (let i = 0; i < Math.round(12_000 / STEP_MS); i++) g.step();
+    expect(ended).toBe(true);
+    expect(g.hyperActive('slowmo')).toBe(false);
+  });
+
+  it('Frenesí triplica el multiplicador y no deja que se rompa el combo', () => {
+    const g = withHyper('frenzy');
+    const before = g.scoreMultNow();
+    g.activateHyper();
+    expect(g.scoreMultNow()).toBeCloseTo(before * 3);
+    g.combo = 2;
+    setActive(g, PIECES.O, 0, 0);
+    g.hardDrop();
+    expect(g.combo).toBe(2);
+  });
+
+  it('Arena mete los bloques en los huecos tapados de su columna', () => {
+    const g = withHyper('sand');
+    g.activateHyper();
+    // columna 0: hueco abajo del todo tapado por un bloque
+    g.board[ROWS - 2][0] = PIECES.T.id;
+    setActive(g, PIECES.M1, 0, 0);
+    g.hardDrop();
+    expect(g.board[ROWS - 1][0]).toBe(PIECES.M1.id);
+    expect(g.board[ROWS - 3][0]).toBe(0);
+  });
+
+  it('Bombardeo convierte en bomba la pieza activa y las que salen', () => {
+    const g = withHyper('barrage');
+    g.activateHyper();
+    expect(g.active!.bomb).toBe(true);
+    g.hardDrop();
+    expect(g.active!.bomb).toBe(true);
+  });
+
+  it('Tabla rasa vacía el tablero y puntúa cada bloque', () => {
+    const g = withHyper('wipe');
+    for (let x = 0; x < 5; x++) g.board[ROWS - 1][x] = PIECES.T.id;
+    const score = g.score;
+    g.activateHyper();
+    expect(g.board.every((r) => r.every((v) => v === 0))).toBe(true);
+    expect(g.score - score).toBe(5 * 40);
+    expect(g.active).not.toBeNull();
+    expect(g.hyperLeft).toBe(0);
   });
 });

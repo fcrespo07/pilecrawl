@@ -26,6 +26,7 @@
   --epic: #7a3fa0;
   --legendary: #b7791f;
   --curse: #8e1b3a;
+  --hyper: #6a2fb8;
   --danger: #c0392b;
   --cut: 0px;
   --chamfer: none;
@@ -62,6 +63,7 @@ kbd[hidden] { display: none; }
 body[data-skin='neon'] .panel, body[data-skin='neon'] .card-front { box-shadow: 0 0 14px rgba(255, 77, 210, 0.35); }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -221,6 +223,25 @@ kbd {
 .keys li span { min-width: 56px; }
 .keys.toggles { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
 
+/* hiperperk: nombre, barra de carga (o de tiempo, activa) y estado */
+.p-hyper { left: 798px; top: 410px; width: 146px; --c: var(--hyper); }
+.p-hyper > header kbd { margin-left: auto; }
+.hy-row { display: flex; align-items: center; gap: 6px; min-height: 26px; }
+.hy-ico { width: 24px; height: 24px; flex: none; color: var(--c); }
+.hy-ico:empty { display: none; }
+.hy-ico svg { width: 100%; height: 100%; }
+.hy-name { font-family: var(--f-display); font-size: 14px; line-height: 1.1; color: var(--ink); }
+.hy-bar { height: 8px; margin: 6px 0 5px; border: 1px solid var(--ink); background: rgba(27, 26, 23, 0.08); overflow: hidden; }
+.hy-bar i { display: block; height: 100%; background: var(--c); transform: scaleX(0); transform-origin: left; }
+.hy-state { font-size: 10px; letter-spacing: 0.06em; color: var(--muted); }
+#hyper-box[data-state='none'] .hy-name { color: var(--muted); }
+#hyper-box[data-state='ready'] .hy-state,
+#hyper-box[data-state='active'] .hy-state { color: var(--c); font-weight: 700; }
+#hyper-box[data-state='ready'] .hy-bar i { animation: hy-pulse 0.6s ease-in-out infinite alternate; }
+#hyper-box[data-state='active'] { animation: hy-pulse 0.45s ease-in-out infinite alternate; }
+@keyframes hy-pulse { to { opacity: 0.55; } }
+#perks.hyper .perk-title span { color: var(--hyper); }
+
 /* ───────────── chips de mejoras ───────────── */
 
 .chip {
@@ -268,6 +289,7 @@ kbd {
 #perks.cursed .stripe-title::before, #perks.cursed .stripe-title::after { background: repeating-linear-gradient(-45deg, var(--curse) 0 2px, transparent 2px 7px); }
 #perks.cursed .card-front { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--curse) 9%, transparent) 0 2px, transparent 2px 10px), var(--panel); }
 .r-legendary { --c: var(--legendary); }
+.r-hyper { --c: var(--hyper); }
 @keyframes chip-in { from { transform: scale(0) rotate(-90deg); } }
 
 /* ───────────── efectos (ventajas / desventajas) ───────────── */
@@ -633,6 +655,8 @@ kbd {
     border-radius: 10px; touch-action: none;
     box-shadow: 3px 3px 0 var(--line);
   }
+  .touch-pad button[data-touch='hyper'] { color: var(--muted); }
+  .touch-pad button[data-touch='hyper'].ready { color: var(--paper); background: var(--hyper); border-color: var(--hyper); }
   .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); box-shadow: 1px 1px 0 var(--line); transform: translate(2px, 2px); }
 }
 

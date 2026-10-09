@@ -24,6 +24,7 @@ src/main.ts             bucle principal, conecta juego, input, render, UI y audi
 src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas, niveles, perks aplicados
 src/core/pieces.ts      piezas y tablas de rebotes (kicks)
 src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, roll
+src/core/hypers.ts      hiperperks (habilidades activas: una por partida, se cargan con líneas)
 src/core/modes.ts       modos de juego (partida, desafío diario, contrarreloj) y semilla del diario
 src/records.ts          récords por modo y último modo elegido (localStorage)
 src/core/emitter.ts     eventos tipados game → efectos/UI
@@ -43,6 +44,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Perks:** cada uno tiene `pros` y `cons` (se muestran en verde y rojo) y un `apply(mods, game)`. Los efectos se leen de `Mods` (`perks.ts`). Los que dependen del estado (Ahorro, Vértigo, Coleccionista, Fénix) se calculan en `scoreMultNow()`. `mods.choices` es el número de cartas (Abanico = 4).
 - **Pieles:** `mods.skin` (Plano, Apagón, Terminal, Neón) cambia el aspecto: `src/fx/skins.ts` para el lienzo y `body[data-skin]` en `style.css` para el DOM. Son solo cosméticas; nunca deben cambiar reglas. En pieles oscuras el renderer aclara los colores con `tone()`.
 - **Ofertas:** `rollOffer` sortea una rareza (peso × cartas que quedan) y saca todas las cartas de ella. Desde `CURSE_FROM_LEVEL` hay ofertas malditas con probabilidad `CURSE_CHANCE`, nunca dos seguidas, con cartas de `CURSES` (`curse: true`, solo `cons`); la oferta siguiente es rara o mejor (`blessedOffer`).
+- **Hiperperks:** habilidades activas a propósito más rotas que los perks (`hypers.ts`). Al subir al nivel `HYPER_LEVEL` (4) se elige una antes de la carta normal; una por partida. Se carga con líneas (`hyperCharge`, vía `addLines`) y se suelta con D o el botón táctil: es la acción `hyper` de la repetición. La duración va en pasos (`hyperLeft`), así que la pausa no la gasta. Los efectos viven en `game.ts` leyendo `hyperActive(id)`.
 - **Piezas extra:** cada perk de pieza mete una pieza en `mods.extraPieces`. Las piezas están en `pieces.ts` (M1, D2, V3, I3, X5, P5).
 - **Basura:** desde el nivel 4 sube una fila cada `garbageInterval()` piezas.
 - **Bombas, taladro y prisma:** se marcan en la cola (`makeSpec`) y se resuelven en `lockPiece`.

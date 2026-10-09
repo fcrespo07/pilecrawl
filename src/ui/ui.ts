@@ -1,5 +1,6 @@
-import { Game } from '../core/game';
+import { Game, STEP_MS } from '../core/game';
 import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
+import { HYPER_LEVEL, type HyperDef } from '../core/hypers';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
@@ -25,10 +26,16 @@ function clock(ms: number, up = false) {
 }
 
 /** Lista de ventajas (verde) y desventajas (rojo) de un perk. */
-export function effectsHTML(p: PerkDef, stacks: number): string {
+export function effectsHTML(p: Pick<PerkDef, 'pros' | 'cons'>, stacks: number): string {
   const pros = p.pros(stacks).map((t) => `<li class="pro">${t}</li>`);
   const cons = (p.cons?.(stacks) ?? []).map((t) => `<li class="con">${t}</li>`);
   return `<ul class="fx">${pros.join('')}${cons.join('')}</ul>`;
+}
+
+/** Lo que cuesta cargar una hiperperk y cuánto dura. */
+function hyperFoot(h: HyperDef): string {
+  const dur = h.durationMs ? `dura ${h.durationMs / 1000} s` : 'al instante';
+  return `${h.charge} líneas · ${dur}`;
 }
 
 function chipHTML(id: string, stacks: number): string {
@@ -47,6 +54,7 @@ export class UI {
   private perkKey = '';
   private segsKey = '';
   private livesKey = -1;
+  private hyperKey = '';
   private overTimer = 0;
 
   constructor(private game: Game) {
@@ -82,6 +90,7 @@ export class UI {
     this.perkKey = '';
     this.segsKey = '';
     this.livesKey = -1;
+    this.hyperKey = '';
     $('hud').classList.add('visible');
   }
 
@@ -96,7 +105,14 @@ export class UI {
 
   private renderBuild() {
     const g = this.game;
-    $('build-list').innerHTML = g.perkOrder.length
+    const h = g.hyper;
+    const hyperRow = h
+      ? `<div class="build-row r-hyper">
+          <div class="b-ico">${perkIcon(h.id)}</div>
+          <div><div class="b-name">${h.name}<small>hiper</small></div>${effectsHTML(h, 1)}</div>
+        </div>`
+      : '';
+    $('build-list').innerHTML = hyperRow + (g.perkOrder.length
       ? g.perkOrder
           .map((id) => {
             const p = Game.perkDef(id);
@@ -107,7 +123,7 @@ export class UI {
             </div>`;
           })
           .join('')
-      : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>';
+      : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>');
   }
 
   showGameOver() {
@@ -157,20 +173,27 @@ export class UI {
     $('perks').style.setProperty('--level', this.levelColor(shownLevel));
     $('reroll-count').textContent = String(g.rerolls);
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
+    const hyper = g.choosingHyper;
+    $('perks').classList.toggle('hyper', hyper);
     const box = $('cards');
     box.innerHTML = '';
-    box.classList.toggle('four', g.choices.length > 3);
-    $('key4').hidden = g.choices.length < 4;
-    g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i)));
-    // re-dispara la animación del título
+    const n = hyper ? g.hyperChoices.length : g.choices.length;
+    box.classList.toggle('four', n > 3);
+    $('key4').hidden = n < 4;
+    if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, hyperFoot(h))));
+    else g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i, `r-${rarityKey(p)}`, rarityLabel(p), this.game.perkStacks(p.id), this.stackLabel(this.game.perkStacks(p.id), p.max))));
     // oferta maldita: aviso claro en el título y el color de las maldiciones
-    $('perks').classList.toggle('cursed', g.cursedOffer);
-    $('perk-stripe').textContent = g.cursedOffer ? 'Oferta maldita' : 'Subida de nivel';
-    $('perk-sub').textContent = g.cursedOffer
-      ? 'Todas son malas: elige la menos mala. El reroll saca otras maldiciones; la siguiente oferta será rara o mejor'
-      : g.blessedOffer
-        ? 'Recompensa por la maldición: rara o mejor'
-        : 'Elige una mejora';
+    const cursed = !hyper && g.cursedOffer;
+    $('perks').classList.toggle('cursed', cursed);
+    $('perk-stripe').textContent = cursed ? 'Oferta maldita' : 'Subida de nivel';
+    $('perk-sub').textContent = hyper
+      ? 'Elige tu hiperperk: solo una por partida'
+      : cursed
+        ? 'Todas son malas: elige la menos mala. El reroll saca otras maldiciones; la siguiente oferta será rara o mejor'
+        : g.blessedOffer
+          ? 'Recompensa por la maldición: rara o mejor'
+          : 'Elige una mejora';
+    // re-dispara la animación del título
     const title = document.querySelector<HTMLElement>('.perk-title')!;
     title.style.animation = 'none';
     void title.offsetWidth;
@@ -185,10 +208,10 @@ export class UI {
     return `<span class="pips">${pips}</span>`;
   }
 
-  private makeCard(p: PerkDef, i: number): HTMLElement {
-    const cur = this.game.perkStacks(p.id);
+  /** Carta de mejora o de hiperperk: `cls` da el color, `band` la etiqueta y `foot` el pie. */
+  private makeCard(p: PerkDef | HyperDef, i: number, cls: string, band: string, cur: number, foot: string): HTMLElement {
     const el = document.createElement('div');
-    el.className = `card r-${rarityKey(p)}`;
+    el.className = `card ${cls}`;
     el.style.setProperty('--i', String(i));
     el.innerHTML = `
       <div class="card-tilt">
@@ -196,12 +219,12 @@ export class UI {
         <div class="card-flip">
           <div class="card-face card-back"><span>T</span></div>
           <div class="card-face card-front">
-            <div class="card-band"><span>${rarityLabel(p)}</span><kbd>${i + 1}</kbd></div>
+            <div class="card-band"><span>${band}</span><kbd>${i + 1}</kbd></div>
             <div class="card-icon">${perkIcon(p.id)}</div>
             <div class="card-name">${p.name}</div>
             <div class="card-sep"></div>
             ${effectsHTML(p, cur + 1)}
-            <div class="card-foot">${this.stackLabel(cur, p.max)}</div>
+            <div class="card-foot">${foot}</div>
             <div class="card-shine"></div>
           </div>
         </div>
@@ -226,10 +249,12 @@ export class UI {
 
   pick(i: number) {
     const g = this.game;
-    if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !g.choices[i]) return;
+    const hyper = g.choosingHyper;
+    const choice = hyper ? g.hyperChoices[i] : g.choices[i];
+    if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !choice) return;
     this.picking = true;
-    const perk = g.choices[i];
-    audio.pick(perk.curse ? 0 : RARITY_RANK[perk.rarity]);
+    const perk = choice as PerkDef;
+    audio.pick(hyper ? 3 : perk.curse ? 0 : RARITY_RANK[perk.rarity]);
     const cards = [...$('cards').children] as HTMLElement[];
     cards.forEach((c, j) => c.classList.add(j === i ? 'chosen' : 'discarded'));
     setTimeout(() => {
@@ -284,6 +309,33 @@ export class UI {
     return skinOf(this.game.mods.skin).dark ? `color-mix(in srgb, ${c} 55%, white)` : c;
   }
 
+  /** Panel de la hiperperk: sin elegir, cargando, lista o activa. */
+  private updateHyper() {
+    const g = this.game;
+    const h = g.hyper;
+    const active = g.hyperLeft > 0;
+    const ready = g.hyperReady();
+    const state = !h ? 'none' : active ? 'active' : ready ? 'ready' : 'charging';
+    const meter = g.hyperMeter();
+    const text = !h
+      ? `Se elige al llegar al nivel ${HYPER_LEVEL}`
+      : active
+        ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s`
+        : ready
+          ? 'Lista: pulsa D'
+          : `${g.hyperCharge}/${h.charge} líneas`;
+    const key = `${h?.id ?? ''}|${state}|${text}`;
+    $('hyper-fill').style.transform = `scaleX(${meter})`;
+    if (key === this.hyperKey) return;
+    this.hyperKey = key;
+    const box = $('hyper-box');
+    box.dataset.state = state;
+    $('hyper-name').textContent = h ? h.name : 'Hiperperk';
+    $('hyper-ico').innerHTML = h ? perkIcon(h.id) : '';
+    $('hyper-state').textContent = text;
+    document.querySelector<HTMLElement>('[data-touch="hyper"]')?.classList.toggle('ready', ready);
+  }
+
   update(dt: number) {
     const skin = this.game.mods.skin ?? 'papel';
     if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
@@ -330,6 +382,8 @@ export class UI {
       this.livesKey = g.lives;
       $('lives').innerHTML = g.lives > 0 ? UI_ICONS.heart.repeat(Math.min(g.lives, 4)) : '<span class="none">—</span>';
     }
+
+    this.updateHyper();
 
     const key = g.perkOrder.map((id) => `${id}${g.perkStacks(id)}`).join(',');
     if (key !== this.perkKey) {

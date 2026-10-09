@@ -45,6 +45,12 @@ const PATHS: Record<string, string> = {
   blackout: `<path d="M24 20.5A10 10 0 0 1 11.5 8 10 10 0 1 0 24 20.5z"/><path d="M22 5v4M20 7h4M27 11v3M25.5 12.5h3" stroke-opacity=".6"/>`,
   terminal: `<rect x="3" y="5" width="26" height="19" rx="2"/><path d="M8 11l4 3-4 3M14 18h6"/><path d="M11 28h10M16 24v4"/>`,
   neon: `<path d="M5 25V8l10 17V8"/><path d="M20 8h7M20 16.5h6M20 25h7M20 8v17"/><path d="M5 25V8l10 17V8M20 8v17" stroke-opacity=".3" stroke-width="5"/>`,
+  // hiperperks
+  slowmo: `<circle cx="16" cy="17" r="11"/><path d="M16 10v7l4 3"/><path d="M12 3h8"/><path d="M5 9.5L3 7.5M27 9.5l2-2" stroke-opacity=".6"/>`,
+  frenzy: `<path d="M5 25l6-9-6-9M14 25l6-9-6-9M23 25l6-9-6-9"/>`,
+  sand: `<path d="M5 29h22"/>${B(5, 23, 5)}${B(11, 23, 5)}${B(22, 23, 5)}${B(5, 17, 5)}<rect x="16.5" y="23" width="5" height="5" rx="1" stroke-dasharray="2 1.5"/><path d="M19 4v13M15.5 13.5L19 17l3.5-3.5"/>`,
+  barrage: `<circle cx="9" cy="21" r="6"/><circle cx="22" cy="12" r="6"/><path d="M13 16.5l2-2M26.5 7.5l2-2"/><path d="M27 22l2 2M24 26l1 3M20 24l-1 3" stroke-opacity=".6"/>`,
+  wipe: `<path d="M4 28h24"/><path d="M8 22l12-14 6 5-12 14H9z"/><path d="M14 16l6 5" stroke-opacity=".6"/><path d="M4 8h5M3 13h4" stroke-opacity=".5"/>`,
   prism: `<path d="M15 5l10 18H5z"/><path d="M1 17.5l9.5-2"/><path d="M20 13.5l11-5M21.2 15.7H31M20.5 18l10.5 4.5" stroke-opacity=".75"/>`,
 };
 

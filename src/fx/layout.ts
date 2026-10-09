@@ -20,3 +20,6 @@ export const ACCENTS = [0x1f5fa8, 0xb8336a, 0x4c7d1c, 0xb06a14, 0x6a3fb0, 0x157a
 export const accentFor = (level: number) => ACCENTS[(level - 1) % ACCENTS.length];
 
 export const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+
+/** Tinta de las hiperperks (barra de carga, marco y textos). En CSS es `--hyper`. */
+export const HYPER_COLOR = 0x6a2fb8;

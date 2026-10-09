@@ -1,0 +1,53 @@
+// Hiperperks: habilidades activas, una por partida. Se cargan limpiando líneas y el jugador
+// decide cuándo soltarlas. Van aparte de los perks normales y a propósito están más rotas.
+// La lógica de cada una vive en `game.ts` (leyendo `hyperActive`), aquí solo los datos.
+
+export type HyperId = 'slowmo' | 'frenzy' | 'sand' | 'barrage' | 'wipe';
+
+export interface HyperDef {
+  id: HyperId;
+  name: string;
+  /** Líneas que hay que limpiar para cargarla. */
+  charge: number;
+  /** Cuánto dura activa, en ms de juego. 0 = efecto instantáneo. */
+  durationMs: number;
+  pros: () => string[];
+  cons?: () => string[];
+}
+
+/** Nivel en cuya subida se ofrecen las hiperperks (una vez por partida). */
+export const HYPER_LEVEL = 4;
+
+export const HYPERS: HyperDef[] = [
+  {
+    id: 'slowmo', name: 'Cámara lenta', charge: 10, durationMs: 12_000,
+    pros: () => ['Durante <b>12 s</b> las piezas casi <b>no caen</b>', 'La basura <b>no avanza</b> mientras dura'],
+  },
+  {
+    id: 'frenzy', name: 'Frenesí', charge: 12, durationMs: 15_000,
+    pros: () => ['Durante <b>15 s</b>, <b>×3</b> a toda la puntuación', 'El combo <b>no se rompe</b> mientras dura'],
+  },
+  {
+    id: 'sand', name: 'Arena', charge: 14, durationMs: 5_000,
+    pros: () => ['Durante <b>5 s</b>, cada bloque que fijas se escurre hasta el <b>hueco libre más bajo</b> de su columna', 'Tapa <b>agujeros</b> aunque estén cubiertos'],
+  },
+  {
+    id: 'barrage', name: 'Bombardeo', charge: 12, durationMs: 8_000,
+    pros: () => ['Durante <b>8 s</b>, <b>todas las piezas</b> son bombas', 'Cada una revienta un área de <b>5×5</b>'],
+  },
+  {
+    id: 'wipe', name: 'Tabla rasa', charge: 20, durationMs: 0,
+    pros: () => ['Al activarla <b>vacía el tablero</b> entero', 'Cada bloque borrado da <b>40 × nivel</b> puntos'],
+    cons: () => ['Es la que más tarda en <b>cargarse</b>'],
+  },
+];
+
+export const HYPER_BY_ID: Record<HyperId, HyperDef> = Object.fromEntries(HYPERS.map((h) => [h.id, h])) as Record<HyperId, HyperDef>;
+
+/** Saca `n` hiperperks distintas con el azar que se le pase (todas pesan lo mismo). */
+export function rollHypers(n: number, rand: () => number): HyperDef[] {
+  const pool = [...HYPERS];
+  const picks: HyperDef[] = [];
+  while (picks.length < n && pool.length) picks.push(pool.splice(Math.floor(rand() * pool.length), 1)[0]);
+  return picks;
+}

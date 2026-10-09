@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bestPlacement } from './bot';
-import { Game } from './game';
+import { Game, STEP_MS } from './game';
 import { makeRng } from './rng';
 
 /**
@@ -29,10 +29,13 @@ export function playBot(seed: number, maxPieces = 1500, bestLevel = Infinity): G
     let guard = 0;
     while (g.state !== 'over' && pieces < maxPieces && guard++ < maxPieces * 50) {
       if (g.state === 'choosing') {
-        g.choosePerk(Math.floor(choicePicker() * g.choices.length));
+        const n = g.choosingHyper ? g.hyperChoices.length : g.choices.length;
+        g.choosePerk(Math.floor(choicePicker() * n));
         continue;
       }
       if (g.state !== 'playing' || !g.active) break;
+      // la hiperperk se suelta en cuanto está cargada
+      if (g.hyperReady()) g.activateHyper();
       const best = bestPlacement(g);
       const a = g.active;
       if (!best) {
@@ -44,6 +47,8 @@ export function playBot(seed: number, maxPieces = 1500, bestLevel = Infinity): G
       a.x = best.x;
       g.hardDrop();
       pieces++;
+      // el bot no deja pasar el tiempo: se cuenta un segundo por pieza para que las hiperperks se acaben
+      g.hyperLeft = Math.max(0, g.hyperLeft - Math.round(1000 / STEP_MS));
     }
     return {
       level: g.level,
