@@ -97,7 +97,18 @@ function wireTouch() {
   });
 }
 
+const home = document.getElementById('home')!;
+
+function showHome(show: boolean) {
+  home.classList.toggle('hidden', !show);
+  if (show) {
+    ui.refreshBest();
+    home.scrollTop = 0;
+  }
+}
+
 function startRun() {
+  showHome(false);
   audio.init();
   audio.setIntensity(1);
   audio.startMusic();
@@ -176,6 +187,8 @@ async function boot() {
     }
   });
   document.getElementById('start-btn')!.addEventListener('click', startRun);
+  document.getElementById('home-play')!.addEventListener('click', startRun);
+  document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', startRun);
 
   wireAudioAndFeel();

@@ -24,6 +24,51 @@
       <button type="button" data-touch="pause" aria-label="Pausa">II</button>
     </div>
   </nav>
+    <!-- ═════════════ Home: portada antes de la partida ═════════════ -->
+    <main id="home" class="home" aria-label="Inicio de Derrumbe">
+      <div class="home-inner">
+        <header class="home-hero">
+          <p class="home-kicker">Roguelite de bloques</p>
+          <h1 class="home-title">Derrumbe</h1>
+          <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
+          <div class="home-cta">
+            <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+            <p class="home-best">Récord <b id="best-home">0</b></p>
+          </div>
+        </header>
+
+        <section class="home-card" aria-labelledby="h-how">
+          <h2 id="h-how">Cómo se juega</h2>
+          <ol class="home-steps">
+            <li><b>Limpia líneas.</b> Tablero de 11×18, rotación con rebotes, reserva y giros.</li>
+            <li><b>Sube de nivel.</b> Cada pocas líneas. La basura sube desde el nivel 4.</li>
+            <li><b>Elige una mejora.</b> Ventajas con desventajas que cambian las reglas y se combinan.</li>
+          </ol>
+        </section>
+
+        <section class="home-card" aria-labelledby="h-keys">
+          <h2 id="h-keys">Controles</h2>
+          <ul class="home-keys">
+            <li><span><kbd>←</kbd><kbd>→</kbd></span>mover</li>
+            <li><span><kbd>↓</kbd></span>bajar</li>
+            <li><span><kbd>Espacio</kbd></span>soltar</li>
+            <li><span><kbd>↑</kbd><kbd>X</kbd></span>girar</li>
+            <li><span><kbd>Z</kbd></span>girar al revés</li>
+            <li><span><kbd>A</kbd></span>180°</li>
+            <li><span><kbd>C</kbd></span>reserva</li>
+            <li><span><kbd>Esc</kbd></span>pausa</li>
+          </ul>
+          <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil hay botones táctiles.</p>
+        </section>
+
+        <section class="home-card home-ranking" aria-labelledby="h-rank">
+          <h2 id="h-rank">Ranking global</h2>
+          <p class="home-soon">Próximamente</p>
+          <p class="home-note">Aquí aparecerán las mejores puntuaciones de todos los jugadores.</p>
+        </section>
+      </div>
+    </main>
+
     <div id="stage">
       <canvas id="game"></canvas>
 
@@ -80,7 +125,7 @@
       <div id="tooltip"></div>
 
       <!-- ═════════════ Inicio ═════════════ -->
-      <div id="start" class="overlay visible">
+      <div id="start" class="overlay">
         <div class="tag-corner tl">DRMB // BUILD 0.2</div>
         <div class="tag-corner tr">ROGUELITE // 1P</div>
         <h1 class="logo">Derrumbe</h1>
@@ -129,6 +174,7 @@
         <div id="over-stats" class="over-stats"></div>
         <div id="over-perks" class="over-perks"></div>
         <button id="retry-btn" class="btn"><span>Otra partida</span><kbd>Enter</kbd></button>
+        <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

@@ -649,3 +649,88 @@ kbd {
   }
   .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); }
 }
+
+/* ═════════════ Home (portada) ═════════════
+   Papel y tinta: colores propios en variables --h-* para poder
+   alinearlos con el resto de la interfaz cuando se unifique el estilo. */
+.home {
+  --h-paper: #f3ead6;
+  --h-card: #fbf6e9;
+  --h-ink: #1d1a16;
+  --h-muted: #6b6254;
+  --h-accent: #c8402a;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  background: var(--h-paper);
+  color: var(--h-ink);
+  font-family: var(--f-ui);
+  -webkit-overflow-scrolling: touch;
+}
+.home.hidden { display: none; }
+.home-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 20px 56px;
+  display: grid;
+  gap: 18px;
+}
+.home-hero { text-align: center; padding: 24px 0 12px; }
+.home-kicker { margin: 0; letter-spacing: 0.3em; text-transform: uppercase; font-size: 12px; color: var(--h-muted); }
+.home-title {
+  margin: 6px 0 10px;
+  font-family: var(--f-display);
+  font-size: clamp(44px, 12vw, 96px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--h-ink);
+}
+.home-lead { max-width: 520px; margin: 0 auto 22px; font-size: 17px; line-height: 1.5; }
+.home-cta { display: grid; justify-items: center; gap: 10px; }
+.home-btn {
+  font: inherit;
+  font-family: var(--f-display);
+  font-size: 22px;
+  padding: 14px 40px;
+  min-height: 48px;
+  color: var(--h-paper);
+  background: var(--h-ink);
+  border: 2px solid var(--h-ink);
+  box-shadow: 4px 4px 0 var(--h-accent);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.home-btn:hover, .home-btn:focus-visible { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--h-accent); outline: none; }
+.home-btn kbd { margin-left: 10px; font-size: 12px; opacity: 0.7; }
+.home-best { margin: 0; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--h-muted); }
+.home-best b { color: var(--h-ink); font-size: 16px; }
+.home-card {
+  background: var(--h-card);
+  border: 2px solid var(--h-ink);
+  padding: 18px 20px;
+}
+.home-card h2 { margin: 0 0 10px; font-family: var(--f-display); font-size: 18px; letter-spacing: 0.05em; }
+.home-steps { margin: 0; padding-left: 22px; display: grid; gap: 8px; line-height: 1.45; }
+.home-keys {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px;
+}
+.home-keys li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--h-muted); }
+.home-keys li span { min-width: 84px; }
+.home kbd {
+  display: inline-block; padding: 1px 6px; margin-right: 3px;
+  font: 700 12px var(--f-ui);
+  color: var(--h-ink); background: var(--h-paper);
+  border: 1.5px solid var(--h-ink); border-radius: 3px;
+}
+.home-btn kbd { color: var(--h-paper); background: transparent; border-color: currentColor; }
+.home-note { margin: 12px 0 0; font-size: 13px; color: var(--h-muted); line-height: 1.5; }
+.home-ranking { border-style: dashed; text-align: center; }
+.home-soon { margin: 0; font-family: var(--f-display); font-size: 20px; color: var(--h-accent); }
+.home-ranking .home-note { margin-top: 6px; }
+@media (max-width: 520px) {
+  .home-inner { padding: 24px 16px 40px; }
+  .home-lead { font-size: 16px; }
+  .home-btn { width: 100%; }
+}
