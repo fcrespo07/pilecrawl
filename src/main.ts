@@ -4,7 +4,7 @@ import { Game } from './core/game';
 import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
-import { Input } from './input';
+import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 
 const game = new Game();
@@ -61,6 +61,31 @@ function wireAudioAndFeel() {
     audio.stopMusic();
     audio.gameOver();
     ui.showGameOver();
+  });
+}
+
+/** Botones táctiles: cada uno reutiliza la misma lógica que su tecla. */
+function wireTouch() {
+  document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((btn) => {
+    const action = btn.dataset.touch as TouchAction | 'pause';
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      btn.setPointerCapture(e.pointerId);
+      if (action === 'pause') {
+        if (game.state === 'playing' || game.state === 'paused') {
+          game.togglePause();
+          input.releaseAll();
+          ui.setPaused(game.state === 'paused');
+        }
+        return;
+      }
+      input.touchDown(action);
+    });
+    if (action === 'pause') return;
+    const up = () => input.touchUp(action);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+    btn.addEventListener('lostpointercapture', up);
   });
 }
 
@@ -145,6 +170,7 @@ async function boot() {
   document.getElementById('retry-btn')!.addEventListener('click', startRun);
 
   wireAudioAndFeel();
+  wireTouch();
 
   renderer.app.ticker.add((t) => {
     const dt = Math.min(t.deltaMS, 50);

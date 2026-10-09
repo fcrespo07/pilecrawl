@@ -13,8 +13,23 @@ const CW = ['ArrowUp', 'KeyX'];
 const CCW = ['KeyZ', 'ControlLeft', 'ControlRight'];
 const R180 = ['KeyA'];
 const HOLD = ['KeyC', 'ShiftLeft', 'ShiftRight'];
+const ALL = [...LEFT, ...RIGHT, ...DOWN, ...HARD, ...CW, ...CCW, ...R180, ...HOLD];
 
-/** Teclado con DAS/ARR estilo guideline. */
+/** Acciones de juego que pueden venir de botones táctiles en pantalla. */
+export type TouchAction = 'left' | 'right' | 'down' | 'hard' | 'cw' | 'ccw' | 'hold';
+
+/** Tecla que representa cada acción táctil, para reutilizar la misma lógica que el teclado. */
+const TOUCH_CODE: Record<TouchAction, string> = {
+  left: 'ArrowLeft',
+  right: 'ArrowRight',
+  down: 'ArrowDown',
+  hard: 'Space',
+  cw: 'ArrowUp',
+  ccw: 'KeyZ',
+  hold: 'KeyC',
+};
+
+/** Teclado y táctil con DAS/ARR estilo guideline. */
 export class Input {
   handling: Handling = { das: 130, arr: 25 };
   private dir = 0;
@@ -26,10 +41,32 @@ export class Input {
   constructor(private game: Game) {}
 
   keyDown(e: KeyboardEvent): boolean {
+    return this.press(e.code, e.repeat);
+  }
+
+  keyUp(e: KeyboardEvent) {
+    this.release(e.code);
+  }
+
+  touchDown(action: TouchAction) {
+    this.press(TOUCH_CODE[action], false);
+  }
+
+  touchUp(action: TouchAction) {
+    this.release(TOUCH_CODE[action]);
+  }
+
+  /** Al pausar o abrir menús: olvida lo que estaba pulsado. */
+  releaseAll() {
+    this.leftHeld = this.rightHeld = false;
+    this.dir = 0;
+    this.game.softDropping = false;
+  }
+
+  private press(c: string, repeat: boolean): boolean {
     const g = this.game;
     if (g.state !== 'playing') return false;
-    const c = e.code;
-    if (e.repeat) return [...LEFT, ...RIGHT, ...DOWN, ...HARD, ...CW, ...CCW, ...R180, ...HOLD].includes(c);
+    if (repeat) return ALL.includes(c);
     if (LEFT.includes(c)) {
       this.leftHeld = true;
       this.startDir(-1);
@@ -46,8 +83,7 @@ export class Input {
     return true;
   }
 
-  keyUp(e: KeyboardEvent) {
-    const c = e.code;
+  private release(c: string) {
     if (LEFT.includes(c)) {
       this.leftHeld = false;
       if (this.dir === -1) this.rightHeld ? this.startDir(1) : (this.dir = 0);
@@ -55,13 +91,6 @@ export class Input {
       this.rightHeld = false;
       if (this.dir === 1) this.leftHeld ? this.startDir(-1) : (this.dir = 0);
     } else if (DOWN.includes(c)) this.game.softDropping = false;
-  }
-
-  /** Al pausar o abrir menús: olvida lo que estaba pulsado. */
-  releaseAll() {
-    this.leftHeld = this.rightHeld = false;
-    this.dir = 0;
-    this.game.softDropping = false;
   }
 
   private startDir(d: number) {
