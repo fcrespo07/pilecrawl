@@ -119,7 +119,6 @@ function onKeyDown(e: KeyboardEvent) {
 async function boot() {
   await Promise.allSettled([
     document.fonts.load('32px Bungee'),
-    document.fonts.load('32px Monoton'),
     document.fonts.load('700 16px "Chakra Petch"'),
     document.fonts.load('400 16px "Chakra Petch"'),
   ]);
