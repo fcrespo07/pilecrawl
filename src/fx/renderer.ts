@@ -1,10 +1,10 @@
 import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { AdvancedBloomFilter, CRTFilter, RGBSplitFilter, ShockwaveFilter } from 'pixi-filters';
-import { cellType, COLS, HIDDEN, isGold, ROWS, type Cell, type Game, type PieceSpec } from '../core/game';
+import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
-  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, NEXT_W, NEXT_X, NEXT_Y, W,
+  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W,
 } from './layout';
 import { Particles } from './particles';
 
@@ -73,14 +73,32 @@ function makeCellTexture(): Texture {
   });
 }
 
+/** Fantasma propio: rayado diagonal con esquinas marcadas, sin caja rellena. */
 function makeGhostTexture(): Texture {
   const s = 64;
   return canvasTex(s, s, (c) => {
-    c.fillStyle = 'rgba(255,255,255,0.13)';
-    c.fillRect(4, 4, s - 8, s - 8);
-    c.strokeStyle = 'rgba(255,255,255,0.85)';
+    c.save();
+    c.beginPath();
+    c.rect(6, 6, s - 12, s - 12);
+    c.clip();
+    c.strokeStyle = 'rgba(255,255,255,0.55)';
+    c.lineWidth = 3;
+    for (let k = -s; k < s; k += 12) {
+      c.beginPath();
+      c.moveTo(k, s);
+      c.lineTo(k + s, 0);
+      c.stroke();
+    }
+    c.restore();
+    c.strokeStyle = 'rgba(255,255,255,0.95)';
     c.lineWidth = 4;
-    c.strokeRect(5, 5, s - 10, s - 10);
+    const a = 6, b = s - 6, l = 14;
+    c.beginPath();
+    c.moveTo(a, a + l); c.lineTo(a, a); c.lineTo(a + l, a);
+    c.moveTo(b - l, a); c.lineTo(b, a); c.lineTo(b, a + l);
+    c.moveTo(b, b - l); c.lineTo(b, b); c.lineTo(b - l, b);
+    c.moveTo(a + l, b); c.lineTo(a, b); c.lineTo(a, b - l);
+    c.stroke();
   });
 }
 
@@ -288,7 +306,7 @@ export class Renderer {
     for (let x = 1; x < COLS; x++) {
       g.moveTo(BOARD_X + x * CELL, BOARD_Y).lineTo(BOARD_X + x * CELL, BOARD_Y + BOARD_H);
     }
-    for (let y = 1; y < 20; y++) {
+    for (let y = 1; y < VISIBLE; y++) {
       g.moveTo(BOARD_X, BOARD_Y + y * CELL).lineTo(BOARD_X + BOARD_W, BOARD_Y + y * CELL);
     }
     g.stroke({ width: 1, color: INK, alpha: 0.12 });
@@ -638,42 +656,63 @@ export class Renderer {
     }
   }
 
+  /** Posiciones de las casillas de la barra de piezas (reserva y cola), según los perks. */
+  private queueSlots() {
+    const g = this.game;
+    const top = QUEUE_Y + 24;
+    const hold: { x: number; y: number; s: number }[] = [];
+    let x = QUEUE_X + 14;
+    for (let i = 0; i < g.mods.holdSlots; i++, x += 72) hold.push({ x, y: top, s: 64 });
+    const sep = x + 8;
+    const next: { x: number; y: number; s: number }[] = [];
+    x = sep + 22;
+    for (let i = 0; i < g.mods.preview; i++) {
+      const s = i === 0 ? 64 : 48;
+      next.push({ x, y: top + (64 - s) / 2, s });
+      x += s + 8;
+    }
+    return { hold, next, sep };
+  }
+
   private updatePanels() {
     const g = this.game;
-    const holdH = 34 + 80 * g.mods.holdSlots;
-    const nextH = 34 + 90 + (g.mods.preview - 1) * 64;
     const key = `${g.mods.holdSlots}|${g.mods.preview}|${this.accent}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
+    const { hold, next, sep } = this.queueSlots();
     const p = this.panels;
     p.clear();
     const c = 10; // esquina cortada, igual que los paneles del HUD
-    const band = 24;
-    for (const [x, y, w, h] of [[HOLD_X, HOLD_Y, HOLD_W, holdH], [NEXT_X, NEXT_Y, NEXT_W, nextH]]) {
-      const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
-      p.poly(shape).fill({ color: PAPER_PANEL, alpha: 1 });
-      p.poly(shape).stroke({ width: 2, color: INK, alpha: 1 });
-      p.poly([x + c, y, x + w, y, x + w, y + band, x, y + band, x, y + c]).fill({ color: INK, alpha: 1 });
-      // franjas de peligro al final de la banda
-      for (let k = 0; k < 3; k++) {
-        const sx = x + w - 30 + k * 8;
-        p.poly([sx, y + 5, sx + 4, y + 5, sx + 1, y + band - 5, sx - 3, y + band - 5]).fill({ color: PAPER, alpha: 0.5 });
-      }
-    }
+    const x = QUEUE_X, y = QUEUE_Y, w = QUEUE_W, h = QUEUE_H;
+    const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
+    p.poly(shape).fill({ color: PAPER_PANEL, alpha: 1 });
+    p.poly(shape).stroke({ width: 2, color: INK, alpha: 1 });
+    // separador entre reserva y cola
+    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: INK, alpha: 0.3 });
+    for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: INK, alpha: 0.35 });
+    next.forEach((sl, i) => {
+      p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : INK, alpha: i === 0 ? 1 : 0.35 });
+    });
+    // flecha: la primera de la cola es la que entra
+    const ax = next[0].x - 14, ay = next[0].y + next[0].s / 2;
+    p.poly([ax, ay - 6, ax + 8, ay, ax, ay + 6]).fill({ color: this.accent, alpha: 1 });
+
     if (!this.labels.length) {
-      for (const [txt, x] of [['HOLD', HOLD_X + 16], ['NEXT', NEXT_X + 16]] as const) {
+      for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 12, fill: PAPER, letterSpacing: 4 },
+          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 11, fill: INK, letterSpacing: 3 },
           resolution: 2,
         });
         t.anchor.set(0, 0.5);
-        t.x = x;
-        t.y = HOLD_Y + band / 2 + 1;
+        t.y = QUEUE_Y + 13;
         this.world.addChild(t);
         this.labels.push(t);
       }
     }
+    this.labels[0].x = hold[0].x;
+    this.labels[1].x = next[0].x;
+    for (const t of this.labels) t.tint = this.accent;
   }
 
   private drawFrame() {
@@ -757,7 +796,7 @@ export class Renderer {
     shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;
-      this.placeCell(this.ghosts, this.px(a.x + cx), this.py(y), CELL, this.specColor(a, i), 0.55);
+      this.placeCell(this.ghosts, this.px(a.x + cx), this.py(y), CELL, this.specColor(a, i), 0.7);
     });
     // pieza
     const lp = g.lockProgress();
@@ -793,17 +832,16 @@ export class Renderer {
 
   private drawSidePieces() {
     const g = this.game;
-    // hold
+    const { hold, next } = this.queueSlots();
     const holdLocked = g.holdUsed && !g.mods.infiniteHold;
     g.hold.forEach((spec, i) => {
-      this.drawMini(spec, HOLD_X + HOLD_W / 2, HOLD_Y + 34 + 40 + i * 80, 22, holdLocked ? 0.3 : 1);
+      const sl = hold[i];
+      if (sl) this.drawMini(spec, sl.x + sl.s / 2, sl.y + sl.s / 2, 14, holdLocked ? 0.3 : 1);
     });
-    // next
-    const n = Math.min(g.mods.preview, g.queue.length);
+    const n = Math.min(next.length, g.queue.length);
     for (let i = 0; i < n; i++) {
-      const spec = g.queue[i];
-      if (i === 0) this.drawMini(spec, NEXT_X + NEXT_W / 2, NEXT_Y + 34 + 45, 24);
-      else this.drawMini(spec, NEXT_X + NEXT_W / 2, NEXT_Y + 34 + 90 + (i - 1) * 64 + 32, 17, 0.85);
+      const sl = next[i];
+      this.drawMini(g.queue[i], sl.x + sl.s / 2, sl.y + sl.s / 2, i === 0 ? 14 : 10, i === 0 ? 1 : 0.8);
     }
   }
 
