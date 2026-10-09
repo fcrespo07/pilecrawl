@@ -155,7 +155,9 @@ export class Game {
 
   private fillQueue() {
     while (this.queue.length < 8) {
-      const bag = [...STANDARD];
+      // con la cruz, la T sale sustituida por la X: la bolsa no crece
+      const bag = this.mods.crossSwap ? STANDARD.filter((k) => k !== 'T') : [...STANDARD];
+      if (this.mods.crossSwap) bag.push('X5');
       for (const k of this.mods.extraPieces) bag.push(k === 'SZ' ? (Math.random() < 0.5 ? 'S' : 'Z') : k);
       for (let i = bag.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -557,6 +559,14 @@ export class Game {
     const points = this.addScore(removed.length * 40 * this.level);
     this.events.emit('bomb', { cx, cy, removed, points });
     if (this.combo >= 0 && removed.length === 0) this.combo = -1;
+    this.settleAfterBlast(removed.length);
+  }
+
+  /** Tras una explosión o un prisma: los bloques de encima caen a los huecos y pueden completar líneas. */
+  private settleAfterBlast(removedCount: number) {
+    if (removedCount === 0) return;
+    this.compact();
+    this.resolveClears(null, null, [], 1);
   }
 
   private prismBlast(cells: Cell[]) {
@@ -586,6 +596,7 @@ export class Game {
     }
     const points = this.addScore(removed.length * 60 * this.level);
     this.events.emit('prism', { cells, removed, color: target, points });
+    this.settleAfterBlast(removed.length);
   }
 
   private afterLock() {

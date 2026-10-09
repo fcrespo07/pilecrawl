@@ -27,6 +27,8 @@ export interface Mods {
   extraPieces: string[];
   expBonus: number;
   allSpin: boolean;
+  /** la cruz sustituye a la T en cada bolsa (no añade piezas) */
+  crossSwap: boolean;
   b2bMult: number;
   comboGrace: number;
   instinct: boolean;
@@ -58,6 +60,7 @@ export function baseMods(): Mods {
     extraPieces: [],
     expBonus: 0,
     allSpin: false,
+    crossSwap: false,
     b2bMult: 1.5,
     comboGrace: 0,
     instinct: false,
@@ -219,9 +222,9 @@ export const PERKS: PerkDef[] = [
   // ───────── Épicas ─────────
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
-    pros: () => ['Cada bolsa trae una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
-    cons: () => ['Deja <b>huecos</b> con muchísima facilidad'],
-    apply: (m) => { m.extraPieces.push('X5'); },
+    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
+    cons: () => ['Sin <b>T</b> no hay <b>T-spins</b>'],
+    apply: (m) => { m.crossSwap = true; },
   },
   {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
@@ -268,7 +271,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'prism', name: 'Prisma', rarity: 'legendary', max: 2,
-    pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza'],
+    pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza', 'Lo que queda encima <b>cae</b> a los huecos'],
     cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
     apply: (m) => { m.prismEvery = m.prismEvery ? 10 : 16; m.gravitySpeed *= 1.15; },
   },
