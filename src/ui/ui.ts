@@ -281,7 +281,7 @@ export class UI {
     this.shownScore += diff * (1 - Math.exp(-dt / 90));
     if (Math.abs(diff) < 1) this.shownScore = g.score;
     $('score').textContent = fmt(this.shownScore);
-    $('mult').textContent = `×${g.mods.scoreMult.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    $('mult').textContent = `×${g.scoreMultNow().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     $('level').textContent = pad2(g.level);
     $('lines').textContent = String(g.lines);
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';

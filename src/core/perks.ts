@@ -197,7 +197,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'savings', name: 'Ahorro', rarity: 'common', max: 2,
-    pros: (s) => [`Cada reroll que guardas da <b>+${s * 10}%</b> a toda la puntuación`],
+    pros: (s) => [`Cada reroll que guardas da <b>+${s * 10}%</b> a toda la puntuación (hasta <b>5</b> rerolls)`],
     cons: () => ['Gastar un reroll <b>baja</b> ese extra'],
     apply: (m) => { m.savings += 0.1; },
   },
@@ -208,9 +208,9 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'reflex', name: 'Reflejos', rarity: 'common', max: 3,
-    pros: (s) => [`Cada pieza que fijas en menos de <b>1,5 s</b> da <b>${s * 25} × nivel</b> puntos`],
-    cons: () => ['<b>−80 ms</b> antes de que la pieza se fije'],
-    apply: (m) => { m.reflexPoints += 25; m.lockDelay = Math.max(200, m.lockDelay - 80); },
+    pros: (s) => [`Si una pieza limpia líneas en menos de <b>1,5 s</b> desde que aparece, cada línea da <b>+${s * 60} × nivel</b>`],
+    cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
+    apply: (m) => { m.reflexPoints += 60; m.gravitySpeed *= 1.08; },
   },
   // ───────── Raras ─────────
   {
@@ -369,7 +369,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'phoenix', name: 'Fénix', rarity: 'legendary', max: 1,
-    pros: () => ['<b>+1 vida</b>', 'Al revivir, el tablero queda <b>vacío del todo</b>', 'Cada vez que revives, <b>+25%</b> a toda la puntuación'],
+    pros: () => ['<b>+1 vida</b>', 'Al revivir, el tablero queda <b>vacío del todo</b>', 'Cada vez que revives, <b>+25%</b> a toda la puntuación (tope <b>+50%</b>)'],
     cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
     apply: (m, g) => { g.lives += 1; m.phoenix = true; m.gravitySpeed *= 1.15; },
   },

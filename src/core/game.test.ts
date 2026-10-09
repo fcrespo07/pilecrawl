@@ -290,12 +290,41 @@ describe('perks nuevos', () => {
     expect(g.scoreMultNow()).toBeCloseTo(1.25);
   });
 
-  it('Reflejos premia fijar la pieza rápido', () => {
+  it('Reflejos solo premia las piezas rápidas que limpian línea', () => {
     const g = playing();
     take(g, 'reflex');
     setActive(g, PIECES.O, 0, ROWS - 2);
-    const before = g.score;
+    let before = g.score;
     g.hardDrop();
-    expect(g.score - before).toBe(25);
+    expect(g.score - before).toBe(0);
+    const plain = playing();
+    clearBottomLineWithI(plain);
+    const g2 = playing();
+    take(g2, 'reflex');
+    before = g2.score;
+    clearBottomLineWithI(g2);
+    const plainGain = plain.score;
+    expect(g2.score - before - plainGain).toBe(60);
+  });
+
+  it('Vértigo cuenta la altura de antes de limpiar', () => {
+    const g = playing();
+    take(g, 'vertigo');
+    // montón justo en la mitad: al limpiar la fila de abajo baja de la mitad
+    for (let y = ROWS - 9; y < ROWS - 1; y++) g.board[y][0] = PIECES.T.id;
+    const plain = playing();
+    for (let y = ROWS - 9; y < ROWS - 1; y++) plain.board[y][0] = PIECES.T.id;
+    clearBottomLineWithI(plain);
+    clearBottomLineWithI(g);
+    // la línea simple (100) cobra ×1,5; los puntos de la caída no llevan multiplicador
+    expect(g.score - plain.score).toBe(50);
+  });
+
+  it('Fénix tiene un tope de +50%', () => {
+    const g = playing();
+    take(g, 'phoenix');
+    g.lives = 4;
+    for (let i = 0; i < 4; i++) g['topOut']();
+    expect(g.scoreMultNow()).toBeCloseTo(1.5);
   });
 });

@@ -570,8 +570,9 @@ export class Game {
     return mult;
   }
 
-  private addScore(base: number, useMult = true): number {
-    const pts = Math.round(useMult ? base * this.scoreMultNow() : base);
+  /** `mult` permite fijar el multiplicador antes de cambiar el tablero (Vértigo mide la altura). */
+  private addScore(base: number, useMult = true, mult = this.scoreMultNow()): number {
+    const pts = Math.round(useMult ? base * mult : base);
     this.score += pts;
     return pts;
   }
@@ -582,9 +583,6 @@ export class Game {
     const spin = this.detectSpin();
     this.active = null;
     this.piecesLocked++;
-    if (this.mods.reflexPoints > 0 && this.time - this.pieceStart < 1500) {
-      this.addScore(this.mods.reflexPoints * this.level);
-    }
 
     if (a.bomb) {
       this.explode(cells);
@@ -674,12 +672,18 @@ export class Game {
     if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;
     total += gold * 300 * lvl;
     total += garbageRows * 200 * this.mods.recycle * lvl;
+    // Reflejos: solo las piezas que limpian línea, y rápido desde que aparecen
+    if (this.mods.reflexPoints > 0 && piece && cascade === 0 && !blast && this.time - this.pieceStart < 1500) {
+      total += this.mods.reflexPoints * lines * lvl;
+    }
 
+    // el multiplicador se mide antes de quitar las filas: un cuádruple no debe perder Vértigo
+    const mult = this.scoreMultNow();
     this.removeRows(rows);
     const perfect = this.board.every((r) => r.every((v) => v === 0));
     if (perfect) total += 3500 * lvl;
 
-    const points = this.addScore(total);
+    const points = this.addScore(total, true, mult);
     this.addLines(lines);
     let counted = lines + garbageRows * this.mods.recycle;
     if (lines >= 4 || spin) counted += this.mods.expBonus;
@@ -889,7 +893,8 @@ export class Game {
       // deja sólo las 5 filas de abajo; con Fénix, nada
       const keep = this.mods.phoenix ? 0 : 5;
       for (let y = 0; y < ROWS - keep; y++) this.board[y].fill(0);
-      if (this.mods.phoenix) this.phoenixBonus += 0.25;
+      // tope de +50%: con Segunda vida, Fénix no debe crecer sin límite
+      if (this.mods.phoenix) this.phoenixBonus = Math.min(0.5, this.phoenixBonus + 0.25);
       this.combo = -1;
       this.events.emit('revive', { livesLeft: this.lives });
       return true;
