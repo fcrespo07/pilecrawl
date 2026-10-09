@@ -100,9 +100,10 @@ export interface GameResult {
 }
 
 /** Juega una partida completa con el bot. Corta a `maxPieces` para no colgarse. */
-export function playBot(seed: number, maxPieces = 1500): GameResult {
+export function playBot(seed: number, maxPieces = 1500, bestLevel = Infinity): GameResult {
   return seeded(seed, () => {
     const g = new Game();
+    g.bestLevel = bestLevel;
     g.start();
     const choicePicker = rng(seed + 1);
     let pieces = 0;
@@ -142,23 +143,28 @@ const median = (xs: number[]) => {
 };
 const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length;
 
+const summarize = (results: GameResult[]) => ({
+  games: results.length,
+  medianLevel: median(results.map((r) => r.level)),
+  meanLevel: +mean(results.map((r) => r.level)).toFixed(2),
+  medianLines: median(results.map((r) => r.lines)),
+  meanPieces: Math.round(mean(results.map((r) => r.pieces))),
+  meanPerks: +mean(results.map((r) => r.perks)).toFixed(2),
+  topOuts: results.filter((r) => r.overByTopOut).length,
+});
+
 describe('bot de equilibrio', () => {
   const GAMES = 30;
 
   // El bot coloca con hard drop, así que la gravedad y el lock delay no le afectan:
   // estos números miden reglas de líneas, niveles, basura y perks, no el ritmo de caída.
+  // Se juega con todos los perks desbloqueados (cota superior) y con la progresión de una primera partida.
   it('el bot sube de nivel y el juego no se bloquea', () => {
-    const results = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
-    const stats = {
-      games: results.length,
-      medianLevel: median(results.map((r) => r.level)),
-      meanLevel: +mean(results.map((r) => r.level)).toFixed(2),
-      medianLines: median(results.map((r) => r.lines)),
-      meanPieces: Math.round(mean(results.map((r) => r.pieces))),
-      meanPerks: +mean(results.map((r) => r.perks)).toFixed(2),
-      topOuts: results.filter((r) => r.overByTopOut).length,
-    };
-    console.log('[balance]', JSON.stringify(stats));
-    expect(stats.medianLevel).toBeGreaterThanOrEqual(2);
-  }, 60_000);
+    const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
+    const firstRun = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i, 1500, 0));
+    console.log('[balance] todo desbloqueado', JSON.stringify(summarize(unlocked)));
+    console.log('[balance] primera partida  ', JSON.stringify(summarize(firstRun)));
+    expect(median(unlocked.map((r) => r.level))).toBeGreaterThanOrEqual(2);
+    expect(median(firstRun.map((r) => r.level))).toBeGreaterThanOrEqual(2);
+  }, 120_000);
 });

@@ -156,7 +156,7 @@ export const PERKS: PerkDef[] = [
   // ───────── Raras ─────────
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
-    pros: () => ['Salen más mejoras <b>raras, épicas y legendarias</b>'],
+    pros: () => ['Salen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> si ya las has desbloqueado'],
     apply: (m) => { m.luck += 1; },
   },
   {
