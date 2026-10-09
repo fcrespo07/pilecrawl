@@ -50,7 +50,7 @@
           <section class="panel mini" id="b2b-box"><header>B2B</header><div class="ico" id="b2b-ico"></div></section>
           <section class="panel mini"><header>Vidas</header><div id="lives" class="ico-row"></div></section>
           <section class="panel mini"><header>Rerolls</header><div id="rerolls" class="num">1</div></section>
-          <section class="panel mini"><header>Tiempo</header><div id="time" class="num">0:00</div></section>
+          <section class="panel mini" id="time-box"><header id="time-label">Tiempo</header><div id="time" class="num">0:00</div></section>
         </div>
 
         <section class="panel p-perks">
@@ -90,6 +90,7 @@
           <div class="step"><i>02</i><div class="step-ico" data-icon="shortcut"></div><b>Sube de nivel</b><p>Cada pocas líneas. La basura empieza en el nivel 4.</p></div>
           <div class="step"><i>03</i><div class="step-ico" data-icon="dice"></div><b>Elige 1 de 3</b><p>Mejoras que rompen las reglas. Algunas tienen precio.</p></div>
         </div>
+        <div id="mode-select" class="mode-select"></div>
         <button id="start-btn" class="btn"><span>Insertar ficha</span><kbd>Enter</kbd></button>
         <p class="best">RÉCORD <b id="best-start">0</b></p>
       </div>
@@ -119,8 +120,8 @@
 
       <!-- ═════════════ Fin ═════════════ -->
       <div id="over" class="overlay">
-        <div class="stripe-title danger"><span>Señal perdida</span></div>
-        <h2 class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
+        <div class="stripe-title danger"><span id="over-mode">Señal perdida</span></div>
+        <h2 id="over-title" class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
         <div class="final">
           <small>Puntuación final</small>
           <div id="over-score" class="final-score">0</div>

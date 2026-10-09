@@ -637,3 +637,36 @@ kbd {
   }
   .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); box-shadow: 1px 1px 0 var(--line); transform: translate(2px, 2px); }
 }
+
+/* ═════════════ Selector de modo ═════════════ */
+.mode-select { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(100%, 720px); }
+.mode-opt {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px 9px;
+  text-align: left;
+  background: var(--panel-hi);
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.mode-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.mode-opt b { font-family: var(--f-display); font-weight: 800; font-size: 16px; color: var(--ink); }
+.mode-opt b i { font-style: normal; color: var(--accent); }
+.mode-opt span { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.mode-opt small { margin-top: 2px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.mode-opt small em { font-style: normal; font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+.mode-opt:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.mode-opt:has(input:checked) { background: var(--ink); box-shadow: 4px 4px 0 var(--accent); }
+.mode-opt:has(input:checked) b,
+.mode-opt:has(input:checked) small em { color: var(--paper); }
+.mode-opt:has(input:checked) span,
+.mode-opt:has(input:checked) small { color: #cfc7b3; }
+.mode-opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 560px) { .mode-select { grid-template-columns: 1fr; } }
+
+/* cuenta atrás del contrarreloj en sus últimos segundos */
+#time-box.urgent .num { color: var(--danger); animation: urgent 0.5s steps(1) infinite; }
+@keyframes urgent { 50% { opacity: 0.35; } }
