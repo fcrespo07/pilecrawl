@@ -94,7 +94,7 @@ export class Game {
   rerolls = 1;
   time = 0;
   maxCombo = 0;
-  tetrises = 0;
+  quads = 0;
 
   mods: Mods = baseMods();
   perks = new Map<string, number>();
@@ -137,7 +137,7 @@ export class Game {
     this.rerolls = 1;
     this.time = 0;
     this.maxCombo = 0;
-    this.tetrises = 0;
+    this.quads = 0;
     this.mods = baseMods();
     this.perks.clear();
     this.perkOrder = [];
@@ -456,7 +456,7 @@ export class Game {
     const rows = this.findFullRows();
     const lines = rows.length;
     const lvl = this.level;
-    const spinName = spin && piece ? `${piece.name}-SPIN${spin === 'mini' ? ' MINI' : ''}` : '';
+    const spinName = spin && piece ? `GIRO ${piece.name}${spin === 'mini' ? ' MINI' : ''}` : '';
 
     if (lines === 0) {
       if (cascade > 0 || blast) return;
@@ -481,7 +481,7 @@ export class Game {
     else base = LINE_SCORES[Math.min(lines, 4)];
     base *= lvl;
     if (lines === 1 && !spin) base *= this.mods.singleMult;
-    if (lines >= 4) base *= this.mods.tetrisMult;
+    if (lines >= 4) base *= this.mods.quadMult;
     if (piece) base *= piece.scoreMult;
 
     const difficult = lines >= 4 || spin !== null;
@@ -504,7 +504,7 @@ export class Game {
     } else {
       base *= 1 + cascade;
     }
-    if (lines >= 4) this.tetrises++;
+    if (lines >= 4) this.quads++;
 
     let total = base;
     if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;

@@ -15,7 +15,7 @@ function $(id: string) {
 
 function loadBest(): number {
   try {
-    return Number(localStorage.getItem('tetrogue.best') ?? 0) || 0;
+    return Number(localStorage.getItem('derrumbe.best') ?? 0) || 0;
   } catch {
     return 0;
   }
@@ -23,7 +23,7 @@ function loadBest(): number {
 
 function saveBest(v: number) {
   try {
-    localStorage.setItem('tetrogue.best', String(v));
+    localStorage.setItem('derrumbe.best', String(v));
   } catch {
     /* sin almacenamiento: no pasa nada */
   }
@@ -129,7 +129,7 @@ export class UI {
     $('over-stats').innerHTML =
       stat('Nivel', g.level) +
       stat('Líneas', g.lines) +
-      stat('Tetris', g.tetrises) +
+      stat('Cuádruples', g.quads) +
       stat('Combo máx.', Math.max(0, g.maxCombo)) +
       stat('Tiempo', clock(g.time)) +
       stat('Mejor nivel', loadMeta().bestLevel) +

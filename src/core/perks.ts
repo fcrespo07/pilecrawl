@@ -14,7 +14,7 @@ export interface Mods {
   scoreMult: number;
   comboMult: number;
   singleMult: number;
-  tetrisMult: number;
+  quadMult: number;
   linesReduction: number; // puede ser negativo (= más líneas por nivel)
   garbageDelay: number; // piezas extra entre filas de basura (negativo = antes)
   hardDropMult: number;
@@ -48,7 +48,7 @@ export function baseMods(): Mods {
     scoreMult: 1,
     comboMult: 1,
     singleMult: 1,
-    tetrisMult: 1,
+    quadMult: 1,
     linesReduction: 0,
     garbageDelay: 0,
     hardDropMult: 1,
@@ -204,7 +204,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'exp', name: 'Experiencia', rarity: 'rare', max: 3,
-    pros: () => ['Los Tetris y los spins cuentan <b>+2 líneas</b> para subir de nivel'],
+    pros: () => ['Los cuádruples y los giros cuentan <b>+2 líneas</b> para subir de nivel'],
     apply: (m) => { m.expBonus += 2; },
   },
   {
@@ -223,14 +223,14 @@ export const PERKS: PerkDef[] = [
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
     pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
-    cons: () => ['Sin <b>T</b> no hay <b>T-spins</b>'],
+    cons: () => ['Sin pieza <b>T</b> no hay <b>giros T</b>'],
     apply: (m) => { m.crossSwap = true; },
   },
   {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
-    pros: () => ['<b>Todas las piezas</b> hacen spins y puntúan como T-spin'],
-    cons: () => ['Los Tetris dan un <b>25% menos</b>'],
-    apply: (m) => { m.allSpin = true; m.tetrisMult *= 0.75; },
+    pros: () => ['<b>Todas las piezas</b> hacen giros y puntúan como un giro T'],
+    cons: () => ['Los cuádruples dan un <b>25% menos</b>'],
+    apply: (m) => { m.allSpin = true; m.quadMult *= 0.75; },
   },
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
@@ -265,7 +265,7 @@ export const PERKS: PerkDef[] = [
   // ───────── Legendarias ─────────
   {
     id: 'quake', name: 'Terremoto', rarity: 'legendary', max: 1,
-    pros: () => ['Tras un <b>Tetris</b> o un <b>spin doble</b>, todo cae rellenando huecos', 'Las líneas nuevas se <b>encadenan</b> con multiplicador'],
+    pros: () => ['Tras un <b>cuádruple</b> o un <b>giro doble</b>, todo cae rellenando huecos', 'Las líneas nuevas se <b>encadenan</b> con multiplicador'],
     cons: () => ['La basura sube <b>3 piezas antes</b>'],
     apply: (m) => { m.quake = true; m.garbageDelay -= 3; },
   },

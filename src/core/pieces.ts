@@ -36,13 +36,14 @@ function def(id: number, name: string, color: number, kicks: KickTable, rows: st
 }
 
 export const PIECES: Record<string, PieceDef> = {
-  I: def(1, 'I', 0x2ef2ff, 'I', ['....', '####', '....', '....']),
-  O: def(2, 'O', 0xffe14d, 'O', ['##', '##']),
-  T: def(3, 'T', 0xc04dff, 'JLSTZ', ['.#.', '###', '...']),
-  S: def(4, 'S', 0x4dff88, 'JLSTZ', ['.##', '##.', '...']),
-  Z: def(5, 'Z', 0xff4d6a, 'JLSTZ', ['##.', '.##', '...']),
-  J: def(6, 'J', 0x4d7cff, 'JLSTZ', ['#..', '###', '...']),
-  L: def(7, 'L', 0xff9a3d, 'JLSTZ', ['..#', '###', '...']),
+  // Paleta propia: a propósito no sigue la asignación de colores estándar del género
+  I: def(1, 'I', 0xff6b5a, 'I', ['....', '####', '....', '....']),
+  O: def(2, 'O', 0x3ec9a7, 'O', ['##', '##']),
+  T: def(3, 'T', 0x5aa9ff, 'JLSTZ', ['.#.', '###', '...']),
+  S: def(4, 'S', 0xd9a441, 'JLSTZ', ['.##', '##.', '...']),
+  Z: def(5, 'Z', 0x8fd14f, 'JLSTZ', ['##.', '.##', '...']),
+  J: def(6, 'J', 0xc77dff, 'JLSTZ', ['#..', '###', '...']),
+  L: def(7, 'L', 0xe8508f, 'JLSTZ', ['..#', '###', '...']),
   // Piezas extra: cada una la añade su propio perk
   M1: def(8, '·', 0xff7ad9, 'JLSTZ', ['#'], 0.5),
   D2: def(9, 'D', 0xb4ff4d, 'JLSTZ', ['##', '..']),
