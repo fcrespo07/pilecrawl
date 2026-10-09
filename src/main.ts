@@ -1,3 +1,4 @@
+import './fonts.css';
 import './style.css';
 import { Game } from './core/game';
 import { audio } from './fx/audio';
