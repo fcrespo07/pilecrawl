@@ -2,8 +2,9 @@ import { Emitter } from './emitter';
 import { baseMods, PERK_BY_ID, rollPerks, type Mods, type PerkDef } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
 
-export const COLS = 10;
-export const ROWS = 22; // 2 filas ocultas arriba
+// Tablero propio de 11×18 visibles (no el 10×20 clásico del género)
+export const COLS = 11;
+export const ROWS = 20; // 2 filas ocultas arriba
 export const HIDDEN = 2;
 export const VISIBLE = ROWS - HIDDEN;
 

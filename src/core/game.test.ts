@@ -21,8 +21,8 @@ function setActive(g: Game, def: PieceDef, x: number, y: number, rot = 0): void 
 
 /** Deja la fila de abajo llena salvo cuatro huecos a la derecha y cae una I horizontal ahí. */
 function clearBottomLineWithI(g: Game): void {
-  for (let x = 0; x < 6; x++) g.board[ROWS - 1][x] = PIECES.T.id;
-  setActive(g, PIECES.I, 6, 0);
+  for (let x = 0; x < COLS - 4; x++) g.board[ROWS - 1][x] = PIECES.T.id;
+  setActive(g, PIECES.I, COLS - 4, 0);
   g.hardDrop();
 }
 
@@ -87,8 +87,8 @@ describe('colocación y líneas', () => {
     setActive(g, PIECES.O, 0, 0);
     const before = g.score;
     g.hardDrop();
-    // la O cae desde la fila 0 hasta las dos últimas filas: 20 casillas
-    expect(g.score - before).toBe(20 * 2);
+    // la O cae desde la fila 0 hasta las dos últimas filas: ROWS - 2 casillas
+    expect(g.score - before).toBe((ROWS - 2) * 2);
   });
 
   it('subir de nivel abre la elección de mejoras con 3 opciones', () => {
@@ -167,30 +167,30 @@ describe('cruz y prisma', () => {
 
   it('el prisma hace caer los bloques de encima tras borrar un color', () => {
     const g = playing();
-    g.board[21][5] = PIECES.O.id; // color que se borra
-    g.board[20][5] = PIECES.T.id; // bloque de encima que debe caer
-    g['prismBlast']([[5, 20]]);
-    expect(g.board[21][5]).toBe(PIECES.T.id);
-    expect(g.board[20][5]).toBe(0);
+    g.board[ROWS - 1][5] = PIECES.O.id; // color que se borra
+    g.board[ROWS - 2][5] = PIECES.T.id; // bloque de encima que debe caer
+    g['prismBlast']([[5, ROWS - 2]]);
+    expect(g.board[ROWS - 1][5]).toBe(PIECES.T.id);
+    expect(g.board[ROWS - 2][5]).toBe(0);
   });
 
   it('tras una bomba solo caen las columnas afectadas, no los huecos de las demás', () => {
     const g = playing();
-    g.board[20][8] = PIECES.T.id; // bloque de encima en la misma columna: debe caer
-    g.board[20][0] = PIECES.T.id; // columna 0 con un hueco debajo: no debe rellenarse
-    g['settleAfterBlast']([{ x: 8, y: 21 }]); // la bomba ya ha vaciado (8,21)
-    expect(g.board[21][8]).toBe(PIECES.T.id);
-    expect(g.board[21][0]).toBe(0);
-    expect(g.board[20][0]).toBe(PIECES.T.id);
+    g.board[ROWS - 2][8] = PIECES.T.id; // bloque de encima en la misma columna: debe caer
+    g.board[ROWS - 2][0] = PIECES.T.id; // columna 0 con un hueco debajo: no debe rellenarse
+    g['settleAfterBlast']([{ x: 8, y: ROWS - 1 }]); // la bomba ya ha vaciado (8, fila de abajo)
+    expect(g.board[ROWS - 1][8]).toBe(PIECES.T.id);
+    expect(g.board[ROWS - 1][0]).toBe(0);
+    expect(g.board[ROWS - 2][0]).toBe(PIECES.T.id);
   });
 
   it('las líneas tras una bomba no cuentan para el combo', () => {
     const g = playing();
     g.combo = 2;
-    for (let x = 0; x < COLS; x++) g.board[21][x] = PIECES.O.id;
-    g.board[21][0] = 0;
-    g.board[20][0] = PIECES.T.id;
-    g['settleAfterBlast']([{ x: 0, y: 21 }]);
+    for (let x = 0; x < COLS; x++) g.board[ROWS - 1][x] = PIECES.O.id;
+    g.board[ROWS - 1][0] = 0;
+    g.board[ROWS - 2][0] = PIECES.T.id;
+    g['settleAfterBlast']([{ x: 0, y: ROWS - 1 }]);
     expect(g.combo).toBe(2);
   });
 });
