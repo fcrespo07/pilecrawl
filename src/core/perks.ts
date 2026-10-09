@@ -1,4 +1,5 @@
 import type { Game } from './game';
+import { UNLOCK_LEVEL } from './meta';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -26,6 +27,8 @@ export interface Mods {
   extraPieces: string[];
   expBonus: number;
   allSpin: boolean;
+  /** la cruz sustituye a la T en cada bolsa (no añade piezas) */
+  crossSwap: boolean;
   b2bMult: number;
   comboGrace: number;
   instinct: boolean;
@@ -57,6 +60,7 @@ export function baseMods(): Mods {
     extraPieces: [],
     expBonus: 0,
     allSpin: false,
+    crossSwap: false,
     b2bMult: 1.5,
     comboGrace: 0,
     instinct: false,
@@ -155,7 +159,7 @@ export const PERKS: PerkDef[] = [
   // ───────── Raras ─────────
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
-    pros: () => ['Salen más mejoras <b>raras, épicas y legendarias</b>'],
+    pros: () => ['Salen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> si ya las has desbloqueado'],
     apply: (m) => { m.luck += 1; },
   },
   {
@@ -218,9 +222,9 @@ export const PERKS: PerkDef[] = [
   // ───────── Épicas ─────────
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
-    pros: () => ['Cada bolsa trae una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
-    cons: () => ['Deja <b>huecos</b> con muchísima facilidad'],
-    apply: (m) => { m.extraPieces.push('X5'); },
+    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
+    cons: () => ['Sin <b>T</b> no hay <b>T-spins</b>'],
+    apply: (m) => { m.crossSwap = true; },
   },
   {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
@@ -267,7 +271,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'prism', name: 'Prisma', rarity: 'legendary', max: 2,
-    pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza'],
+    pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza', 'Lo que queda encima <b>cae</b> a los huecos'],
     cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
     apply: (m) => { m.prismEvery = m.prismEvery ? 10 : 16; m.gravitySpeed *= 1.15; },
   },
@@ -275,9 +279,14 @@ export const PERKS: PerkDef[] = [
 
 export const PERK_BY_ID: Record<string, PerkDef> = Object.fromEntries(PERKS.map((p) => [p.id, p]));
 
-/** Saca `n` perks distintos ponderados por rareza (y suerte). */
-export function rollPerks(owned: Map<string, number>, luck: number, n = 3): PerkDef[] {
-  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max);
+/** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
+export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
+  return bestLevel >= UNLOCK_LEVEL[p.rarity];
+}
+
+/** Saca `n` perks distintos ponderados por rareza (y suerte). `bestLevel` filtra por desbloqueos. */
+export function rollPerks(owned: Map<string, number>, luck: number, n = 3, bestLevel = Infinity): PerkDef[] {
+  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
   const weight = (p: PerkDef) => {
     const base = RARITY_WEIGHT[p.rarity];
     if (p.rarity === 'common') return base;

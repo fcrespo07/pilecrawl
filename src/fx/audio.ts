@@ -35,6 +35,7 @@ export class SoundEngine {
   private sfxBus!: GainNode;
   private musicBus!: GainNode;
   private echo!: DelayNode;
+  private musicEcho!: DelayNode;
   private noiseBuf!: AudioBuffer;
   musicOn: boolean;
   muted: boolean;
@@ -73,23 +74,31 @@ export class SoundEngine {
     this.musicBus.gain.value = this.musicOn ? 0.32 : 0;
     this.musicBus.connect(this.master);
 
-    // eco suave compartido
-    this.echo = ctx.createDelay(1);
-    this.echo.delayTime.value = 0.27;
-    const fb = ctx.createGain();
-    fb.gain.value = 0.32;
-    const echoOut = ctx.createGain();
-    echoOut.gain.value = 0.35;
-    const echoLp = ctx.createBiquadFilter();
-    echoLp.type = 'lowpass';
-    echoLp.frequency.value = 2400;
-    this.echo.connect(echoLp).connect(fb).connect(this.echo);
-    echoLp.connect(echoOut).connect(this.master);
+    // eco suave: uno para los efectos y otro para la música, que sale por su bus
+    // (así al silenciar la música no sigue sonando su cola)
+    this.echo = this.makeEcho(ctx, this.master);
+    // el bus de música baja a 0,32: el eco de la música compensa esa ganancia para sonar igual que antes
+    this.musicEcho = this.makeEcho(ctx, this.musicBus, 0.35 / 0.32);
 
     const len = ctx.sampleRate;
     this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+
+  private makeEcho(ctx: AudioContext, out: AudioNode, gain = 0.35): DelayNode {
+    const delay = ctx.createDelay(1);
+    delay.delayTime.value = 0.27;
+    const fb = ctx.createGain();
+    fb.gain.value = 0.32;
+    const echoOut = ctx.createGain();
+    echoOut.gain.value = gain;
+    const echoLp = ctx.createBiquadFilter();
+    echoLp.type = 'lowpass';
+    echoLp.frequency.value = 2400;
+    delay.connect(echoLp).connect(fb).connect(delay);
+    echoLp.connect(echoOut).connect(out);
+    return delay;
   }
 
   toggleMute() {
@@ -135,7 +144,7 @@ export class SoundEngine {
     }
     node.connect(g);
     g.connect(opts.bus ?? this.sfxBus);
-    if (opts.echo) g.connect(this.echo);
+    if (opts.echo) g.connect(opts.bus ? this.musicEcho : this.echo);
     osc.start(t);
     osc.stop(t + dur + 0.05);
   }

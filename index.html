@@ -6,6 +6,24 @@
     <title>Tetrogue</title>
   </head>
   <body>
+  <!-- Controles táctiles: solo se muestran en pantallas sin ratón (ver style.css) -->
+  <nav id="touch" class="touch-pad" aria-label="Controles táctiles">
+    <div class="tp-group">
+      <button type="button" data-touch="left" aria-label="Izquierda">←</button>
+      <button type="button" data-touch="right" aria-label="Derecha">→</button>
+    </div>
+    <div class="tp-group">
+      <button type="button" data-touch="down" aria-label="Bajar">↓</button>
+      <button type="button" data-touch="hard" aria-label="Soltar">⤓</button>
+    </div>
+    <div class="tp-group">
+      <button type="button" data-touch="ccw" aria-label="Girar izquierda">↺</button>
+      <button type="button" data-touch="cw" aria-label="Girar derecha">↻</button>
+      <button type="button" data-touch="r180" aria-label="Girar 180">A</button>
+          <button type="button" data-touch="hold" aria-label="Guardar pieza">C</button>
+      <button type="button" data-touch="pause" aria-label="Pausa">II</button>
+    </div>
+  </nav>
     <div id="stage">
       <canvas id="game"></canvas>
 

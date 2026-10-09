@@ -3,6 +3,7 @@ import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
+import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
@@ -120,12 +121,19 @@ export class UI {
     $('over-best').textContent = isBest ? '¡Nuevo récord!' : `Récord ${fmt(this.best)}`;
     $('over-best').classList.toggle('record', isBest);
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
+    // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
+    const prevBest = Number.isFinite(g.bestLevel) ? g.bestLevel : Infinity;
+    const unlocked = (Object.keys(UNLOCK_LEVEL) as Rarity[])
+      .filter((r) => UNLOCK_LEVEL[r] > prevBest && UNLOCK_LEVEL[r] <= g.level)
+      .map((r) => RARITY_LABEL[r]);
     $('over-stats').innerHTML =
       stat('Nivel', g.level) +
       stat('Líneas', g.lines) +
       stat('Tetris', g.tetrises) +
       stat('Combo máx.', Math.max(0, g.maxCombo)) +
-      stat('Tiempo', clock(g.time));
+      stat('Tiempo', clock(g.time)) +
+      stat('Mejor nivel', loadMeta().bestLevel) +
+      (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     $('best-start').textContent = fmt(this.best);
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida

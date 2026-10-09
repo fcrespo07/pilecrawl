@@ -58,7 +58,7 @@ body::before {
 }
 
 #stage {
-  position: absolute;
+  position: fixed;
   left: 50%;
   top: 50%;
   width: 960px;
@@ -618,3 +618,21 @@ kbd {
 .over-stats span { display: block; font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 .over-stats b { font-size: 21px; font-variant-numeric: tabular-nums; }
 .over-perks { display: flex; flex-wrap: wrap; gap: 7px; max-width: 600px; justify-content: center; min-height: 10px; margin-bottom: 8px; }
+
+/* Controles táctiles: solo en dispositivos sin ratón. Sin estilo visual propio (lo lleva la interfaz). */
+.touch-pad { display: none; }
+@media (pointer: coarse) {
+  .touch-pad {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .touch-pad .tp-group { display: flex; gap: 8px; }
+  .touch-pad button {
+    min-width: 56px; min-height: 56px; font: 600 20px var(--f-ui);
+    color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; touch-action: none;
+  }
+  .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); }
+}
