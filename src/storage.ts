@@ -1,6 +1,7 @@
 // Migra las partidas guardadas con los nombres anteriores del juego (tetrogue, derrumbe) a las claves actuales.
 // Se importa antes que nada en main.ts para que audio, meta y récord lean ya lo migrado.
-const OLD_PREFIXES = ['tetrogue.', 'derrumbe.'];
+// Del más reciente al más antiguo: el primero que exista gana y los demás se borran.
+const OLD_PREFIXES = ['derrumbe.', 'tetrogue.'];
 const NEW_PREFIX = 'blockrogue.';
 const KEYS = ['best', 'audio', 'meta'];
 
