@@ -4,6 +4,8 @@ import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
+import { dailyNumber, MODES } from '../core/modes';
+import { loadBest, submitScore } from '../records';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
@@ -13,24 +15,8 @@ function $(id: string) {
   return document.getElementById(id)!;
 }
 
-function loadBest(): number {
-  try {
-    return Number(localStorage.getItem('blockrogue.best') ?? 0) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function saveBest(v: number) {
-  try {
-    localStorage.setItem('blockrogue.best', String(v));
-  } catch {
-    /* sin almacenamiento: no pasa nada */
-  }
-}
-
-function clock(ms: number) {
-  const s = Math.floor(ms / 1000);
+function clock(ms: number, up = false) {
+  const s = up ? Math.ceil(ms / 1000) : Math.floor(ms / 1000);
   return `${Math.floor(s / 60)}:${pad2(s % 60)}`;
 }
 
@@ -51,7 +37,9 @@ export class UI {
   private perksOpen = false;
   private picking = false;
   private choiceDelay = 0;
-  private best = loadBest();
+  /** Fecha del desafío diario que se está jugando (AAAA-MM-DD, UTC). */
+  private date = '';
+  private timedKey = '';
   private perkKey = '';
   private segsKey = '';
   private livesKey = -1;
@@ -59,7 +47,6 @@ export class UI {
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
-    this.refreshBest();
     $('b2b-ico').innerHTML = UI_ICONS.flame;
     document.querySelectorAll<HTMLElement>('[data-icon]').forEach((el) => {
       el.innerHTML = perkIcon(el.dataset.icon!);
@@ -73,12 +60,16 @@ export class UI {
   show(id: string) { $(id).classList.add('visible'); }
   hide(id: string) { $(id).classList.remove('visible'); }
 
-  /** Refleja el récord en el inicio y en la portada. */
-  refreshBest() {
-    $('best-home').textContent = fmt(this.best);
+  /** Nombre del modo para títulos; el diario lleva su número. */
+  modeTitle(): string {
+    const g = this.game;
+    return g.mode === 'daily' ? `${MODES.daily.name} #${dailyNumber(this.date)}` : MODES[g.mode].name;
   }
 
-  startGame() {
+  /** `date`: día del desafío diario, para guardar el récord en el día en que se empezó. */
+  startGame(date: string) {
+    this.date = date;
+    this.timedKey = '';
     window.clearTimeout(this.overTimer);
     for (const id of ['over', 'pause', 'perks']) this.hide(id);
     this.perksOpen = false;
@@ -117,13 +108,16 @@ export class UI {
 
   showGameOver() {
     const g = this.game;
-    const isBest = g.score > this.best;
-    if (isBest) {
-      this.best = g.score;
-      saveBest(this.best);
-    }
+    const isBest = submitScore(g.mode, this.date, g.score);
+    const best = loadBest(g.mode, this.date);
+    const timeUp = g.endReason === 'time';
+    $('over-mode').textContent = this.modeTitle();
+    const title = $('over-title');
+    title.textContent = timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
+    title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
-    $('over-best').textContent = isBest ? '¡Nuevo récord!' : `Récord ${fmt(this.best)}`;
+    const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';
+    $('over-best').textContent = isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
     $('over-best').classList.toggle('record', isBest);
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
     // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
@@ -140,7 +134,6 @@ export class UI {
       stat('Mejor nivel', loadMeta().bestLevel) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
-    this.refreshBest();
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);
   }
@@ -292,7 +285,15 @@ export class UI {
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';
     $('b2b-box').classList.toggle('on', g.b2b);
     $('rerolls').textContent = String(g.rerolls);
-    $('time').textContent = clock(g.time);
+    const left = g.timeLeftMs();
+    const timed = Number.isFinite(left);
+    const timedKey = timed ? `${Math.ceil(left / 1000)}` : '';
+    if (timedKey !== this.timedKey || !timed) {
+      this.timedKey = timedKey;
+      $('time-label').textContent = timed ? 'Queda' : 'Tiempo';
+      $('time').textContent = timed ? clock(left, true) : clock(g.time);
+      $('time-box').classList.toggle('urgent', timed && left <= 10_000);
+    }
     document.documentElement.style.setProperty('--level', hex(accentFor(g.level)));
 
     const need = g.linesNeeded();

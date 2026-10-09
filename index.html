@@ -32,8 +32,8 @@
           <h1 class="home-title">Block Rogue</h1>
           <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
           <div class="home-cta">
+            <div id="mode-select" class="mode-select"></div>
             <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
-            <p class="home-best">Récord <b id="best-home">0</b></p>
           </div>
         </header>
 
@@ -97,7 +97,7 @@
           <section class="panel mini" id="b2b-box"><header>B2B</header><div class="ico" id="b2b-ico"></div></section>
           <section class="panel mini"><header>Vidas</header><div id="lives" class="ico-row"></div></section>
           <section class="panel mini"><header>Rerolls</header><div id="rerolls" class="num">1</div></section>
-          <section class="panel mini"><header>Tiempo</header><div id="time" class="num">0:00</div></section>
+          <section class="panel mini" id="time-box"><header id="time-label">Tiempo</header><div id="time" class="num">0:00</div></section>
         </div>
 
         <section class="panel p-perks">
@@ -151,8 +151,8 @@
 
       <!-- ═════════════ Fin ═════════════ -->
       <div id="over" class="overlay">
-        <div class="stripe-title danger"><span>Señal perdida</span></div>
-        <h2 class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
+        <div class="stripe-title danger"><span id="over-mode">Señal perdida</span></div>
+        <h2 id="over-title" class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
         <div class="final">
           <small>Puntuación final</small>
           <div id="over-score" class="final-score">0</div>

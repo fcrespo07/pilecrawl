@@ -1,6 +1,7 @@
 import { Emitter } from './emitter';
 import { baseMods, PERK_BY_ID, rollPerks, type Mods, type PerkDef } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
+import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
 
 // Tablero propio de 11×18 visibles (no el 10×20 clásico del género)
@@ -30,6 +31,8 @@ export interface ActivePiece extends PieceSpec {
 export type SpinKind = 'full' | 'mini' | null;
 export type Cell = [number, number];
 export type GameState = 'ready' | 'playing' | 'choosing' | 'paused' | 'over';
+/** Por qué terminó la partida: tablero lleno o fin del tiempo (contrarreloj). */
+export type EndReason = 'topout' | 'time';
 
 export interface ClearInfo {
   rows: number[];
@@ -65,7 +68,7 @@ export interface GameEvents {
   levelup: { level: number };
   interest: { amount: number };
   revive: { livesLeft: number };
-  gameover: void;
+  gameover: { reason: EndReason };
   perk: { perk: PerkDef; stacks: number };
 }
 
@@ -91,6 +94,8 @@ export type ReplayAction =
 /** Todo lo necesario para volver a jugar una partida idéntica (ver `replay.ts`). */
 export interface Replay {
   version: number;
+  /** Modo de juego. Las repeticiones anteriores a los modos no lo llevan: son `normal`. */
+  mode?: ModeId;
   seed: number;
   bestLevel: number;
   actions: ReplayAction[];
@@ -156,6 +161,8 @@ export class Game {
 
   /** Semilla de la partida: con ella y las acciones grabadas se reproduce entera. */
   seed = 0;
+  mode: ModeId = 'normal';
+  endReason: EndReason | null = null;
   /** Pasos de simulación ejecutados (solo avanzan jugando, no en pausa ni eligiendo perk). */
   steps = 0;
   /** Acciones del jugador en esta partida. */
@@ -208,15 +215,24 @@ export class Game {
     this.soft = false;
     this.gravityAcc = 0;
     this.lockTimer = 0;
+    this.endReason = null;
   }
 
   /** Empieza una partida. Sin semilla se elige una al azar. */
-  start(seed = randomSeed()) {
+  start(seed = randomSeed(), mode: ModeId = 'normal') {
     this.reset();
     this.seed = seed >>> 0;
+    this.mode = mode;
+    const def = MODES[mode];
+    if (def.fixedBestLevel !== undefined) this.bestLevel = def.fixedBestLevel;
     this.rng = makeRng(this.seed);
     this.perkRng = makeRng((this.seed ^ 0x9e3779b9) >>> 0);
     this.lastHole = Math.floor(this.rng() * COLS);
+    if (def.starterPerk) {
+      // azar propio para no mover la cola ni las cartas: solo comunes y raras
+      const [perk] = rollPerks(this.perks, 0, 1, 0, makeRng((this.seed ^ 0x5bd1e995) >>> 0));
+      if (perk) this.grantPerk(perk);
+    }
     this.state = 'playing';
     this.fillQueue();
     this.spawn();
@@ -440,13 +456,26 @@ export class Game {
     if (this.state !== 'playing' || !this.active) return;
     this.steps++;
     this.update(STEP_MS);
+    // si la última pieza sube de nivel justo al acabar, no se llega a elegir carta
+    if (this.timeLeftMs() <= 0 && (this.state === 'playing' || this.state === 'choosing')) this.endRun('time');
+  }
+
+  /** Pasos que dura la partida en este modo. 0 = sin límite. */
+  timeLimitSteps(): number {
+    return Math.round(MODES[this.mode].timeLimitMs / STEP_MS);
+  }
+
+  /** Tiempo que queda en contrarreloj (Infinity en los modos sin límite). */
+  timeLeftMs(): number {
+    const limit = this.timeLimitSteps();
+    return limit ? Math.max(0, (limit - this.steps) * STEP_MS) : Infinity;
   }
 
   /** Datos para rejugar la partida en el servidor o en un reproductor. */
   replay(): Replay {
     // Infinity no sobrevive a JSON (sale null): cualquier nivel alto desbloquea lo mismo
     const bestLevel = Math.min(this.bestLevel, 9999);
-    return { version: RULES_VERSION, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps };
+    return { version: RULES_VERSION, mode: this.mode, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps };
   }
 
   update(dt: number) {
@@ -795,10 +824,17 @@ export class Game {
       this.events.emit('revive', { livesLeft: this.lives });
       return true;
     }
-    this.active = null;
-    this.state = 'over';
-    this.events.emit('gameover', undefined);
+    this.endRun('topout');
     return false;
+  }
+
+  private endRun(reason: EndReason) {
+    this.active = null;
+    this.choices = [];
+    this.pendingLevelUps = 0;
+    this.state = 'over';
+    this.endReason = reason;
+    this.events.emit('gameover', { reason });
   }
 
   // ─────────────────────────── Niveles y perks ───────────────────────────
@@ -842,12 +878,7 @@ export class Game {
     const perk = this.choices[index];
     if (!perk) return;
     this.record([this.steps, 'pick', index]);
-    const stacks = (this.perks.get(perk.id) ?? 0) + 1;
-    this.perks.set(perk.id, stacks);
-    if (!this.perkOrder.includes(perk.id)) this.perkOrder.push(perk.id);
-    perk.apply(this.mods, this);
-    this.refreshQueueSpecials();
-    this.events.emit('perk', { perk, stacks });
+    this.grantPerk(perk);
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
       this.choices = rollPerks(this.perks, this.mods.luck, 3, this.bestLevel, this.perkRng);
@@ -856,6 +887,15 @@ export class Game {
     this.choices = [];
     this.state = 'playing';
     this.spawn();
+  }
+
+  private grantPerk(perk: PerkDef) {
+    const stacks = (this.perks.get(perk.id) ?? 0) + 1;
+    this.perks.set(perk.id, stacks);
+    if (!this.perkOrder.includes(perk.id)) this.perkOrder.push(perk.id);
+    perk.apply(this.mods, this);
+    this.refreshQueueSpecials();
+    this.events.emit('perk', { perk, stacks });
   }
 
   togglePause() {

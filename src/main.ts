@@ -6,6 +6,10 @@ import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
+import { dailySeed, utcDate } from './core/modes';
+import { randomSeed } from './core/rng';
+import { loadLastMode, saveLastMode } from './records';
+import { ModeSelect } from './ui/modeSelect';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 
@@ -15,6 +19,7 @@ const input = new Input(game);
 const ui = new UI(game);
 
 const stage = document.getElementById('stage')!;
+const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
@@ -70,6 +75,7 @@ function wireAudioAndFeel() {
     audio.stopMusic();
     audio.gameOver();
     ui.showGameOver();
+    modeSelect.refresh();
   });
 }
 
@@ -106,7 +112,7 @@ function showHome(show: boolean) {
   stage.inert = show;
   if (show) {
     renderer.app.ticker.stop();
-    ui.refreshBest();
+    modeSelect.refresh();
     home.scrollTop = 0;
     home.focus({ preventScroll: true });
   } else renderer.app.ticker.start();
@@ -122,8 +128,11 @@ function startRun() {
   stepAcc = 0;
   renderer.reset();
   game.bestLevel = loadMeta().bestLevel;
-  game.start();
-  ui.startGame();
+  // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
+  const mode = modeSelect.mode;
+  const date = utcDate();
+  game.start(mode === 'daily' ? dailySeed(date) : randomSeed(), mode);
+  ui.startGame(date);
 }
 
 function onKeyDown(e: KeyboardEvent) {
