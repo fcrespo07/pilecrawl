@@ -15,8 +15,10 @@ const ui = new UI(game);
 const stage = document.getElementById('stage')!;
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
-function fitScale() {
-  return Math.min(window.innerWidth / W, window.innerHeight / H);
+/** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
+function touchReserve(): number {
+  const bar = document.getElementById('touch');
+  return bar && getComputedStyle(bar).display !== 'none' ? bar.offsetHeight : 0;
 }
 
 function renderResolution(scale: number) {
@@ -24,7 +26,10 @@ function renderResolution(scale: number) {
 }
 
 function layout() {
-  const s = fitScale();
+  const reserve = touchReserve();
+  const avail = window.innerHeight - reserve;
+  const s = Math.min(window.innerWidth / W, avail / H);
+  stage.style.top = `${avail / 2}px`;
   stage.style.transform = `translate(-50%, -50%) scale(${s})`;
   return s;
 }

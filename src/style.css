@@ -52,7 +52,7 @@ body::before {
 }
 
 #stage {
-  position: absolute;
+  position: fixed;
   left: 50%;
   top: 50%;
   width: 960px;
@@ -643,9 +643,9 @@ kbd {
   }
   .touch-pad .tp-group { display: flex; gap: 8px; }
   .touch-pad button {
-    min-width: 56px; min-height: 56px; font: 600 20px 'Chakra Petch', sans-serif;
-    color: #e6e8ff; background: rgba(9, 11, 24, 0.85); border: 1px solid rgba(255, 255, 255, 0.25);
+    min-width: 56px; min-height: 56px; font: 600 20px var(--f-ui);
+    color: var(--text); background: var(--panel); border: 1px solid var(--line);
     border-radius: 10px; touch-action: none;
   }
-  .touch-pad button:active { background: rgba(46, 242, 255, 0.25); }
+  .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); }
 }
