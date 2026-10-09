@@ -103,3 +103,11 @@ describe('modos', () => {
     expect(runReplay({ ...base, mode: 'zen' as never }).ok).toBe(false);
   });
 });
+
+describe('próximo desafío', () => {
+  it('cuenta hasta la medianoche UTC', async () => {
+    const { msToNextDaily } = await import('./modes');
+    expect(msToNextDaily(new Date(Date.UTC(2026, 9, 9, 22, 30)))).toBe(90 * 60_000);
+    expect(msToNextDaily(new Date(Date.UTC(2026, 11, 31, 23, 59)))).toBe(60_000);
+  });
+});

@@ -30,7 +30,7 @@ export const MODES: Record<ModeId, ModeDef> = {
   daily: {
     id: 'daily',
     name: 'Desafío diario',
-    desc: 'Las mismas piezas, cartas y mejora inicial para todos. Cambia cada día.',
+    desc: 'Las mismas piezas, cartas y mejora inicial para todos. Cambia a las 00:00 UTC.',
     timeLimitMs: 0,
     fixedBestLevel: 9999,
     starterPerk: true,
@@ -51,6 +51,12 @@ export const isModeId = (v: unknown): v is ModeId => typeof v === 'string' && Ob
 /** Fecha UTC en formato AAAA-MM-DD: el desafío cambia a la misma hora en todo el mundo. */
 export function utcDate(now = new Date()): string {
   return now.toISOString().slice(0, 10);
+}
+
+/** Milisegundos hasta el próximo desafío (medianoche UTC). */
+export function msToNextDaily(now = new Date()): number {
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return next - now.getTime();
 }
 
 /** Primer día del desafío: el número 1. */

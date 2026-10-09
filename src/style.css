@@ -709,6 +709,15 @@ kbd {
 .mode-opt:has(input:checked) small { color: #cfc7b3; }
 .mode-opt:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 560px) { .mode-select { grid-template-columns: 1fr; } }
+/* móvil apaisado: sin descripciones para que el botón Jugar quepa sin desplazar */
+@media (max-height: 500px) {
+  .home-inner { padding-top: 12px; }
+  .home-hero { padding: 0; }
+  .home-lead { display: none; }
+  .home-title { font-size: 56px; margin: 2px 0 10px; }
+  .mode-opt { padding: 6px 10px; gap: 2px; }
+  .mode-opt span { display: none; }
+}
 
 /* cuenta atrás del contrarreloj en sus últimos segundos */
 #time-box.urgent .num { color: var(--danger); animation: urgent 0.5s steps(1) infinite; }

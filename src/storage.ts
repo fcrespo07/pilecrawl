@@ -17,3 +17,5 @@ try {
 } catch {
   /* sin almacenamiento: no hay nada que migrar */
 }
+
+export {};
