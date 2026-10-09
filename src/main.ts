@@ -209,3 +209,5 @@ async function boot() {
 }
 
 void boot();
+
+document.querySelectorAll('[data-version]').forEach((el) => (el.textContent = __APP_VERSION__));

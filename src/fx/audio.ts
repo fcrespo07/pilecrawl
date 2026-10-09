@@ -5,7 +5,7 @@ const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
 const noteInScale = (root: number, degree: number) =>
   root + SCALE[((degree % 7) + 7) % 7] + 12 * Math.floor(degree / 7);
 
-const PREFS_KEY = 'derrumbe.audio';
+const PREFS_KEY = 'blockrogue.audio';
 
 /** Preferencias de sonido guardadas por el jugador. Sin almacenamiento disponible, valores por defecto. */
 function loadAudioPrefs(): { muted: boolean; musicOn: boolean } {

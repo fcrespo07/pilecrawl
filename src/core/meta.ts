@@ -13,7 +13,7 @@ export interface Meta {
   bestLevel: number;
 }
 
-const KEY = 'derrumbe.meta';
+const KEY = 'blockrogue.meta';
 
 /** Lee la progresión guardada. Sin almacenamiento o con datos rotos, empieza de cero. */
 export function loadMeta(): Meta {
