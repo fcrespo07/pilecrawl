@@ -50,7 +50,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Sin emojis en la interfaz. Los iconos son SVG propios.
 - Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva y cola en una barra horizontal encima del tablero (`QUEUE_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
-- Efectos visuales pesados (bloom, CRT) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
+- Las ondas de choque (distorsión de pantalla) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
 - Récord en `localStorage` (`blockrogue.best`). Se envuelve en try/catch.
 - Nombre: Block Rogue (antes Tetrogue y Derrumbe). `src/storage.ts` migra las claves `tetrogue.*` y `derrumbe.*` a `blockrogue.*`.
 
