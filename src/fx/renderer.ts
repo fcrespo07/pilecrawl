@@ -559,6 +559,9 @@ export class Renderer {
       this.floatText(chain > 1 ? `TERREMOTO ×${chain}` : 'TERREMOTO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xff8a3d, size: 30 });
     });
 
+    // la caída tras una bomba o un prisma: un temblor corto para que el salto de bloques se note
+    ev.on('settle', () => this.shake(0.25));
+
     ev.on('garbage', () => {
       this.kickY = -6;
       this.shake(0.1);

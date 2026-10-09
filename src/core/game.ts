@@ -57,6 +57,7 @@ export interface GameEvents {
   prism: { cells: Cell[]; removed: { x: number; y: number; v: number }[]; color: number; points: number };
   drill: { values: number[]; points: number };
   quake: { chain: number };
+  settle: { columns: number };
   garbage: { hole: number };
   garbageWarn: { progress: number };
   levelup: { level: number };
@@ -155,7 +156,9 @@ export class Game {
 
   private fillQueue() {
     while (this.queue.length < 8) {
-      const bag = [...STANDARD];
+      // con la cruz, la T sale sustituida por la X: la bolsa no crece
+      const bag = this.mods.crossSwap ? STANDARD.filter((k) => k !== 'T') : [...STANDARD];
+      if (this.mods.crossSwap) bag.push('X5');
       for (const k of this.mods.extraPieces) bag.push(k === 'SZ' ? (Math.random() < 0.5 ? 'S' : 'Z') : k);
       for (let i = bag.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -448,14 +451,15 @@ export class Game {
     while (this.board.length < ROWS) this.board.unshift(new Array(COLS).fill(0));
   }
 
-  private resolveClears(spin: SpinKind, piece: PieceDef | null, cells: Cell[], cascade = 0) {
+  /** `blast`: líneas que caen tras una bomba o un prisma. Puntúan como una línea normal, sin cadena ni combo. */
+  private resolveClears(spin: SpinKind, piece: PieceDef | null, cells: Cell[], cascade = 0, blast = false) {
     const rows = this.findFullRows();
     const lines = rows.length;
     const lvl = this.level;
     const spinName = spin && piece ? `${piece.name}-SPIN${spin === 'mini' ? ' MINI' : ''}` : '';
 
     if (lines === 0) {
-      if (cascade > 0) return;
+      if (cascade > 0 || blast) return;
       // spin sin líneas: puntúa pero no rompe ni da b2b
       if (spin) {
         const pts = this.addScore((spin === 'full' ? 400 : 100) * lvl);
@@ -482,7 +486,9 @@ export class Game {
 
     const difficult = lines >= 4 || spin !== null;
     let b2bApplied = false;
-    if (cascade === 0) {
+    if (blast) {
+      // no toca combo ni b2b: la bomba o el prisma no los mantienen ni los rompen
+    } else if (cascade === 0) {
       if (difficult) {
         if (this.b2b) {
           base *= this.mods.b2bMult;
@@ -501,7 +507,7 @@ export class Game {
     if (lines >= 4) this.tetrises++;
 
     let total = base;
-    if (this.combo > 0 && cascade === 0) total += 50 * this.combo * lvl * this.mods.comboMult;
+    if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;
     total += gold * 300 * lvl;
 
     this.removeRows(rows);
@@ -557,6 +563,39 @@ export class Game {
     const points = this.addScore(removed.length * 40 * this.level);
     this.events.emit('bomb', { cx, cy, removed, points });
     if (this.combo >= 0 && removed.length === 0) this.combo = -1;
+    this.settleAfterBlast(removed);
+  }
+
+  /**
+   * Tras una explosión o un prisma: en cada columna afectada, los bloques de encima de su casilla
+   * borrada más baja caen a los huecos. El resto del tablero no se mueve (a diferencia de Terremoto).
+   */
+  private settleColumns(removed: { x: number; y: number }[]): number {
+    const bottom = new Map<number, number>();
+    for (const r of removed) bottom.set(r.x, Math.max(bottom.get(r.x) ?? -1, r.y));
+    let columns = 0;
+    for (const [x, from] of bottom) {
+      const col: number[] = [];
+      for (let y = from; y >= 0; y--) if (this.board[y][x] !== 0) col.push(this.board[y][x]);
+      let moved = false;
+      for (let y = from, i = 0; y >= 0; y--, i++) {
+        const v = i < col.length ? col[i] : 0;
+        if (this.board[y][x] !== v) {
+          moved = true;
+          this.board[y][x] = v;
+        }
+      }
+      if (moved) columns++;
+    }
+    return columns;
+  }
+
+  private settleAfterBlast(removed: { x: number; y: number }[]) {
+    if (removed.length === 0) return;
+    const columns = this.settleColumns(removed);
+    if (columns === 0) return;
+    this.events.emit('settle', { columns });
+    this.resolveClears(null, null, [], 0, true);
   }
 
   private prismBlast(cells: Cell[]) {
@@ -586,6 +625,7 @@ export class Game {
     }
     const points = this.addScore(removed.length * 60 * this.level);
     this.events.emit('prism', { cells, removed, color: target, points });
+    this.settleAfterBlast(removed);
   }
 
   private afterLock() {
