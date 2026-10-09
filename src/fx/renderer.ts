@@ -794,11 +794,11 @@ export class Renderer {
       const active = g.hyperLeft > 0;
       const ready = g.hyperReady();
       const h = BOARD_H * g.hyperMeter();
-      const alpha = ready ? 0.65 + 0.35 * Math.sin(this.time * 10) : 1;
+      const alpha = ready && !REDUCED_MOTION ? 0.65 + 0.35 * Math.sin(this.time * 10) : 1;
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y, 6, BOARD_H).fill({ color: this.skin.ink, alpha: 0.12 });
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y + BOARD_H - h, 6, h).fill({ color: HYPER_COLOR, alpha });
       if (active) {
-        const pulse = 0.55 + 0.45 * Math.sin(this.time * 9);
+        const pulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
         f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: pulse });
       }
     }
@@ -838,7 +838,7 @@ export class Renderer {
   }
 
   private specColor(spec: PieceSpec, i: number): number {
-    if (spec.bomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
+    if (spec.bomb || spec.hyperBomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
     if (spec.prism) return hsv((this.time * 0.6 + i * 0.12) % 1, 0.75, 1);
     if (spec.gold) return lerpColor(GOLD_COLOR, 0xffffff, 0.2 + 0.2 * Math.sin(this.time * 5 + i));
     return this.pieceColor(spec.def.color);
@@ -880,11 +880,11 @@ export class Renderer {
       this.placeCell(this.cells, BOARD_X + (this.visX + cx) * CELL, BOARD_Y + (y - HIDDEN) * CELL, CELL, col, alpha);
     });
     // mecha de la bomba / brillo del prisma
-    if (a.bomb && Math.random() < sec * 40) {
+    if ((a.bomb || a.hyperBomb) && Math.random() < sec * 40) {
       const [cx, cy] = shape[0];
       this.particles.emit({ x: BOARD_X + (this.visX + cx + 0.5) * CELL, y: BOARD_Y + (this.visY + cy - HIDDEN) * CELL, color: 0xffb020, count: 1, speed: 120, angle: -Math.PI / 2, spread: 1.2, life: 0.4, size: 5, gravity: -100 });
     }
-    if (a.prism && Math.random() < sec * 30) {
+    if (a.prism && !a.hyperBomb && Math.random() < sec * 30) {
       const [cx, cy] = shape[Math.floor(Math.random() * shape.length)];
       this.particles.emit({ x: BOARD_X + (this.visX + cx + 0.5) * CELL, y: BOARD_Y + (this.visY + cy - HIDDEN + 0.5) * CELL, color: hsv(Math.random(), 0.7, 1), count: 1, speed: 60, life: 0.6, size: 6, gravity: -60 });
     }

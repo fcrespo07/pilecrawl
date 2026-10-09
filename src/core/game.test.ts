@@ -462,9 +462,27 @@ describe('hiperperks', () => {
   it('Bombardeo convierte en bomba la pieza activa y las que salen', () => {
     const g = withHyper('barrage');
     g.activateHyper();
-    expect(g.active!.bomb).toBe(true);
+    expect(g.active!.hyperBomb).toBe(true);
     g.hardDrop();
-    expect(g.active!.bomb).toBe(true);
+    expect(g.active!.hyperBomb).toBe(true);
+  });
+
+  it('las bombas de Bombardeo no se guardan en la reserva', () => {
+    const g = withHyper('barrage');
+    g.mods.infiniteHold = true;
+    g.activateHyper();
+    g.active!.prism = true;
+    g.holdPiece();
+    expect(g.hold[0].bomb).toBe(false);
+    expect(g.hold[0].hyperBomb).toBeUndefined();
+    // el prisma que era sigue siéndolo
+    expect(g.hold[0].prism).toBe(true);
+    g.hyperLeft = 1;
+    g.step();
+    expect(g.hyperLeft).toBe(0);
+    g.holdPiece();
+    expect(g.active!.hyperBomb).toBeFalsy();
+    expect(g.active!.bomb).toBe(false);
   });
 
   it('Tabla rasa vacía el tablero y puntúa cada bloque', () => {
@@ -476,5 +494,13 @@ describe('hiperperks', () => {
     expect(g.score - score).toBe(5 * 40);
     expect(g.active).not.toBeNull();
     expect(g.hyperLeft).toBe(0);
+  });
+
+  it('las hiperperks instantáneas también avisan al terminar', () => {
+    const g = withHyper('wipe');
+    let ended = false;
+    g.events.on('hyperEnd', () => (ended = true));
+    g.activateHyper();
+    expect(ended).toBe(true);
   });
 });

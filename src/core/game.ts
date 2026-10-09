@@ -21,6 +21,8 @@ export interface PieceSpec {
   bomb: boolean;
   prism: boolean;
   gold: boolean;
+  /** Bomba solo por Bombardeo: no pasa a la reserva y no borra si era prisma u oro. */
+  hyperBomb?: boolean;
 }
 
 export interface ActivePiece extends PieceSpec {
@@ -358,7 +360,7 @@ export class Game {
     if (def.size === 1 || (def.size === 2 && def.name !== 'O')) y = HIDDEN;
     if (def.name === 'O') y = HIDDEN;
     this.active = { ...s, x, y, rot: 0 };
-    if (this.hyperActive('barrage')) this.makeBomb(this.active);
+    if (this.hyperActive('barrage')) this.active.hyperBomb = true;
     if (this.collides(def, x, y, 0)) {
       if (!this.collides(def, x, y - 1, 0)) this.active.y = y - 1;
       else if (!this.collides(def, x, 0, 0)) this.active.y = 0;
@@ -628,7 +630,7 @@ export class Game {
     this.active = null;
     this.piecesLocked++;
 
-    if (a.bomb) {
+    if (a.bomb || a.hyperBomb) {
       this.explode(cells);
     } else if (a.prism) {
       this.prismBlast(cells);
@@ -1115,15 +1117,11 @@ export class Game {
     this.hyperCharge = 0;
     this.hyperLeft = Math.round(h.durationMs / STEP_MS);
     this.events.emit('hyper', { hyper: h });
-    if (h.id === 'barrage') this.makeBomb(this.active);
+    if (h.id === 'barrage') this.active!.hyperBomb = true;
     if (h.id === 'wipe') this.wipeBoard();
+    // las instantáneas también avisan de que han terminado
+    if (this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: h });
     return true;
-  }
-
-  private makeBomb(p: PieceSpec) {
-    p.bomb = true;
-    p.prism = false;
-    p.gold = false;
   }
 
   /** Arena: cada bloque cae al hueco libre más bajo de su columna, aunque esté tapado. */

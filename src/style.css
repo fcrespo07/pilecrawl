@@ -240,6 +240,10 @@ kbd {
 #hyper-box[data-state='ready'] .hy-bar i { animation: hy-pulse 0.6s ease-in-out infinite alternate; }
 #hyper-box[data-state='active'] { animation: hy-pulse 0.45s ease-in-out infinite alternate; }
 @keyframes hy-pulse { to { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  #hyper-box[data-state='ready'] .hy-bar i,
+  #hyper-box[data-state='active'] { animation: none; }
+}
 #perks.hyper .perk-title span { color: var(--hyper); }
 
 /* ───────────── chips de mejoras ───────────── */
@@ -654,6 +658,12 @@ kbd {
     color: var(--text); background: var(--panel); border: 1px solid var(--line);
     border-radius: 10px; touch-action: none;
     box-shadow: 3px 3px 0 var(--line);
+  }
+  /* seis botones en la fila de giros: en móviles estrechos se encogen para que quepa la pausa */
+  @media (max-width: 400px) {
+    .touch-pad { gap: 6px; padding-left: 8px; padding-right: 8px; }
+    .touch-pad .tp-group { gap: 5px; }
+    .touch-pad button { min-width: 48px; min-height: 48px; }
   }
   .touch-pad button[data-touch='hyper'] { color: var(--muted); }
   .touch-pad button[data-touch='hyper'].ready { color: var(--paper); background: var(--hyper); border-color: var(--hyper); }
