@@ -4,7 +4,6 @@ import { HYPER_LEVEL, type HyperDef } from '../core/hypers';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
-import { skinOf } from '../fx/skins';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { loadBest, submitScore } from '../records';
@@ -42,6 +41,13 @@ function chipHTML(id: string, stacks: number): string {
   const p = Game.perkDef(id);
   return `<div class="chip-wrap r-${rarityKey(p)}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
 }
+
+/** Marca del dorso de las cartas: una «B» de Block Rogue hecha con bloques. */
+const CARD_MARK = (() => {
+  const rows = ['###.', '#..#', '###.', '#..#', '###.'];
+  const cells = rows.flatMap((r, y) => [...r].map((ch, x) => (ch === '#' ? `<rect x="${x * 10 + 1}" y="${y * 10 + 1}" width="8" height="8"/>` : '')));
+  return `<svg class="card-mark" viewBox="0 0 40 50" aria-hidden="true">${cells.join('')}</svg>`;
+})();
 
 export class UI {
   private shownScore = 0;
@@ -217,7 +223,7 @@ export class UI {
       <div class="card-tilt">
         <div class="card-glow"></div>
         <div class="card-flip">
-          <div class="card-face card-back"><span>T</span></div>
+          <div class="card-face card-back">${CARD_MARK}</div>
           <div class="card-face card-front">
             <div class="card-band"><span>${band}</span><kbd>${i + 1}</kbd></div>
             <div class="card-icon">${perkIcon(p.id)}</div>
@@ -303,10 +309,9 @@ export class UI {
 
   // ───────────── HUD ─────────────
 
-  /** Color del nivel; en las pieles oscuras, aclarado para que se lea. */
+  /** Color del nivel: los acentos ya están pensados para fondo oscuro. */
   private levelColor(level: number): string {
-    const c = hex(accentFor(level));
-    return skinOf(this.game.mods.skin).dark ? `color-mix(in srgb, ${c} 55%, white)` : c;
+    return hex(accentFor(level));
   }
 
   /** Panel de la hiperperk: sin elegir, cargando, lista o activa. */
@@ -337,7 +342,7 @@ export class UI {
   }
 
   update(dt: number) {
-    const skin = this.game.mods.skin ?? 'papel';
+    const skin = this.game.mods.skin ?? 'pixel';
     if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
     const g = this.game;
 

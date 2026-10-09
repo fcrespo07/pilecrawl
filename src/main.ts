@@ -1,4 +1,3 @@
-import './fonts.css';
 import './style.css';
 import './storage';
 import { Game, STEP_MS } from './core/game';
@@ -114,8 +113,8 @@ function showHome(show: boolean) {
   // detrás de la portada nada debe recibir foco ni dibujarse
   stage.inert = show;
   if (show) {
-    // la portada siempre en papel: la piel es de la partida y el ticker (que la pone) se para
-    document.body.dataset.skin = 'papel';
+    // la portada siempre con la piel de base: la de los perks es de la partida y el ticker (que la pone) se para
+    document.body.dataset.skin = 'pixel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
     home.scrollTop = 0;
@@ -187,9 +186,8 @@ function onKeyDown(e: KeyboardEvent) {
 
 async function boot() {
   await Promise.allSettled([
-    document.fonts.load('32px Bungee'),
-    document.fonts.load('700 16px "Chakra Petch"'),
-    document.fonts.load('400 16px "Chakra Petch"'),
+    document.fonts.load('16px "Press Start 2P"'),
+    document.fonts.load('16px VT323'),
   ]);
 
   const scale = layout();

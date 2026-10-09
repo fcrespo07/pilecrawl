@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.10.0 — 2026-10-09
+- Nuevo estilo visual «Píxel» en toda la interfaz: consola de 16 bits con cielo nocturno, bloques de 8×8 píxeles, bordes de 4 px y letra de recreativa. Sustituye a «papel y tinta». Las pieles de los perks (Plano, Apagón, Terminal, Neón) recolorean el estilo píxel (#17).
+
 ## 0.9.0 — 2026-10-09
 - **Hiperperks**: al subir al nivel 4 eliges una habilidad activa por partida (Cámara lenta, Frenesí, Arena, Bombardeo o Tabla rasa). Se carga limpiando líneas y se suelta con la tecla D o el botón táctil. Reglas versión 5 (#16).
 

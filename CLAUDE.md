@@ -42,7 +42,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Tablero:** 11 columnas × 18 filas visibles (`COLS`, `ROWS`, `HIDDEN` en `game.ts`). No volver al 10×20 clásico.
 - **Niveles:** `linesNeeded()` en `game.ts`. 8 líneas al principio, +1 cada dos niveles, tope 16. Se resta `linesReduction` de los perks.
 - **Perks:** cada uno tiene `pros` y `cons` (se muestran en verde y rojo) y un `apply(mods, game)`. Los efectos se leen de `Mods` (`perks.ts`). Los que dependen del estado (Ahorro, Vértigo, Coleccionista, Fénix) se calculan en `scoreMultNow()`. `mods.choices` es el número de cartas (Abanico = 4).
-- **Pieles:** `mods.skin` (Plano, Apagón, Terminal, Neón) cambia el aspecto: `src/fx/skins.ts` para el lienzo y `body[data-skin]` en `style.css` para el DOM. Son solo cosméticas; nunca deben cambiar reglas. En pieles oscuras el renderer aclara los colores con `tone()`.
+- **Pieles:** la de base es `pixel`. `mods.skin` (Plano, Apagón, Terminal, Neón) la recolorea: `src/fx/skins.ts` para el lienzo y `body[data-skin]` en `style.css` para el DOM (redefinen los tokens, incluidos `--hi`, `--hot`, `--shade` y `--raise` del estilo píxel). Son solo cosméticas; nunca deben cambiar reglas. El renderer aclara con `tone()` los colores fijos de textos y destellos; los acentos de nivel (`ACCENTS`) ya son claros.
 - **Ofertas:** `rollOffer` sortea una rareza (peso × cartas que quedan) y saca todas las cartas de ella. Desde `CURSE_FROM_LEVEL` hay ofertas malditas con probabilidad `CURSE_CHANCE`, nunca dos seguidas, con cartas de `CURSES` (`curse: true`, solo `cons`); la oferta siguiente es rara o mejor (`blessedOffer`).
 - **Hiperperks:** habilidades activas a propósito más rotas que los perks (`hypers.ts`). Al subir al nivel `HYPER_LEVEL` (4) se elige una antes de la carta normal; una por partida. Se carga con líneas (`hyperCharge`, vía `addLines`) y se suelta con D o el botón táctil: es la acción `hyper` de la repetición. La duración va en pasos (`hyperLeft`), así que la pausa no la gasta. Los efectos viven en `game.ts` leyendo `hyperActive(id)`.
 - **Piezas extra:** cada perk de pieza mete una pieza en `mods.extraPieces`. Las piezas están en `pieces.ts` (M1, D2, V3, I3, X5, P5).
@@ -55,6 +55,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 
 - Los perks cambian reglas, no solo suman números. Cada mejora buena tiene su contrapartida.
 - Sin emojis en la interfaz. Los iconos son SVG propios.
+- Estilo visual «Píxel» (elegido por el usuario entre seis propuestas, 2026-10-09): consola de 16 bits, cielo nocturno con colinas, bloques de 8×8, bordes de 4 px con esquinas de píxel. Fuentes Press Start 2P (títulos, números y lienzo) y VT323 (texto, con `font-size-adjust`). Los estilos están en `style.css`: base y, al final, la capa «Estilo píxel». Sustituye a «papel y tinta».
 - Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva y cola en una barra horizontal encima del tablero (`QUEUE_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
 - Las ondas de choque (distorsión de pantalla) se pueden desactivar con F. El estado queda en la sesión, no se guarda.

@@ -1,6 +1,7 @@
 // Pieles de la interfaz. Son solo aspecto: las ponen algunos perks (`mods.skin`) y no tocan las reglas.
+// La de base es Píxel; las de los perks cambian sus colores y mantienen los bloques de píxeles.
 
-export type SkinId = 'papel' | 'apagon' | 'terminal' | 'neon' | 'plano';
+export type SkinId = 'pixel' | 'apagon' | 'terminal' | 'neon' | 'plano';
 
 export interface Skin {
   /** Degradado del fondo del lienzo, de arriba abajo. */
@@ -14,10 +15,12 @@ export interface Skin {
   panel: number;
   /** Fondo oscuro: los colores de texto y acento se aclaran para que se lean. */
   dark: boolean;
+  /** Cielo de estrellas y colinas de píxeles al fondo (solo la piel de base). */
+  stars?: boolean;
 }
 
 export const SKINS: Record<SkinId, Skin> = {
-  papel: { bg0: 0xe9e1cc, bg1: 0xe2d8bf, ink: 0x1b1a17, paper: 0xf3ecdc, panel: 0xfbf6ea, dark: false },
+  pixel: { bg0: 0x1d2142, bg1: 0x11132a, ink: 0xf4f0e6, paper: 0x11132a, panel: 0x14172f, dark: true, stars: true },
   apagon: { bg0: 0x14161f, bg1: 0x0c0d13, ink: 0xd9d4c4, paper: 0x14161f, panel: 0x1b1e29, dark: true },
   terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true },
   neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true },
@@ -25,4 +28,4 @@ export const SKINS: Record<SkinId, Skin> = {
   plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true },
 };
 
-export const skinOf = (id: SkinId | null | undefined): Skin => SKINS[id ?? 'papel'];
+export const skinOf = (id: SkinId | null | undefined): Skin => SKINS[id ?? 'pixel'];

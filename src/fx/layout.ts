@@ -16,10 +16,10 @@ export const QUEUE_W = 610;
 export const QUEUE_H = 96;
 
 /** Paleta de acento: cambia con cada nivel. */
-export const ACCENTS = [0x1f5fa8, 0xb8336a, 0x4c7d1c, 0xb06a14, 0x6a3fb0, 0x157a66, 0xb83a2e, 0x8a6d00];
+export const ACCENTS = [0xffd23f, 0x2fb4ff, 0x3ee06a, 0xff3b5c, 0x9a7bff, 0xff9a2e, 0xff7ac0, 0x5af0e0];
 export const accentFor = (level: number) => ACCENTS[(level - 1) % ACCENTS.length];
 
 export const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 /** Tinta de las hiperperks (barra de carga, marco y textos). En CSS es `--hyper`. */
-export const HYPER_COLOR = 0x6a2fb8;
+export const HYPER_COLOR = 0xb07aff;
