@@ -77,8 +77,11 @@ function pieceIcon(key: string): string {
     .join('');
 }
 
+/** Sello de las maldiciones: un hexágono roto. */
+const CURSE_ICON = `<path d="M16 3l11 6.5v13L16 29 5 22.5v-13z"/><path d="M15 3.6l2.5 7-4 4 4 5-2 9.6" stroke-opacity=".7"/>`;
+
 export function perkIcon(id: string): string {
-  const inner = PIECE_PERKS[id] ? pieceIcon(PIECE_PERKS[id]) : (PATHS[id] ?? '');
+  const inner = PIECE_PERKS[id] ? pieceIcon(PIECE_PERKS[id]) : (PATHS[id] ?? (id.startsWith('c_') ? CURSE_ICON : ''));
   return `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 }
 

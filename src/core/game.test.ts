@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COLS, Game, ROWS } from './game';
+import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS } from './game';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { PERK_BY_ID } from './perks';
 import type { PieceSpec } from './game';
@@ -352,5 +352,16 @@ describe('perks con piel', () => {
       return [g.score, g.lines, g.board.map((r) => r.join('')).join('|')];
     };
     expect(play(true)).toEqual(play(false));
+  });
+});
+
+describe('suelo de la basura', () => {
+  it('Terremoto y Marea al máximo no bajan el intervalo de basura del mínimo', () => {
+    const g = new Game();
+    g.start(3);
+    PERK_BY_ID.quake.apply(g.mods, g);
+    for (let i = 0; i < PERK_BY_ID.c_tide.max; i++) PERK_BY_ID.c_tide.apply(g.mods, g);
+    g.level = 40;
+    expect(g.garbageInterval()).toBe(GARBAGE_MIN_INTERVAL);
   });
 });

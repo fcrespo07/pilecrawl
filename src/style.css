@@ -25,6 +25,7 @@
   --rare: #2d6a9f;
   --epic: #7a3fa0;
   --legendary: #b7791f;
+  --curse: #8e1b3a;
   --danger: #c0392b;
   --cut: 0px;
   --chamfer: none;
@@ -54,7 +55,7 @@ body[data-skin='plano'] {
   --ink: #eaf2ff; --paper: #0f2f55; --veil-a: rgba(19, 52, 87, 0.8); --veil-b: rgba(19, 52, 87, 0.96);
 }
 body[data-skin='apagon'], body[data-skin='terminal'], body[data-skin='neon'], body[data-skin='plano'] {
-  --pro: #6fd39a; --con: #ff7a6b; --common: #b9b4a6; --rare: #79b4ea; --epic: #c79bea; --legendary: #f0c060; --danger: #ff7a6b;
+  --pro: #6fd39a; --con: #ff7a6b; --common: #b9b4a6; --rare: #79b4ea; --epic: #c79bea; --legendary: #f0c060; --curse: #ff6f93; --danger: #ff7a6b;
 }
 body:is([data-skin='apagon'], [data-skin='terminal'], [data-skin='neon'], [data-skin='plano']) kbd { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.08); }
 kbd[hidden] { display: none; }
@@ -261,6 +262,11 @@ kbd {
 .r-common { --c: var(--common); }
 .r-rare { --c: var(--rare); }
 .r-epic { --c: var(--epic); }
+.r-curse { --c: var(--curse); }
+/* oferta maldita: franja y título en el color de las maldiciones */
+#perks.cursed .stripe-title, #perks.cursed .perk-title span { color: var(--curse); }
+#perks.cursed .stripe-title::before, #perks.cursed .stripe-title::after { background: repeating-linear-gradient(-45deg, var(--curse) 0 2px, transparent 2px 7px); }
+#perks.cursed .card-front { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--curse) 9%, transparent) 0 2px, transparent 2px 10px), var(--panel); }
 .r-legendary { --c: var(--legendary); }
 @keyframes chip-in { from { transform: scale(0) rotate(-90deg); } }
 

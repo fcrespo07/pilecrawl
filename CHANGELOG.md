@@ -4,6 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.8.0 — 2026-10-09
+- Las cartas de cada subida de nivel son de la misma rareza (si no quedan bastantes, se completa con las de al lado) (#15).
+- Ofertas malditas: desde el nivel 5, algunas subidas (nunca dos seguidas) solo ofrecen maldiciones y hay que elegir la menos mala; la siguiente oferta es rara o mejor. Ocho maldiciones nuevas. Reglas a la versión 4 (#15).
+- La basura nunca sube más a menudo que cada 3 piezas, sumen lo que sumen los perks (#15).
+
 ## 0.7.0 — 2026-10-09
 - Cuatro mejoras que cambian la piel de la interfaz mientras las tienes: Plano (común), Apagón y Terminal (raras) y Neón (épica). Si tienes varias, manda la última. La piel es solo aspecto (#14).
 - Las reglas pasan a la versión 3 por las cartas nuevas (#14).

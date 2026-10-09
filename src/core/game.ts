@@ -1,5 +1,5 @@
 import { Emitter } from './emitter';
-import { baseMods, PERK_BY_ID, rollPerks, type Mods, type PerkDef } from './perks';
+import { baseMods, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
 import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
@@ -82,7 +82,14 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 3;
+export const RULES_VERSION = 4;
+
+/** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
+export const CURSE_FROM_LEVEL = 5;
+
+/** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
+export const GARBAGE_MIN_INTERVAL = 3;
+export const CURSE_CHANCE = 0.12;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
 export type ReplayAction =
@@ -163,6 +170,10 @@ export class Game {
   perks = new Map<string, number>();
   perkOrder: string[] = [];
   choices: PerkDef[] = [];
+  /** La oferta actual es maldita (solo maldiciones). */
+  cursedOffer = false;
+  /** La oferta actual es la recompensa de una maldita: rara o mejor. */
+  blessedOffer = false;
   pendingLevelUps = 0;
   /** Mejor nivel de partidas anteriores: decide qué rarezas pueden salir. */
   bestLevel = Infinity;
@@ -221,6 +232,8 @@ export class Game {
     this.perks.clear();
     this.perkOrder = [];
     this.choices = [];
+    this.cursedOffer = false;
+    this.blessedOffer = false;
     this.pendingLevelUps = 0;
     this.steps = 0;
     this.actions = [];
@@ -565,7 +578,7 @@ export class Game {
     let mult = m.scoreMult;
     if (m.savings > 0) mult *= 1 + m.savings * Math.min(this.rerolls, 5);
     if (m.vertigo > 0 && this.inDanger(0.5)) mult *= 1 + m.vertigo;
-    if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.length;
+    if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.filter((id) => !PERK_BY_ID[id].curse).length;
     if (this.phoenixBonus > 0) mult *= 1 + this.phoenixBonus;
     return mult;
   }
@@ -863,7 +876,8 @@ export class Game {
   }
 
   garbageInterval(): number {
-    return Math.max(5, 15 - Math.floor(this.level / 2)) + this.mods.garbageDelay;
+    // suelo después de sumar los perks: Terremoto y Marea juntos no pueden subir basura en cada pieza
+    return Math.max(GARBAGE_MIN_INTERVAL, Math.max(5, 15 - Math.floor(this.level / 2)) + this.mods.garbageDelay);
   }
 
   garbageProgress(): number {
@@ -937,14 +951,43 @@ export class Game {
 
   private beginChoice() {
     this.state = 'choosing';
-    this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
+    this.newOffer();
+  }
+
+  /** Nivel que se celebra en la oferta actual (con varias subidas seguidas, la primera pendiente). */
+  offerLevel(): number {
+    return this.level - this.pendingLevelUps + 1;
+  }
+
+  /**
+   * Oferta nueva: todas las cartas de la misma rareza. Desde el nivel 5, algunas (nunca dos
+   * seguidas) son malditas: solo maldiciones, y hay que elegir la menos mala. La oferta que
+   * sigue a una maldita es rara o mejor.
+   */
+  private newOffer() {
+    this.blessedOffer = this.cursedOffer;
+    const cursed =
+      this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE;
+    this.cursedOffer = cursed;
+    this.rollChoices();
+  }
+
+  /** Saca las cartas del tipo de oferta actual (el reroll mantiene el tipo). */
+  private rollChoices() {
+    const n = this.mods.choices;
+    if (this.cursedOffer) {
+      this.choices = rollCurses(this.perks, n, this.perkRng);
+      if (this.choices.length > 0) return;
+      this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
+    }
+    this.choices = rollOffer(this.perks, this.mods.luck, n, this.bestLevel, this.perkRng, this.blessedOffer);
   }
 
   reroll(): boolean {
     if (this.state !== 'choosing' || this.rerolls <= 0) return false;
     this.rerolls--;
     this.record([this.steps, 'reroll']);
-    this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
+    this.rollChoices();
     return true;
   }
 
@@ -956,7 +999,7 @@ export class Game {
     this.grantPerk(perk);
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
-      this.choices = rollPerks(this.perks, this.mods.luck, this.mods.choices, this.bestLevel, this.perkRng);
+      this.newOffer();
       return;
     }
     this.choices = [];
