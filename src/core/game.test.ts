@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COLS, Game, ROWS } from './game';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
+import { PERK_BY_ID } from './perks';
 import type { PieceSpec } from './game';
 
 /** Partida lista para jugar, sin azar en la cola inicial que moleste a los tests. */
@@ -150,5 +151,46 @@ describe('bloqueo fuera del tablero', () => {
     g['lockPiece']();
     expect(g.state).toBe('playing');
     expect(g.lives).toBe(0);
+  });
+});
+
+describe('cruz y prisma', () => {
+  it('la cruz sustituye a la T en cada bolsa y no añade piezas', () => {
+    const g = new Game();
+    PERK_BY_ID.cross.apply(g.mods, g);
+    g['fillQueue']();
+    const firstBag = g.queue.slice(0, 7).map((s) => s.def.name);
+    expect(firstBag.filter((n) => n === 'X')).toHaveLength(1);
+    expect(firstBag).not.toContain('T');
+    expect(new Set(firstBag).size).toBe(7);
+  });
+
+  it('el prisma hace caer los bloques de encima tras borrar un color', () => {
+    const g = playing();
+    g.board[21][5] = PIECES.O.id; // color que se borra
+    g.board[20][5] = PIECES.T.id; // bloque de encima que debe caer
+    g['prismBlast']([[5, 20]]);
+    expect(g.board[21][5]).toBe(PIECES.T.id);
+    expect(g.board[20][5]).toBe(0);
+  });
+
+  it('tras una bomba solo caen las columnas afectadas, no los huecos de las demás', () => {
+    const g = playing();
+    g.board[20][8] = PIECES.T.id; // bloque de encima en la misma columna: debe caer
+    g.board[20][0] = PIECES.T.id; // columna 0 con un hueco debajo: no debe rellenarse
+    g['settleAfterBlast']([{ x: 8, y: 21 }]); // la bomba ya ha vaciado (8,21)
+    expect(g.board[21][8]).toBe(PIECES.T.id);
+    expect(g.board[21][0]).toBe(0);
+    expect(g.board[20][0]).toBe(PIECES.T.id);
+  });
+
+  it('las líneas tras una bomba no cuentan para el combo', () => {
+    const g = playing();
+    g.combo = 2;
+    for (let x = 0; x < COLS; x++) g.board[21][x] = PIECES.O.id;
+    g.board[21][0] = 0;
+    g.board[20][0] = PIECES.T.id;
+    g['settleAfterBlast']([{ x: 0, y: 21 }]);
+    expect(g.combo).toBe(2);
   });
 });
