@@ -5,6 +5,30 @@ const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
 const noteInScale = (root: number, degree: number) =>
   root + SCALE[((degree % 7) + 7) % 7] + 12 * Math.floor(degree / 7);
 
+const PREFS_KEY = 'tetrogue.audio';
+
+/** Preferencias de sonido guardadas por el jugador. Sin almacenamiento disponible, valores por defecto. */
+function loadAudioPrefs(): { muted: boolean; musicOn: boolean } {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) {
+      const p = JSON.parse(raw) as Partial<{ muted: boolean; musicOn: boolean }>;
+      return { muted: p.muted === true, musicOn: p.musicOn !== false };
+    }
+  } catch {
+    /* sin almacenamiento o JSON roto: se usan los valores por defecto */
+  }
+  return { muted: false, musicOn: true };
+}
+
+function saveAudioPrefs(prefs: { muted: boolean; musicOn: boolean }) {
+  try {
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  } catch {
+    /* sin almacenamiento: la preferencia dura lo que la pestaña */
+  }
+}
+
 export class SoundEngine {
   ctx: AudioContext | null = null;
   private master!: GainNode;
@@ -12,8 +36,8 @@ export class SoundEngine {
   private musicBus!: GainNode;
   private echo!: DelayNode;
   private noiseBuf!: AudioBuffer;
-  musicOn = true;
-  muted = false;
+  musicOn: boolean;
+  muted: boolean;
 
   // secuenciador
   private nextStepTime = 0;
@@ -21,6 +45,12 @@ export class SoundEngine {
   private tempo = 112;
   private intensity = 0;
   private timer: number | null = null;
+
+  constructor() {
+    const prefs = loadAudioPrefs();
+    this.muted = prefs.muted;
+    this.musicOn = prefs.musicOn;
+  }
 
   init() {
     if (this.ctx) {
@@ -34,13 +64,13 @@ export class SoundEngine {
     comp.ratio.value = 4;
     comp.connect(ctx.destination);
     this.master = ctx.createGain();
-    this.master.gain.value = 0.8;
+    this.master.gain.value = this.muted ? 0 : 0.8;
     this.master.connect(comp);
     this.sfxBus = ctx.createGain();
     this.sfxBus.gain.value = 0.9;
     this.sfxBus.connect(this.master);
     this.musicBus = ctx.createGain();
-    this.musicBus.gain.value = 0.32;
+    this.musicBus.gain.value = this.musicOn ? 0.32 : 0;
     this.musicBus.connect(this.master);
 
     // eco suave compartido
@@ -64,11 +94,13 @@ export class SoundEngine {
 
   toggleMute() {
     this.muted = !this.muted;
+    saveAudioPrefs({ muted: this.muted, musicOn: this.musicOn });
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.8, this.ctx.currentTime, 0.05);
   }
 
   toggleMusic() {
     this.musicOn = !this.musicOn;
+    saveAudioPrefs({ muted: this.muted, musicOn: this.musicOn });
     if (this.ctx) this.musicBus.gain.setTargetAtTime(this.musicOn ? 0.32 : 0, this.ctx.currentTime, 0.1);
   }
 

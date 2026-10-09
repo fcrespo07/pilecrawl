@@ -54,6 +54,7 @@ export class UI {
   private perkKey = '';
   private segsKey = '';
   private livesKey = -1;
+  private overTimer = 0;
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
@@ -72,6 +73,7 @@ export class UI {
   hide(id: string) { $(id).classList.remove('visible'); }
 
   startGame() {
+    window.clearTimeout(this.overTimer);
     for (const id of ['start', 'over', 'pause', 'perks']) this.hide(id);
     this.perksOpen = false;
     this.picking = false;
@@ -126,7 +128,8 @@ export class UI {
       stat('Tiempo', clock(g.time));
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     $('best-start').textContent = fmt(this.best);
-    setTimeout(() => this.show('over'), 900);
+    // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
+    this.overTimer = window.setTimeout(() => this.show('over'), 900);
   }
 
   // ───────────── elección de perks ─────────────

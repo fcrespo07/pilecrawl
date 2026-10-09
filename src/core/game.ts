@@ -213,8 +213,9 @@ export class Game {
       if (!this.collides(def, x, y - 1, 0)) this.active.y = y - 1;
       else if (!this.collides(def, x, 0, 0)) this.active.y = 0;
       else {
-        this.topOut();
-        return false;
+        // con una vida se reintenta la misma pieza: si no, se pierde al revivir (p. ej. desde hold)
+        if (!this.topOut()) return false;
+        return this.spawn(s);
       }
     }
     this.gravityAcc = 0;
@@ -426,6 +427,8 @@ export class Game {
       for (const [x, y] of cells) if (y >= 0) this.board[y][x] = value;
       this.events.emit('lock', { cells, color: a.def.color });
       this.resolveClears(spin, a.def, cells);
+      // una pieza con algún bloque por encima del búfer oculto es un bloqueo fuera: cuenta como topOut
+      if (cells.some(([, y]) => y < 0) && !this.topOut()) return;
     }
 
     this.afterLock();
@@ -604,7 +607,7 @@ export class Game {
       this.events.emit('garbageWarn', { progress: this.garbageCounter / interval });
       if (this.garbageCounter >= interval) {
         this.garbageCounter = 0;
-        this.addGarbage();
+        if (!this.addGarbage()) return;
       }
     }
 
@@ -625,7 +628,10 @@ export class Game {
   }
 
   private lastHole = Math.floor(Math.random() * COLS);
-  private addGarbage() {
+  /** Sube el tablero una fila. Devuelve false si la partida termina. */
+  private addGarbage(): boolean {
+    // si hay bloques en la fila de arriba, subir el tablero los empujaría fuera
+    if (this.board[0].some((v) => v !== 0) && !this.topOut()) return false;
     const hole = Math.random() < 0.7 ? this.lastHole : Math.floor(Math.random() * COLS);
     this.lastHole = hole;
     this.board.shift();
@@ -633,21 +639,23 @@ export class Game {
     row[hole] = 0;
     this.board.push(row);
     this.events.emit('garbage', { hole });
+    return true;
   }
 
-  private topOut() {
+  /** Devuelve true si queda una vida y la partida sigue; false si termina. No genera pieza. */
+  private topOut(): boolean {
     if (this.lives > 0) {
       this.lives--;
       // deja sólo las 5 filas de abajo
       for (let y = 0; y < ROWS - 5; y++) this.board[y].fill(0);
       this.combo = -1;
       this.events.emit('revive', { livesLeft: this.lives });
-      this.spawn();
-      return;
+      return true;
     }
     this.active = null;
     this.state = 'over';
     this.events.emit('gameover', undefined);
+    return false;
   }
 
   // ─────────────────────────── Niveles y perks ───────────────────────────
