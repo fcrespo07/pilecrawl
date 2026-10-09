@@ -15,7 +15,7 @@ function $(id: string) {
 
 function loadBest(): number {
   try {
-    return Number(localStorage.getItem('derrumbe.best') ?? 0) || 0;
+    return Number(localStorage.getItem('blockrogue.best') ?? 0) || 0;
   } catch {
     return 0;
   }
@@ -23,7 +23,7 @@ function loadBest(): number {
 
 function saveBest(v: number) {
   try {
-    localStorage.setItem('derrumbe.best', String(v));
+    localStorage.setItem('blockrogue.best', String(v));
   } catch {
     /* sin almacenamiento: no pasa nada */
   }

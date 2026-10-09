@@ -1,4 +1,4 @@
-# Derrumbe — contexto del proyecto
+# Block Rogue — contexto del proyecto
 
 Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se sube de nivel y el jugador elige 1 de 3 mejoras (perks) que cambian las reglas. Las mejoras se acumulan y pueden combinarse.
 
@@ -51,7 +51,8 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva y cola en una barra horizontal encima del tablero (`QUEUE_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
 - Las ondas de choque (distorsión de pantalla) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
-- Récord en `localStorage` (`derrumbe.best`). Se envuelve en try/catch.
+- Récord en `localStorage` (`blockrogue.best`). Se envuelve en try/catch.
+- Nombre: Block Rogue (antes Tetrogue y Derrumbe). `src/storage.ts` migra las claves `tetrogue.*` y `derrumbe.*` a `blockrogue.*`.
 
 ## Estado
 
@@ -68,3 +69,11 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Nada que lo relacione con Tetris: ni la palabra (tampoco T-spin, Perfect Clear), ni el nombre, ni la paleta oficial de piezas, ni la melodía Korobeiniki. Es marca registrada y The Tetris Company la defiende. Para 4 líneas se dice "cuádruple"; para los spins, "giro".
 - Antes de dar algo por hecho, `npm run typecheck` y comprobar en el navegador.
 - Los scripts de PowerShell van en ASCII puro: PowerShell 5.1 se rompe con caracteres como el guion largo.
+
+## Versionado
+
+- Versión semántica en `package.json`. Sigue en 0.x: aún no está listo para publicar. Sube la minor (0.x.0) con novedades de juego (perks, modos, mecánicas) y la patch (0.x.y) con arreglos y retoques.
+- **Cada PR añade su línea en español** bajo `## Sin publicar`, al principio de `CHANGELOG.md` (con número de PR). Así los PR abiertos a la vez no chocan por la versión.
+- **La versión se sube al fusionar**: en el último commit del PR que se fusiona, Claude cambia `version` en `package.json` y `package-lock.json` (las dos primeras apariciones) y mueve lo de `Sin publicar` a una sección `## X.Y.Z — fecha`. El resto de PR abiertos rebasan sin tocar versión.
+- La versión se ve en el juego (`[data-version]` en la portada; viene de `package.json` vía `__APP_VERSION__` en `vite.config.ts`).
+- Las etiquetas `vX.Y.Z` y su release (con la sección del CHANGELOG) las crea solas `.github/workflows/release.yml` al llegar a master con una versión nueva. No hace falta etiquetar a mano. Ese workflow, lanzado a mano una vez, rellena v0.1.0 a v0.3.0.

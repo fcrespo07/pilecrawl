@@ -1,0 +1,37 @@
+name: Release
+
+# Al fusionar en master crea la etiqueta vX.Y.Z (versión de package.json) y su release
+# con la sección del CHANGELOG, si aún no existen. A mano (workflow_dispatch) rellena
+# las etiquetas históricas v0.1.0 a v0.3.0.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Crea etiqueta y release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          create() { # versión, commit
+            v="$1"; sha="$2"
+            if git rev-parse -q --verify "refs/tags/v$v" >/dev/null; then echo "v$v ya existe"; return; fi
+            awk -v v="$v" '$0 ~ "^## "v" " {f=1; next} /^## /{f=0} f' CHANGELOG.md > notes.md
+            gh release create "v$v" --target "$sha" --title "v$v" --notes-file notes.md
+          }
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            create 0.1.0 3806f33f2292a85719733b70cde0103e48e3d21e
+            create 0.2.0 6606d1effee1fd84dc9c0cbaea707a66306cc7e7
+            create 0.3.0 016b17e655f4f33eba53221aea0ad4bdffb0bfef
+          fi
+          create "$(node -p "require('./package.json').version")" "$GITHUB_SHA"
