@@ -63,6 +63,9 @@ function wireAudioAndFeel() {
   ev.on('bomb', () => { audio.bomb(); hitstop = Math.max(hitstop, 70); });
   ev.on('prism', () => audio.prism());
   ev.on('drill', () => audio.drill());
+  ev.on('breather', () => audio.drill());
+  ev.on('lifeline', () => audio.hold());
+  ev.on('harvest', () => audio.reroll());
   ev.on('quake', () => audio.quake());
   ev.on('garbage', () => audio.garbage());
   ev.on('levelup', ({ level }) => {
@@ -171,6 +174,7 @@ function onKeyDown(e: KeyboardEvent) {
     if (e.code === 'Digit1' || e.code === 'Numpad1') ui.pick(0);
     else if (e.code === 'Digit2' || e.code === 'Numpad2') ui.pick(1);
     else if (e.code === 'Digit3' || e.code === 'Numpad3') ui.pick(2);
+    else if (e.code === 'Digit4' || e.code === 'Numpad4') ui.pick(3);
     else if (e.code === 'KeyR') ui.reroll();
     e.preventDefault();
     return;

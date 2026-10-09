@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Game, STEP_MS, type Replay } from './game';
+import { Game, RULES_VERSION, STEP_MS, type Replay } from './game';
 import { dailyNumber, dailySeed, isModeId, MODES, utcDate } from './modes';
 import { runReplay } from './replay';
 
@@ -96,7 +96,7 @@ describe('modos', () => {
   });
 
   it('una repetición sin modo es una partida normal y una con modo inventado no vale', () => {
-    const base: Replay = { version: 1, seed: 42, bestLevel: 0, steps: 1, actions: [] };
+    const base: Replay = { version: RULES_VERSION, seed: 42, bestLevel: 0, steps: 1, actions: [] };
     const res = runReplay(base);
     expect(res.ok).toBe(true);
     expect(res.game.mode).toBe('normal');

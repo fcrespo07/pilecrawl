@@ -155,6 +155,8 @@ export class UI {
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
     const box = $('cards');
     box.innerHTML = '';
+    box.classList.toggle('four', g.choices.length > 3);
+    $('key4').hidden = g.choices.length < 4;
     g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i)));
     // re-dispara la animación del título
     const title = document.querySelector<HTMLElement>('.perk-title')!;
@@ -279,7 +281,7 @@ export class UI {
     this.shownScore += diff * (1 - Math.exp(-dt / 90));
     if (Math.abs(diff) < 1) this.shownScore = g.score;
     $('score').textContent = fmt(this.shownScore);
-    $('mult').textContent = `×${g.mods.scoreMult.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    $('mult').textContent = `×${g.scoreMultNow().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     $('level').textContent = pad2(g.level);
     $('lines').textContent = String(g.lines);
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';

@@ -21,7 +21,7 @@ function validAction(a: unknown): a is ReplayAction {
     case 'move': return a.length === 3 && (arg === 1 || arg === -1);
     case 'rotate': return a.length === 3 && (arg === 1 || arg === -1 || arg === 2);
     case 'soft': return a.length === 3 && (arg === 0 || arg === 1);
-    case 'pick': return a.length === 3 && (arg === 0 || arg === 1 || arg === 2);
+    case 'pick': return a.length === 3 && (arg === 0 || arg === 1 || arg === 2 || arg === 3);
     case 'drop':
     case 'hold':
     case 'reroll': return a.length === 2;

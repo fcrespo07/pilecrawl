@@ -35,6 +35,28 @@ export interface Mods {
   interest: number;
   quake: boolean;
   luck: number;
+  /** cartas que se ofrecen en cada elección */
+  choices: number;
+  /** filas de abajo que se borran al subir de nivel (Respiro) */
+  levelClearRows: number;
+  /** +puntuación por cada reroll guardado (Ahorro) */
+  savings: number;
+  /** líneas para ganar un reroll; 0 = desactivado (Cosecha) */
+  harvestEvery: number;
+  /** puntos × nivel por pieza fijada rápido (Reflejos) */
+  reflexPoints: number;
+  /** líneas de nivel extra y puntos por cada fila de basura limpiada (Reciclaje) */
+  recycle: number;
+  /** multiplicador extra con el montón por encima de la mitad (Vértigo) */
+  vertigo: number;
+  /** con el montón alto, la siguiente pieza es una I (Salvavidas) */
+  lifeline: boolean;
+  /** la basura no avanza mientras dure un combo (Ancla) */
+  anchor: boolean;
+  /** +puntuación por cada mejora distinta (Coleccionista) */
+  collector: number;
+  /** al revivir se vacía todo el tablero y la puntuación sube (Fénix) */
+  phoenix: boolean;
 }
 
 export function baseMods(): Mods {
@@ -67,6 +89,17 @@ export function baseMods(): Mods {
     interest: 0,
     quake: false,
     luck: 0,
+    choices: 3,
+    levelClearRows: 0,
+    savings: 0,
+    harvestEvery: 0,
+    reflexPoints: 0,
+    recycle: 0,
+    vertigo: 0,
+    lifeline: false,
+    anchor: false,
+    collector: 0,
+    phoenix: false,
   };
 }
 
@@ -156,6 +189,29 @@ export const PERKS: PerkDef[] = [
     pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
     apply: (m) => { m.extraPieces.push('I3'); },
   },
+  {
+    id: 'breather', name: 'Respiro', rarity: 'common', max: 2,
+    pros: (s) => [`Al subir de nivel se borran las <b>${s * 3} filas</b> de abajo`],
+    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.levelClearRows += 3; m.linesReduction -= 1; },
+  },
+  {
+    id: 'savings', name: 'Ahorro', rarity: 'common', max: 2,
+    pros: (s) => [`Cada reroll que guardas da <b>+${s * 10}%</b> a toda la puntuación (hasta <b>5</b> rerolls)`],
+    cons: () => ['Gastar un reroll <b>baja</b> ese extra'],
+    apply: (m) => { m.savings += 0.1; },
+  },
+  {
+    id: 'harvest', name: 'Cosecha', rarity: 'common', max: 2,
+    pros: (s) => [`Cada <b>${s > 1 ? 6 : 10} líneas</b> ganas <b>+1 reroll</b>`],
+    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; },
+  },
+  {
+    id: 'reflex', name: 'Reflejos', rarity: 'common', max: 3,
+    pros: (s) => [`Si una pieza limpia líneas en menos de <b>1,5 s</b> desde que aparece, cada línea da <b>+${s * 60} × nivel</b>`],
+    cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
+    apply: (m) => { m.reflexPoints += 60; m.gravitySpeed *= 1.08; },
+  },
   // ───────── Raras ─────────
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
@@ -219,6 +275,30 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Es una pieza <b>torpe</b> de encajar'],
     apply: (m) => { m.extraPieces.push('P5'); },
   },
+  {
+    id: 'recycle', name: 'Reciclaje', rarity: 'rare', max: 2,
+    pros: (s) => [`Cada fila de basura que limpias cuenta <b>+${s} línea${s > 1 ? 's' : ''}</b> para subir de nivel`, `…y da <b>${s * 200} × nivel</b> puntos`],
+    cons: () => ['Las piezas caen un <b>10% más rápido</b>'],
+    apply: (m) => { m.recycle += 1; m.gravitySpeed *= 1.1; },
+  },
+  {
+    id: 'vertigo', name: 'Vértigo', rarity: 'rare', max: 2,
+    pros: (s) => [`Con el montón por encima de la <b>mitad</b>, <b>×${1 + s * 0.5}</b> a toda la puntuación`],
+    cons: () => ['Las piezas caen un <b>10% más rápido</b>'],
+    apply: (m) => { m.vertigo += 0.5; m.gravitySpeed *= 1.1; },
+  },
+  {
+    id: 'lifeline', name: 'Salvavidas', rarity: 'rare', max: 1,
+    pros: () => ['Con el montón por encima del <b>70%</b>, la siguiente pieza es una <b>barra I</b>', 'Como mucho una vez cada <b>12 piezas</b>'],
+    cons: () => ['<b>−10%</b> a toda la puntuación'],
+    apply: (m) => { m.lifeline = true; m.scoreMult *= 0.9; },
+  },
+  {
+    id: 'fan', name: 'Abanico', rarity: 'rare', max: 1,
+    pros: () => ['Eliges entre <b>4 cartas</b> en vez de 3'],
+    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.choices = 4; m.linesReduction -= 1; },
+  },
   // ───────── Épicas ─────────
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
@@ -262,6 +342,18 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Las piezas caen un <b>35% más rápido</b>'],
     apply: (m) => { m.scoreMult *= 2; m.gravitySpeed *= 1.35; },
   },
+  {
+    id: 'anchor', name: 'Ancla', rarity: 'epic', max: 1,
+    pros: () => ['Mientras encadenas líneas <b>pieza tras pieza</b>, la basura <b>no avanza</b>'],
+    cons: () => ['Los combos dan un <b>25% menos</b>'],
+    apply: (m) => { m.anchor = true; m.comboMult = Math.max(0, m.comboMult - 0.25); },
+  },
+  {
+    id: 'collector', name: 'Coleccionista', rarity: 'epic', max: 1,
+    pros: () => ['<b>+6%</b> a toda la puntuación por cada <b>mejora distinta</b> que tengas'],
+    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.collector += 0.06; m.linesReduction -= 1; },
+  },
   // ───────── Legendarias ─────────
   {
     id: 'quake', name: 'Terremoto', rarity: 'legendary', max: 1,
@@ -274,6 +366,12 @@ export const PERKS: PerkDef[] = [
     pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza', 'Lo que queda encima <b>cae</b> a los huecos'],
     cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
     apply: (m) => { m.prismEvery = m.prismEvery ? 10 : 16; m.gravitySpeed *= 1.15; },
+  },
+  {
+    id: 'phoenix', name: 'Fénix', rarity: 'legendary', max: 1,
+    pros: () => ['<b>+1 vida</b>', 'Al revivir, el tablero queda <b>vacío del todo</b>', 'Cada vez que revives, <b>+25%</b> a toda la puntuación (tope <b>+50%</b>)'],
+    cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
+    apply: (m, g) => { g.lives += 1; m.phoenix = true; m.gravitySpeed *= 1.15; },
   },
 ];
 

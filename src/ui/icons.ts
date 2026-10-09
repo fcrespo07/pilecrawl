@@ -30,6 +30,17 @@ const PATHS: Record<string, string> = {
   interest: `<path d="M3 28h26"/><path d="M5 22l6.5-6.5 5 4L26 9"/><path d="M19.5 9H26v6.5"/>`,
   pact: `<path d="M6 3c-.5 6 2.5 10 7 11M26 3c.5 6-2.5 10-7 11"/><circle cx="16" cy="20" r="8.5"/><path d="M12 18.5l2.5 1.5M20 18.5l-2.5 1.5M12.5 24c2 1.3 5 1.3 7 0"/>`,
   quake: `<path d="M2 18h6l2.5-5 3.5 11 3.5-16 3.5 13 2.5-3H30"/><path d="M5 27h22" stroke-opacity=".5"/>`,
+  breather: `<path d="M16 15V4M11 9l5-5 5 5"/><rect x="4" y="19" width="24" height="9" rx="1" stroke-dasharray="3 2.5"/>${B(7, 21, 5)}${B(13.5, 21, 5)}${B(20, 21, 5)}`,
+  savings: `<path d="M6 13h20v14H6z"/><path d="M12 13V9a4 4 0 0 1 8 0v4"/>${B(13, 17, 6)}`,
+  harvest: `<path d="M16 29V13"/><path d="M16 21c-5 0-8-3-9-8 5 0 8 3 9 8zM16 17c5 0 8-3 9-8-5 0-8 3-9 8z"/><path d="M16 13c-2-2-2-6 0-9 2 3 2 7 0 9z" fill="currentColor" fill-opacity=".35"/>`,
+  reflex: `<path d="M18 3L7 18h8l-2 11 12-16h-8z"/>`,
+  recycle: `<path d="M9 13l4-7h6l2.5 4.5"/><path d="M24 15l3 6-3 5h-5"/><path d="M14 26H8l-3-5 2.5-4.5"/><path d="M19.5 7.5l2 3 3-1.5M17 23.5l2 2.5-2 2.5M5.5 19l2-2.5 3 1"/>`,
+  vertigo: `<path d="M5 29h22"/>${B(8, 23, 5)}${B(8, 17, 5)}${B(13, 11, 5)}${B(13, 5, 5)}<path d="M24 4v12M21 13l3 3 3-3" stroke-opacity=".6"/>`,
+  lifeline: `<circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="5"/><path d="M8.2 8.2l4.3 4.3M23.8 8.2l-4.3 4.3M8.2 23.8l4.3-4.3M23.8 23.8l-4.3-4.3"/>`,
+  fan: `<rect x="3" y="9" width="8" height="12" rx="1.5" transform="rotate(-24 7 15)"/><rect x="10" y="6" width="8" height="12" rx="1.5" transform="rotate(-8 14 12)"/><rect x="16" y="6" width="8" height="12" rx="1.5" transform="rotate(8 20 12)"/><rect x="21" y="9" width="8" height="12" rx="1.5" transform="rotate(24 25 15)"/><path d="M16 29v-8"/>`,
+  anchor: `<circle cx="16" cy="6" r="2.5"/><path d="M16 8.5V28M10 13h12"/><path d="M5 19c0 5 5 9 11 9s11-4 11-9"/><path d="M3 21l2-3 3 2M29 21l-2-3-3 2"/>`,
+  collector: `<rect x="4" y="4" width="10" height="10" rx="2"/><rect x="18" y="4" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="4" y="18" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="18" y="18" width="10" height="10" rx="2" stroke-dasharray="3 2.5"/>`,
+  phoenix: `<path d="M16 29c-5-3-6-8-4-13-4 1-7-2-9-6 4 0 7 1 9 3 0-4 2-7 4-10 2 3 4 6 4 10 2-2 5-3 9-3-2 4-5 7-9 6 2 5 1 10-4 13z"/><path d="M16 15v10" stroke-opacity=".6"/>`,
   prism: `<path d="M15 5l10 18H5z"/><path d="M1 17.5l9.5-2"/><path d="M20 13.5l11-5M21.2 15.7H31M20.5 18l10.5 4.5" stroke-opacity=".75"/>`,
 };
 

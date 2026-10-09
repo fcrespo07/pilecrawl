@@ -355,6 +355,8 @@ kbd {
 @keyframes slam { from { transform: scale(2.4); opacity: 0; filter: blur(10px); } }
 
 #cards { display: flex; gap: 22px; perspective: 1100px; }
+#cards.four { gap: 14px; }
+#cards.four .card { width: 212px; }
 .perk-actions { display: flex; align-items: center; gap: 22px; margin-top: 16px; }
 
 .card {

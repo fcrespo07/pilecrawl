@@ -562,11 +562,32 @@ export class Renderer {
       this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_ON_PAPER, size: 18, delay: 0.3 });
     });
 
+    ev.on('breather', ({ rows }) => {
+      rows.forEach((values, i) => {
+        const row = ROWS - 1 - i;
+        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: 0x2a6f8a, life: 0.5, max: 0.5 });
+        values.forEach((v, x) => {
+          if (!v) return;
+          const color = isGold(v) ? GOLD_COLOR : colorOfId(cellType(v));
+          this.particles.emit({ x: this.cx(x), y: this.cy(row), color, count: 4, speed: 260, angle: -Math.PI / 2, spread: 1.2, life: 0.7, size: 6, gravity: 600, shape: 'square' });
+        });
+      });
+      this.floatText('RESPIRO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 60, { color: 0x2a6f8a, size: 22, delay: 0.2 });
+    });
+
+    ev.on('lifeline', () => {
+      this.floatText('SALVAVIDAS', BOARD_X + BOARD_W / 2, BOARD_Y + 120, { color: 0x2a6f8a, size: 24 });
+    });
+
+    ev.on('harvest', ({ rerolls }) => {
+      this.floatText(`+${rerolls} REROLL`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 80, { color: 0x4c7d1c, size: 18, delay: 0.2 });
+    });
+
     ev.on('revive', () => {
       this.flash(INK, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
-      this.floatText('¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
+      this.floatText(this.game.mods.phoenix ? '¡FÉNIX!' : '¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
     });
 
     ev.on('gameover', () => {
