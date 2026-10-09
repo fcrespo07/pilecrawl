@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { baseMods } from './perks';
-import { PERKS, PERK_BY_ID, rollPerks } from './perks';
+import { isUnlocked, PERKS, PERK_BY_ID, rollPerks } from './perks';
 import { Game } from './game';
 
 describe('perks', () => {
@@ -42,5 +42,22 @@ describe('perks', () => {
     owned.set('dice', 0);
     expect(rollPerks(owned, 0).length).toBeGreaterThanOrEqual(1);
     expect(PERK_BY_ID.dice.max).toBeGreaterThanOrEqual(99);
+  });
+
+  it('sin progreso solo salen perks comunes y raros', () => {
+    for (let i = 0; i < 300; i++) {
+      for (const p of rollPerks(new Map(), 0, 3, 0)) {
+        expect(['common', 'rare']).toContain(p.rarity);
+      }
+    }
+  });
+
+  it('las rarezas se desbloquean por el mejor nivel', () => {
+    const epic = PERK_BY_ID.cross;
+    const legendary = PERK_BY_ID.quake;
+    expect(isUnlocked(epic, 3)).toBe(false);
+    expect(isUnlocked(epic, 4)).toBe(true);
+    expect(isUnlocked(legendary, 6)).toBe(false);
+    expect(isUnlocked(legendary, 7)).toBe(true);
   });
 });
