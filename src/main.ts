@@ -4,7 +4,7 @@ import { Game } from './core/game';
 import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
-import { loadMeta } from './core/meta';
+import { loadMeta, recordBestLevel } from './core/meta';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 
@@ -61,6 +61,7 @@ function wireAudioAndFeel() {
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
+    recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {

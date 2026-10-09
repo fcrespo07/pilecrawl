@@ -11,7 +11,6 @@ export const UNLOCK_LEVEL: Record<Rarity, number> = {
 
 export interface Meta {
   bestLevel: number;
-  runs: number;
 }
 
 const KEY = 'tetrogue.meta';
@@ -22,15 +21,12 @@ export function loadMeta(): Meta {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const p = JSON.parse(raw) as Partial<Meta>;
-      return {
-        bestLevel: Math.max(0, Math.floor(Number(p.bestLevel)) || 0),
-        runs: Math.max(0, Math.floor(Number(p.runs)) || 0),
-      };
+      return { bestLevel: Math.max(0, Math.floor(Number(p.bestLevel)) || 0) };
     }
   } catch {
     /* sin almacenamiento o JSON roto: se empieza de cero */
   }
-  return { bestLevel: 0, runs: 0 };
+  return { bestLevel: 0 };
 }
 
 export function saveMeta(meta: Meta) {
@@ -39,4 +35,14 @@ export function saveMeta(meta: Meta) {
   } catch {
     /* sin almacenamiento: la progresión dura lo que la pestaña */
   }
+}
+
+/** Anota un nivel alcanzado en cuanto ocurre, para que no se pierda si la pestaña se cierra. */
+export function recordBestLevel(level: number): number {
+  const meta = loadMeta();
+  if (level > meta.bestLevel) {
+    meta.bestLevel = level;
+    saveMeta(meta);
+  }
+  return meta.bestLevel;
 }
