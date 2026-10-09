@@ -36,6 +36,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 
 ## Mecánica clave
 
+- **Tablero:** 11 columnas × 18 filas visibles (`COLS`, `ROWS`, `HIDDEN` en `game.ts`). No volver al 10×20 clásico.
 - **Niveles:** `linesNeeded()` en `game.ts`. 8 líneas al principio, +1 cada dos niveles, tope 16. Se resta `linesReduction` de los perks.
 - **Perks:** cada uno tiene `pros` y `cons` (se muestran en verde y rojo) y un `apply(mods, game)`. Los efectos se leen de `Mods` (`perks.ts`).
 - **Piezas extra:** cada perk de pieza mete una pieza en `mods.extraPieces`. Las piezas están en `pieces.ts` (M1, D2, V3, I3, X5, P5).
@@ -47,6 +48,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 
 - Los perks cambian reglas, no solo suman números. Cada mejora buena tiene su contrapartida.
 - Sin emojis en la interfaz. Los iconos son SVG propios.
+- Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva y cola en una barra horizontal encima del tablero (`QUEUE_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
 - Efectos visuales pesados (bloom, CRT) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
 - Récord en `localStorage` (`derrumbe.best`). Se envuelve en try/catch.
