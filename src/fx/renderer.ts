@@ -47,32 +47,44 @@ function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => 
   return Texture.from(cv);
 }
 
-/** Bloque de 8×8 "píxeles": borde oscuro, brillo arriba a la izquierda y sombra escalonada abajo a la derecha. */
-function makeCellTexture(): Texture {
-  const s = 64, p = 8;
+/**
+ * Bloque de 8×8 "píxeles": borde oscuro, brillo arriba a la izquierda y sombra escalonada abajo a la derecha.
+ * Se dibuja al tamaño real de la celda en pantalla (`size` px) para que cada píxel caiga en píxeles enteros.
+ */
+function makeCellTexture(size: number): Texture {
+  const s = size;
+  const at = (i: number) => Math.round((i * s) / 8);
   return canvasTex(s, s, (c) => {
+    // rectángulo en unidades de píxel del dibujo (8 por lado)
+    const box = (x: number, y: number, w: number, h: number) => c.fillRect(at(x), at(y), at(x + w) - at(x), at(y + h) - at(y));
     c.fillStyle = '#ffffff';
-    c.fillRect(0, 0, s, s);
+    box(0, 0, 8, 8);
     c.fillStyle = '#5a5a5a';
-    c.fillRect(0, s - p, s, p);
-    c.fillRect(s - p, 0, p, s);
+    box(0, 7, 8, 1);
+    box(7, 0, 1, 8);
     c.fillStyle = '#9c9c9c';
-    c.fillRect(p, s - 2 * p, s - 2 * p, p);
-    c.fillRect(s - 2 * p, p, p, s - 2 * p);
+    box(1, 6, 6, 1);
+    box(6, 1, 1, 6);
     c.fillStyle = '#ffffff';
-    c.fillRect(0, 0, s - p, p);
-    c.fillRect(0, 0, p, s - p);
+    box(0, 0, 7, 1);
+    box(0, 0, 1, 7);
     c.fillStyle = '#e8e8e8';
-    c.fillRect(p, p, s - 3 * p, s - 3 * p);
+    box(1, 1, 5, 5);
     c.fillStyle = '#ffffff';
-    c.fillRect(p, p, 2 * p, p);
-    c.fillRect(p, 2 * p, p, p);
+    box(1, 1, 2, 1);
+    box(1, 2, 1, 1);
+    const b = Math.max(1, Math.round(s / 32));
     c.fillStyle = '#202020';
-    c.fillRect(0, 0, s, 2);
-    c.fillRect(0, 0, 2, s);
-    c.fillRect(0, s - 2, s, 2);
-    c.fillRect(s - 2, 0, 2, s);
+    c.fillRect(0, 0, s, b);
+    c.fillRect(0, 0, b, s);
+    c.fillRect(0, s - b, s, b);
+    c.fillRect(s - b, 0, b, s);
   });
+}
+
+/** Lado en píxeles de pantalla de una celda del tablero, para dibujar su textura sin reescalar. */
+function cellPx(res: number) {
+  return Math.max(16, Math.round(CELL * res));
 }
 
 /** Fantasma propio: rayado diagonal con esquinas marcadas, sin caja rellena. */
@@ -137,7 +149,7 @@ function makeTrailTexture(): Texture {
 
 function makeBackground(skin: Skin): Texture {
   const w = W / 2, h = H / 2;
-  return canvasTex(w, h, (c) => {
+  const tex = canvasTex(w, h, (c) => {
     const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, hex(skin.bg0));
     g.addColorStop(1, hex(skin.bg1));
@@ -158,6 +170,9 @@ function makeBackground(skin: Skin): Texture {
       c.fillRect(x, h - hh, 4, hh);
     }
   });
+  // se dibuja a media resolución: sin suavizado al ampliar, para que estrellas y colinas sigan siendo píxeles
+  tex.source.scaleMode = 'nearest';
+  return tex;
 }
 
 // ───────────────────────── pool de sprites ─────────────────────────
@@ -167,6 +182,10 @@ class Pool {
   private used = 0;
   constructor(private parent: Container, private tex: Texture, private blend: 'normal' | 'add' = 'normal') {}
   begin() { this.used = 0; }
+  setTexture(tex: Texture) {
+    this.tex = tex;
+    for (const s of this.items) s.texture = tex;
+  }
   get(): Sprite {
     let s = this.items[this.used];
     if (!s) {
@@ -254,12 +273,13 @@ export class Renderer {
       resolution,
       autoDensity: true,
       antialias: true,
+      roundPixels: true,
       background: '#e9e1cc',
       preference: 'webgl',
     });
 
     this.tex = {
-      cell: makeCellTexture(),
+      cell: makeCellTexture(cellPx(resolution)),
       ghost: makeGhostTexture(),
       dot: makeDotTexture(),
       trail: makeTrailTexture(),
@@ -303,6 +323,12 @@ export class Renderer {
 
   setResolution(res: number) {
     this.app.renderer.resize(W, H, res);
+    // la textura del bloque va al tamaño real de la celda y los textos a la resolución del lienzo
+    const old = this.tex.cell;
+    this.tex.cell = makeCellTexture(cellPx(res));
+    this.cells.setTexture(this.tex.cell);
+    old.destroy(true);
+    for (const t of this.labels) t.resolution = res;
   }
 
   // ───────────── construcción ─────────────
@@ -432,7 +458,7 @@ export class Renderer {
         letterSpacing: 1,
         align: 'center',
       },
-      resolution: 2,
+      resolution: this.app.renderer.resolution,
     });
     t.anchor.set(0.5);
     t.x = x;
@@ -777,8 +803,8 @@ export class Renderer {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 8, fill: 0xffffff, letterSpacing: 1 },
-          resolution: 2,
+          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 10, fill: 0xffffff, letterSpacing: 1 },
+          resolution: this.app.renderer.resolution,
         });
         t.anchor.set(0, 0.5);
         t.y = QUEUE_Y + 13;

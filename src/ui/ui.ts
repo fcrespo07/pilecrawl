@@ -42,6 +42,13 @@ function chipHTML(id: string, stacks: number): string {
   return `<div class="chip-wrap r-${rarityKey(p)}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
 }
 
+/** Marca del dorso de las cartas: una «B» de Block Rogue hecha con bloques. */
+const CARD_MARK = (() => {
+  const rows = ['###.', '#..#', '###.', '#..#', '###.'];
+  const cells = rows.flatMap((r, y) => [...r].map((ch, x) => (ch === '#' ? `<rect x="${x * 10 + 1}" y="${y * 10 + 1}" width="8" height="8"/>` : '')));
+  return `<svg class="card-mark" viewBox="0 0 40 50" aria-hidden="true">${cells.join('')}</svg>`;
+})();
+
 export class UI {
   private shownScore = 0;
   private perksOpen = false;
@@ -216,7 +223,7 @@ export class UI {
       <div class="card-tilt">
         <div class="card-glow"></div>
         <div class="card-flip">
-          <div class="card-face card-back"><span>T</span></div>
+          <div class="card-face card-back">${CARD_MARK}</div>
           <div class="card-face card-front">
             <div class="card-band"><span>${band}</span><kbd>${i + 1}</kbd></div>
             <div class="card-icon">${perkIcon(p.id)}</div>

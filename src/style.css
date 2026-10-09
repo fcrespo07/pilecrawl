@@ -104,14 +104,6 @@ body { opacity: 0; transition: opacity 0.6s; }
 body.ready { opacity: 1; }
 
 /* rejilla tenue fuera del escenario para que las bandas laterales no queden vacías */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(27, 26, 23, 0.25));
-  pointer-events: none;
-}
-
 #stage {
   position: fixed;
   left: 50%;
@@ -487,16 +479,12 @@ kbd {
 
 .card-back {
   transform: rotateY(180deg);
-  background: repeating-linear-gradient(45deg, rgba(27, 26, 23, 0.14) 0 2px, transparent 2px 12px), var(--panel);
   display: grid;
   place-items: center;
-  box-shadow: inset 0 0 0 2px var(--ink);
 }
-.card-back span {
-  font-family: var(--f-logo);
-  font-weight: 800;
-  font-size: 92px;
-  color: var(--ink);
+.card-back .card-mark {
+  width: 64px;
+  fill: var(--ink);
 }
 
 .card-front {
@@ -823,8 +811,6 @@ kbd {
    ═══════════════════════════════════════════════════════════ */
 
 body, .home { background: var(--page); }
-body::before { display: none; }
-
 /* los textos con la fuente de recreativa no se ajustan: solo VT323 lo necesita */
 :is(.panel > header, .num-big, .lvl, .num, .home-title, .home-kicker, .home-card h2, .mode-opt b, .btn, .home-btn,
   .stripe-title, .perk-title, .big-title, .card-band, .card-name, .home-soon, .btn.ghost b, .hy-name, .final-score,
@@ -832,9 +818,9 @@ body::before { display: none; }
 
 /* paneles: marco de 4 px con esquinas de píxel y franja de luz arriba */
 .panel::after { inset: 4px; background: var(--panel); clip-path: none; box-shadow: inset 0 4px 0 var(--raise); }
-.panel > header { font-family: var(--f-display); font-size: 8px; letter-spacing: 0.08em; color: var(--hi); margin-bottom: 6px; }
+.panel > header { font-family: var(--f-display); font-size: 10px; letter-spacing: 0.04em; color: var(--hi); margin-bottom: 6px; }
 .panel > header::before { width: 6px; height: 6px; background: var(--hot); }
-.panel.mini > header { font-size: 7px; }
+.panel.mini > header { font-size: 10px; letter-spacing: 0; }
 .panel.mini > header::before { width: 5px; height: 5px; }
 .num-big { font-family: var(--f-display); font-size: 16px; line-height: 1.6; }
 .lvl { font-family: var(--f-display); font-size: 30px; color: var(--hi); }
@@ -900,7 +886,7 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .card-name { font-family: var(--f-display); font-size: 12px; line-height: 1.5; }
 .card-sep { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 8px); height: 2px; }
 .card-back { background: repeating-linear-gradient(45deg, var(--raise) 0 4px, transparent 4px 12px), var(--panel); box-shadow: inset 0 0 0 4px var(--hi); }
-.card-back span { color: var(--hi); font-size: 56px; }
+.card-back .card-mark { width: 56px; fill: var(--hi); shape-rendering: crispEdges; }
 .fx li { font-size: 15px; }
 .fx li b { color: #fff; }
 .fx li.pro b, .fx li.con b { text-shadow: none; }
@@ -916,6 +902,15 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .over-stats div::before { background: var(--ink); }
 .over-stats div::after { inset: 3px; }
 .over-stats b { font-family: var(--f-display); font-size: 14px; line-height: 1.8; }
+
+/* En el móvil el escenario se encoge a menos de la mitad: los títulos de 10 px quedarían en 4 px.
+   Se agrandan y la rejilla de mini paneles se ensancha hasta el borde del tablero para que quepan. */
+@media (pointer: coarse) {
+  .panel > header, .panel.mini > header { font-size: 14px; letter-spacing: 0; }
+  .mini-grid { width: 292px; }
+  .p-controls > header { font-size: 12px; }
+  .num, .panel.mini .num { font-size: 18px; line-height: 1.6; }
+}
 
 /* controles táctiles */
 @media (pointer: coarse) {
