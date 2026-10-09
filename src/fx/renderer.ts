@@ -453,8 +453,8 @@ export class Renderer {
       });
 
       // texto
-      const lineNames = ['', 'SINGLE', 'DOUBLE', 'TRIPLE', 'TETRIS'];
-      let label = c.lines >= 4 ? 'TETRIS' : lineNames[c.lines];
+      const lineNames = ['', 'SIMPLE', 'DOBLE', 'TRIPLE', 'CUÁDRUPLE'];
+      let label = c.lines >= 4 ? 'CUÁDRUPLE' : lineNames[c.lines];
       if (c.spin) label = `${c.spinName}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
       if (c.cascade > 0) label = `CADENA ×${c.cascade + 1}`;
       const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : INK;
@@ -470,7 +470,7 @@ export class Renderer {
       if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_COLOR, size: 18, life: 1.3, vy: -30 });
 
       if (c.perfect) {
-        this.floatText('PERFECT CLEAR', cxMid, BOARD_Y + BOARD_H / 2, { color: 0xffe14d, size: 46, life: 2.2, vy: -10 });
+        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: INK, size: 46, life: 2.2, vy: -10 });
         this.flash(INK, 0.3);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
         this.bloomBoost = 0.6;

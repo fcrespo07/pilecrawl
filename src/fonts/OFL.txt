@@ -1,4 +1,4 @@
-Fuentes autoalojadas de Tetrogue. Todas se distribuyen bajo SIL Open Font License 1.1.
+Fuentes autoalojadas de Derrumbe. Todas se distribuyen bajo SIL Open Font License 1.1.
 Fuentes de Google Fonts, empaquetadas por Fontsource (https://fontsource.org).
 
 ===== Fraunces =====

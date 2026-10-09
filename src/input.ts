@@ -30,7 +30,7 @@ const TOUCH_CODE: Record<TouchAction, string> = {
   hold: 'KeyC',
 };
 
-/** Teclado y táctil con DAS/ARR estilo guideline. */
+/** Teclado y táctil con DAS/ARR estándar del género. */
 export class Input {
   handling: Handling = { das: 130, arr: 25 };
   private dir = 0;
