@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bestPlacement } from './bot';
-import { Game } from './game';
+import { Game, STEP_MS } from './game';
 import { makeRng } from './rng';
 
 /**
@@ -29,10 +29,13 @@ export function playBot(seed: number, maxPieces = 1500, bestLevel = Infinity): G
     let guard = 0;
     while (g.state !== 'over' && pieces < maxPieces && guard++ < maxPieces * 50) {
       if (g.state === 'choosing') {
-        g.choosePerk(Math.floor(choicePicker() * g.choices.length));
+        const n = g.choosingHyper ? g.hyperChoices.length : g.choices.length;
+        g.choosePerk(Math.floor(choicePicker() * n));
         continue;
       }
       if (g.state !== 'playing' || !g.active) break;
+      // la hiperperk se suelta en cuanto está cargada
+      if (g.hyperReady()) g.activateHyper();
       const best = bestPlacement(g);
       const a = g.active;
       if (!best) {
@@ -44,6 +47,8 @@ export function playBot(seed: number, maxPieces = 1500, bestLevel = Infinity): G
       a.x = best.x;
       g.hardDrop();
       pieces++;
+      // el bot no deja pasar el tiempo: se cuenta un segundo por pieza para que las hiperperks se acaben
+      g.hyperLeft = Math.max(0, g.hyperLeft - Math.round(1000 / STEP_MS));
     }
     return {
       level: g.level,
@@ -90,7 +95,8 @@ describe('bot de equilibrio', () => {
   // El nivel mediano satura por el tope de piezas, así que la dificultad se mide con las partidas
   // perdidas antes del tope. Con 30 partidas el ruido de las cartas al azar llenaba la banda entera
   // (una tanda de 150 daba 69 y 38 perdidas donde las 30 primeras daban 10 y 10), así que se juegan 60.
-  // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13. La banda es la de siempre: 20-47%.
+  // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13; con las hiperperks (el bot las suelta en
+  // cuanto se cargan), 15 y 12. La banda es la de siempre: 20-47%.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));

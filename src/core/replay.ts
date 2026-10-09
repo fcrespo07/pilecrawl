@@ -24,7 +24,8 @@ function validAction(a: unknown): a is ReplayAction {
     case 'pick': return a.length === 3 && (arg === 0 || arg === 1 || arg === 2 || arg === 3);
     case 'drop':
     case 'hold':
-    case 'reroll': return a.length === 2;
+    case 'reroll':
+    case 'hyper': return a.length === 2;
     default: return false;
   }
 }
@@ -64,6 +65,7 @@ export function runReplay(r: Replay): ReplayResult {
       case 'soft': game.softDropping = a[2] === 1; break;
       case 'pick': game.choosePerk(a[2]); break;
       case 'reroll': game.reroll(); break;
+      case 'hyper': game.activateHyper(); break;
     }
   }
   if (!advanceTo(r.steps)) return { game, ok: false, reason: `no se llega al paso final ${r.steps}` };

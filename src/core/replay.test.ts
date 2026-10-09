@@ -20,9 +20,11 @@ function playHuman(seed: number, maxSteps = 200_000): Game {
   while (g.state !== 'over' && g.steps < maxSteps) {
     if (g.state === 'choosing') {
       if (g.rerolls > 0 && r() < 0.3) g.reroll();
-      else g.choosePerk(Math.floor(r() * g.choices.length));
+      else g.choosePerk(Math.floor(r() * (g.choosingHyper ? g.hyperChoices.length : g.choices.length)));
       continue;
     }
+    // la hiperperk se suelta con algo de retraso, para que caiga en pasos distintos
+    if (g.hyperReady() && r() < 0.01) g.activateHyper();
     const a = g.active!;
     if (a !== piece) {
       piece = a;

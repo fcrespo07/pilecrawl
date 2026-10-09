@@ -1,6 +1,7 @@
 import { Emitter } from './emitter';
 import { baseMods, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
+import { HYPER_LEVEL, rollHypers, type HyperDef, type HyperId } from './hypers';
 import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
 
@@ -20,6 +21,8 @@ export interface PieceSpec {
   bomb: boolean;
   prism: boolean;
   gold: boolean;
+  /** Bomba solo por Bombardeo: no pasa a la reserva y no borra si era prisma u oro. */
+  hyperBomb?: boolean;
 }
 
 export interface ActivePiece extends PieceSpec {
@@ -71,6 +74,13 @@ export interface GameEvents {
   lifeline: void;
   harvest: { rerolls: number };
   revive: { livesLeft: number };
+  /** Hiperperk elegida, cargada del todo, activada o terminada. */
+  hyperPick: { hyper: HyperDef };
+  hyperReady: { hyper: HyperDef };
+  hyper: { hyper: HyperDef };
+  hyperEnd: { hyper: HyperDef };
+  /** Tabla rasa: bloques borrados de golpe. */
+  wipe: { removed: { x: number; y: number; v: number }[]; points: number };
   gameover: { reason: EndReason };
   perk: { perk: PerkDef; stacks: number };
 }
@@ -82,7 +92,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 4;
+export const RULES_VERSION = 5;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -99,7 +109,8 @@ export type ReplayAction =
   | [step: number, op: 'hold']
   | [step: number, op: 'soft', on: 0 | 1]
   | [step: number, op: 'pick', index: number]
-  | [step: number, op: 'reroll'];
+  | [step: number, op: 'reroll']
+  | [step: number, op: 'hyper'];
 
 /** Todo lo necesario para volver a jugar una partida idéntica (ver `replay.ts`). */
 export interface Replay {
@@ -162,6 +173,16 @@ export class Game {
   quads = 0;
   /** Bonus acumulado de Fénix (+0,25 por cada vez que revives). */
   phoenixBonus = 0;
+  /** Hiperperk de la partida (solo una) o null si aún no se ha elegido. */
+  hyper: HyperDef | null = null;
+  /** Líneas cargadas hacia la hiperperk. No carga mientras está activa. */
+  hyperCharge = 0;
+  /** Pasos de simulación que le quedan activa. 0 = inactiva. */
+  hyperLeft = 0;
+  /** Al subir al nivel de las hiperperks, su elección va antes que la carta normal. */
+  hyperPending = false;
+  /** Hiperperks que se ofrecen ahora. Si no está vacía, la elección es de hiperperk. */
+  hyperChoices: HyperDef[] = [];
   private harvestLines = 0;
   private lifelineReadyAt = 0;
   private pieceStart = 0;
@@ -190,6 +211,8 @@ export class Game {
   private rng: Rng = makeRng(0);
   /** Azar de las cartas, aparte para que elegir o descartar no cambie las piezas que vienen. */
   private perkRng: Rng = makeRng(0);
+  /** Azar de las hiperperks, aparte para no mover las cartas normales. */
+  private hyperRng: Rng = makeRng(0);
   private soft = false;
   private gravityAcc = 0;
   private lockTimer = 0;
@@ -225,6 +248,11 @@ export class Game {
     this.maxCombo = 0;
     this.quads = 0;
     this.phoenixBonus = 0;
+    this.hyper = null;
+    this.hyperCharge = 0;
+    this.hyperLeft = 0;
+    this.hyperPending = false;
+    this.hyperChoices = [];
     this.harvestLines = 0;
     this.lifelineReadyAt = 0;
     this.pieceStart = 0;
@@ -252,6 +280,7 @@ export class Game {
     if (def.fixedBestLevel !== undefined) this.bestLevel = def.fixedBestLevel;
     this.rng = makeRng(this.seed);
     this.perkRng = makeRng((this.seed ^ 0x9e3779b9) >>> 0);
+    this.hyperRng = makeRng((this.seed ^ 0x2545f491) >>> 0);
     this.lastHole = Math.floor(this.rng() * COLS);
     if (def.starterPerk) {
       // azar propio para no mover la cola ni las cartas: solo comunes y raras
@@ -331,6 +360,7 @@ export class Game {
     if (def.size === 1 || (def.size === 2 && def.name !== 'O')) y = HIDDEN;
     if (def.name === 'O') y = HIDDEN;
     this.active = { ...s, x, y, rot: 0 };
+    if (this.hyperActive('barrage')) this.active.hyperBomb = true;
     if (this.collides(def, x, y, 0)) {
       if (!this.collides(def, x, y - 1, 0)) this.active.y = y - 1;
       else if (!this.collides(def, x, 0, 0)) this.active.y = 0;
@@ -455,6 +485,7 @@ export class Game {
     let speed = this.mods.gravitySpeed;
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
+    if (this.hyperActive('slowmo')) speed *= 0.12;
     t /= speed;
     return Math.max(t, 1);
   }
@@ -487,6 +518,7 @@ export class Game {
   step() {
     if (this.state !== 'playing' || !this.active) return;
     this.steps++;
+    if (this.hyperLeft > 0 && --this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: this.hyper! });
     this.update(STEP_MS);
     // si la última pieza sube de nivel justo al acabar, no se llega a elegir carta
     if (this.timeLeftMs() <= 0 && (this.state === 'playing' || this.state === 'choosing')) this.endRun('time');
@@ -580,6 +612,7 @@ export class Game {
     if (m.vertigo > 0 && this.inDanger(0.5)) mult *= 1 + m.vertigo;
     if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.filter((id) => !PERK_BY_ID[id].curse).length;
     if (this.phoenixBonus > 0) mult *= 1 + this.phoenixBonus;
+    if (this.hyperActive('frenzy')) mult *= 3;
     return mult;
   }
 
@@ -597,17 +630,19 @@ export class Game {
     this.active = null;
     this.piecesLocked++;
 
-    if (a.bomb) {
+    if (a.bomb || a.hyperBomb) {
       this.explode(cells);
     } else if (a.prism) {
       this.prismBlast(cells);
     } else {
       const value = a.def.id | (a.gold ? GOLD_BIT : 0);
-      for (const [x, y] of cells) if (y >= 0) this.board[y][x] = value;
-      this.events.emit('lock', { cells, color: a.def.color });
-      this.resolveClears(spin, a.def, cells);
+      const sand = this.hyperActive('sand');
+      const placed = sand ? this.sandCells(cells) : cells;
+      for (const [x, y] of placed) if (y >= 0) this.board[y][x] = value;
+      this.events.emit('lock', { cells: placed, color: a.def.color });
+      this.resolveClears(sand ? null : spin, a.def, placed);
       // una pieza con algún bloque por encima del búfer oculto es un bloqueo fuera: cuenta como topOut
-      if (cells.some(([, y]) => y < 0) && !this.topOut()) return;
+      if (placed.some(([, y]) => y < 0) && !this.topOut()) return;
     }
 
     this.afterLock();
@@ -639,7 +674,7 @@ export class Game {
         const pts = this.addScore((spin === 'full' ? 400 : 100) * lvl);
         this.events.emit('spinNoLines', { spinName, points: pts, cells });
       }
-      if (this.combo >= 0) {
+      if (this.combo >= 0 && !this.hyperActive('frenzy')) {
         if (this.comboGraceLeft > 0) this.comboGraceLeft--;
         else this.combo = -1;
       }
@@ -744,7 +779,7 @@ export class Game {
     }
     const points = this.addScore(removed.length * 40 * this.level);
     this.events.emit('bomb', { cx, cy, removed, points });
-    if (this.combo >= 0 && removed.length === 0) this.combo = -1;
+    if (this.combo >= 0 && removed.length === 0 && !this.hyperActive('frenzy')) this.combo = -1;
     this.settleAfterBlast(removed);
   }
 
@@ -826,7 +861,7 @@ export class Game {
     }
 
     // Ancla: con un combo de dos o más piezas seguidas, la basura no avanza
-    const anchored = m.anchor && this.combo >= 1;
+    const anchored = (m.anchor && this.combo >= 1) || this.hyperActive('slowmo');
     if (this.level >= 4 && !anchored) {
       this.garbageCounter++;
       const interval = this.garbageInterval();
@@ -861,6 +896,7 @@ export class Game {
   /** Suma líneas al total y, con Cosecha, da un reroll cada cierto número. */
   private addLines(n: number) {
     this.lines += n;
+    this.chargeHyper(n);
     const every = this.mods.harvestEvery;
     if (every <= 0) return;
     this.harvestLines += n;
@@ -920,6 +956,8 @@ export class Game {
   private endRun(reason: EndReason) {
     this.active = null;
     this.choices = [];
+    this.hyperChoices = [];
+    this.hyperLeft = 0;
     this.pendingLevelUps = 0;
     this.state = 'over';
     this.endReason = reason;
@@ -940,6 +978,7 @@ export class Game {
       this.linesIntoLevel -= this.linesNeeded();
       this.level++;
       this.pendingLevelUps++;
+      if (this.level === HYPER_LEVEL && !this.hyper) this.hyperPending = true;
       if (this.mods.interest > 0) {
         const amount = Math.round(this.score * this.mods.interest);
         this.score += amount;
@@ -962,9 +1001,13 @@ export class Game {
   /**
    * Oferta nueva: todas las cartas de la misma rareza. Desde el nivel 5, algunas (nunca dos
    * seguidas) son malditas: solo maldiciones, y hay que elegir la menos mala. La oferta que
-   * sigue a una maldita es rara o mejor.
+   * sigue a una maldita es rara o mejor. Si tocan hiperperks, van antes y no cuentan como oferta.
    */
   private newOffer() {
+    if (this.hyperPending) {
+      this.rollChoices();
+      return;
+    }
     this.blessedOffer = this.cursedOffer;
     const cursed =
       this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE;
@@ -975,12 +1018,23 @@ export class Game {
   /** Saca las cartas del tipo de oferta actual (el reroll mantiene el tipo). */
   private rollChoices() {
     const n = this.mods.choices;
+    if (this.hyperPending) {
+      this.choices = [];
+      this.hyperChoices = rollHypers(n, this.hyperRng);
+      return;
+    }
+    this.hyperChoices = [];
     if (this.cursedOffer) {
       this.choices = rollCurses(this.perks, n, this.perkRng);
       if (this.choices.length > 0) return;
       this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
     }
     this.choices = rollOffer(this.perks, this.mods.luck, n, this.bestLevel, this.perkRng, this.blessedOffer);
+  }
+
+  /** La elección en curso es de hiperperk, no de mejora normal. */
+  get choosingHyper(): boolean {
+    return this.hyperChoices.length > 0;
   }
 
   reroll(): boolean {
@@ -993,6 +1047,18 @@ export class Game {
 
   choosePerk(index: number) {
     if (this.state !== 'choosing') return;
+    if (this.choosingHyper) {
+      const hyper = this.hyperChoices[index];
+      if (!hyper) return;
+      this.record([this.steps, 'pick', index]);
+      this.hyper = hyper;
+      this.hyperPending = false;
+      this.hyperCharge = 0;
+      this.events.emit('hyperPick', { hyper });
+      // la hiperperk no gasta la subida de nivel: después viene la carta normal
+      this.newOffer();
+      return;
+    }
     const perk = this.choices[index];
     if (!perk) return;
     this.record([this.steps, 'pick', index]);
@@ -1014,6 +1080,79 @@ export class Game {
     perk.apply(this.mods, this);
     this.refreshQueueSpecials();
     this.events.emit('perk', { perk, stacks });
+  }
+
+  // ─────────────────────────── Hiperperks ───────────────────────────
+
+  /** La hiperperk `id` es la de la partida y está activa ahora. */
+  hyperActive(id: HyperId): boolean {
+    return this.hyperLeft > 0 && this.hyper?.id === id;
+  }
+
+  /** Lista para activar: elegida, cargada del todo y sin estar ya activa. */
+  hyperReady(): boolean {
+    return this.hyper !== null && this.hyperLeft === 0 && this.hyperCharge >= this.hyper.charge;
+  }
+
+  /** Lo que lleva cargado (0..1) o, activa, lo que le queda. */
+  hyperMeter(): number {
+    const h = this.hyper;
+    if (!h) return 0;
+    if (this.hyperLeft > 0) return this.hyperLeft / Math.round(h.durationMs / STEP_MS);
+    return Math.min(1, this.hyperCharge / h.charge);
+  }
+
+  private chargeHyper(n: number) {
+    const h = this.hyper;
+    if (!h || this.hyperLeft > 0 || this.hyperCharge >= h.charge) return;
+    this.hyperCharge = Math.min(h.charge, this.hyperCharge + n);
+    if (this.hyperCharge >= h.charge) this.events.emit('hyperReady', { hyper: h });
+  }
+
+  /** Suelta la hiperperk. Es una acción del jugador: se graba para la repetición. */
+  activateHyper(): boolean {
+    if (this.state !== 'playing' || !this.active || !this.hyperReady()) return false;
+    const h = this.hyper!;
+    this.record([this.steps, 'hyper']);
+    this.hyperCharge = 0;
+    this.hyperLeft = Math.round(h.durationMs / STEP_MS);
+    this.events.emit('hyper', { hyper: h });
+    if (h.id === 'barrage') this.active!.hyperBomb = true;
+    if (h.id === 'wipe') this.wipeBoard();
+    // las instantáneas también avisan de que han terminado
+    if (this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: h });
+    return true;
+  }
+
+  /** Arena: cada bloque cae al hueco libre más bajo de su columna, aunque esté tapado. */
+  private sandCells(cells: Cell[]): Cell[] {
+    const taken = new Set<string>();
+    const free = (x: number, y: number) => this.board[y][x] === 0 && !taken.has(`${x},${y}`);
+    // primero los de abajo, para que cada bloque ocupe el hueco más bajo que quede
+    return [...cells]
+      .sort((a, b) => b[1] - a[1])
+      .map(([x, y]) => {
+        for (let ty = ROWS - 1; ty >= Math.max(0, y); ty--) {
+          if (free(x, ty)) {
+            taken.add(`${x},${ty}`);
+            return [x, ty] as Cell;
+          }
+        }
+        return [x, y] as Cell;
+      });
+  }
+
+  /** Tabla rasa: vacía el tablero. Puntúa por bloque, sin tocar combo ni líneas. */
+  private wipeBoard() {
+    const removed: { x: number; y: number; v: number }[] = [];
+    for (let y = 0; y < ROWS; y++)
+      for (let x = 0; x < COLS; x++)
+        if (this.board[y][x] !== 0) {
+          removed.push({ x, y, v: this.board[y][x] });
+          this.board[y][x] = 0;
+        }
+    const points = this.addScore(removed.length * 40 * this.level);
+    this.events.emit('wipe', { removed, points });
   }
 
   togglePause() {

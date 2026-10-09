@@ -13,10 +13,11 @@ const CW = ['ArrowUp', 'KeyX'];
 const CCW = ['KeyZ', 'ControlLeft', 'ControlRight'];
 const R180 = ['KeyA'];
 const HOLD = ['KeyC', 'ShiftLeft', 'ShiftRight'];
-const ALL = [...LEFT, ...RIGHT, ...DOWN, ...HARD, ...CW, ...CCW, ...R180, ...HOLD];
+const HYPER = ['KeyD'];
+const ALL = [...LEFT, ...RIGHT, ...DOWN, ...HARD, ...CW, ...CCW, ...R180, ...HOLD, ...HYPER];
 
 /** Acciones de juego que pueden venir de botones táctiles en pantalla. */
-export type TouchAction = 'left' | 'right' | 'down' | 'hard' | 'cw' | 'ccw' | 'r180' | 'hold';
+export type TouchAction = 'left' | 'right' | 'down' | 'hard' | 'cw' | 'ccw' | 'r180' | 'hold' | 'hyper';
 
 /** Tecla que representa cada acción táctil, para reutilizar la misma lógica que el teclado. */
 const TOUCH_CODE: Record<TouchAction, string> = {
@@ -28,6 +29,7 @@ const TOUCH_CODE: Record<TouchAction, string> = {
   ccw: 'KeyZ',
   r180: 'KeyA',
   hold: 'KeyC',
+  hyper: 'KeyD',
 };
 
 /** Teclado y táctil con DAS/ARR estándar del género. */
@@ -80,6 +82,7 @@ export class Input {
     else if (CCW.includes(c)) g.rotate(-1);
     else if (R180.includes(c)) g.rotate(2);
     else if (HOLD.includes(c)) g.holdPiece();
+    else if (HYPER.includes(c)) g.activateHyper();
     else return false;
     return true;
   }

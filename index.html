@@ -20,7 +20,8 @@
       <button type="button" data-touch="ccw" aria-label="Girar izquierda">↺</button>
       <button type="button" data-touch="cw" aria-label="Girar derecha">↻</button>
       <button type="button" data-touch="r180" aria-label="Girar 180">A</button>
-          <button type="button" data-touch="hold" aria-label="Guardar pieza">C</button>
+      <button type="button" data-touch="hold" aria-label="Guardar pieza">C</button>
+      <button type="button" data-touch="hyper" aria-label="Hiperperk">D</button>
       <button type="button" data-touch="pause" aria-label="Pausa">II</button>
     </div>
   </nav>
@@ -43,6 +44,7 @@
             <li><b>Limpia líneas.</b> Tablero de 11×18, rotación con rebotes, reserva y giros.</li>
             <li><b>Sube de nivel.</b> Cada pocas líneas. La basura sube desde el nivel 4.</li>
             <li><b>Elige una mejora.</b> Ventajas con desventajas que cambian las reglas y se combinan.</li>
+            <li><b>Suelta tu hiperperk.</b> Al nivel 4 eliges una habilidad muy fuerte. Se carga con líneas y la activas cuando quieras.</li>
           </ol>
         </section>
 
@@ -56,6 +58,7 @@
             <li><span><kbd>Z</kbd></span>girar al revés</li>
             <li><span><kbd>A</kbd></span>180°</li>
             <li><span><kbd>C</kbd></span>reserva</li>
+            <li><span><kbd>D</kbd></span>hiperperk</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
           <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil hay botones táctiles.</p>
@@ -105,6 +108,13 @@
           <div id="perk-list"></div>
         </section>
 
+        <section class="panel p-hyper" id="hyper-box" data-state="none">
+          <header>Hiper <kbd>D</kbd></header>
+          <div class="hy-row"><div id="hyper-ico" class="hy-ico"></div><div id="hyper-name" class="hy-name">Hiperperk</div></div>
+          <div class="hy-bar"><i id="hyper-fill"></i></div>
+          <div id="hyper-state" class="hy-state"></div>
+        </section>
+
         <section class="panel p-controls">
           <header>Controles</header>
           <ul class="keys">
@@ -115,6 +125,7 @@
             <li><span><kbd>Z</kbd></span>girar ↺</li>
             <li><span><kbd>A</kbd></span>180°</li>
             <li><span><kbd>C</kbd></span>hold</li>
+            <li><span><kbd>D</kbd></span>hiper</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
           <ul class="keys toggles">

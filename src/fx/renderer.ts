@@ -4,7 +4,7 @@ import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, ty
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
-  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W, hex,
+  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HYPER_COLOR, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W, hex,
 } from './layout';
 import { Particles } from './particles';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
@@ -616,6 +616,37 @@ export class Renderer {
       this.floatText(this.game.mods.phoenix ? '¡FÉNIX!' : '¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
     });
 
+    const mid = BOARD_X + BOARD_W / 2;
+    ev.on('hyperPick', ({ hyper }) => {
+      this.flash(HYPER_COLOR, 0.3);
+      this.floatText(hyper.name.toUpperCase(), mid, BOARD_Y + 100, { color: HYPER_COLOR, size: 28, life: 1.6 });
+    });
+
+    ev.on('hyperReady', ({ hyper }) => {
+      this.floatText(`${hyper.name.toUpperCase()} LISTA`, mid, BOARD_Y + BOARD_H / 2 + 110, { color: HYPER_COLOR, size: 18, delay: 0.25 });
+    });
+
+    ev.on('hyper', ({ hyper }) => {
+      this.flash(HYPER_COLOR, 0.5);
+      this.shake(0.5);
+      this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 170, speed: 650 });
+      this.floatText(`¡${hyper.name.toUpperCase()}!`, mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });
+    });
+
+    ev.on('hyperEnd', ({ hyper }) => {
+      this.floatText(`FIN DE ${hyper.name.toUpperCase()}`, mid, BOARD_Y + 120, { color: this.skin.ink, size: 16 });
+    });
+
+    ev.on('wipe', ({ removed, points }) => {
+      for (const r of removed) {
+        const color = isGold(r.v) ? GOLD_COLOR : colorOfId(cellType(r.v));
+        this.particles.emit({ x: this.cx(r.x), y: this.cy(r.y), color, count: 3, speed: 420, angle: -Math.PI / 2, spread: 1.4, life: 0.9, size: 8, gravity: 700, shape: 'square', jitter: 8 });
+      }
+      this.flashList.push({ x: BOARD_X, y: BOARD_Y, w: BOARD_W, h: BOARD_H, color: HYPER_COLOR, life: 0.5, max: 0.5 });
+      this.shake(0.8);
+      this.floatText(`+${points.toLocaleString('es-ES')}`, mid, BOARD_Y + BOARD_H / 2 + 10, { size: 20, vy: -60 });
+    });
+
     ev.on('gameover', () => {
       this.overT = 0;
       this.shake(0.5);
@@ -758,6 +789,19 @@ export class Renderer {
       const pulse = gp > 0.75 ? 0.6 + 0.4 * Math.sin(this.time * 14) : 0.85;
       f.rect(BOARD_X - 20, BOARD_Y + BOARD_H - h, 6, h).fill({ color: 0xff3050, alpha: pulse });
     }
+    // hiperperk: barra a la derecha del tablero; se llena con líneas y se vacía mientras está activa
+    if (g.hyper) {
+      const active = g.hyperLeft > 0;
+      const ready = g.hyperReady();
+      const h = BOARD_H * g.hyperMeter();
+      const alpha = ready && !REDUCED_MOTION ? 0.65 + 0.35 * Math.sin(this.time * 10) : 1;
+      f.rect(BOARD_X + BOARD_W + 14, BOARD_Y, 6, BOARD_H).fill({ color: this.skin.ink, alpha: 0.12 });
+      f.rect(BOARD_X + BOARD_W + 14, BOARD_Y + BOARD_H - h, 6, h).fill({ color: HYPER_COLOR, alpha });
+      if (active) {
+        const pulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
+        f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: pulse });
+      }
+    }
     // progreso de nivel (barra fina debajo del tablero)
     const lp = g.linesIntoLevel / g.linesNeeded();
     f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: this.skin.ink, alpha: 0.15 });
@@ -794,7 +838,7 @@ export class Renderer {
   }
 
   private specColor(spec: PieceSpec, i: number): number {
-    if (spec.bomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
+    if (spec.bomb || spec.hyperBomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
     if (spec.prism) return hsv((this.time * 0.6 + i * 0.12) % 1, 0.75, 1);
     if (spec.gold) return lerpColor(GOLD_COLOR, 0xffffff, 0.2 + 0.2 * Math.sin(this.time * 5 + i));
     return this.pieceColor(spec.def.color);
@@ -836,11 +880,11 @@ export class Renderer {
       this.placeCell(this.cells, BOARD_X + (this.visX + cx) * CELL, BOARD_Y + (y - HIDDEN) * CELL, CELL, col, alpha);
     });
     // mecha de la bomba / brillo del prisma
-    if (a.bomb && Math.random() < sec * 40) {
+    if ((a.bomb || a.hyperBomb) && Math.random() < sec * 40) {
       const [cx, cy] = shape[0];
       this.particles.emit({ x: BOARD_X + (this.visX + cx + 0.5) * CELL, y: BOARD_Y + (this.visY + cy - HIDDEN) * CELL, color: 0xffb020, count: 1, speed: 120, angle: -Math.PI / 2, spread: 1.2, life: 0.4, size: 5, gravity: -100 });
     }
-    if (a.prism && Math.random() < sec * 30) {
+    if (a.prism && !a.hyperBomb && Math.random() < sec * 30) {
       const [cx, cy] = shape[Math.floor(Math.random() * shape.length)];
       this.particles.emit({ x: BOARD_X + (this.visX + cx + 0.5) * CELL, y: BOARD_Y + (this.visY + cy - HIDDEN + 0.5) * CELL, color: hsv(Math.random(), 0.7, 1), count: 1, speed: 60, life: 0.6, size: 6, gravity: -60 });
     }
