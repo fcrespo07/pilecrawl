@@ -73,7 +73,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 ## Versionado
 
 - Versión semántica en `package.json`. Sigue en 0.x: aún no está listo para publicar. Sube la minor (0.x.0) con novedades de juego (perks, modos, mecánicas) y la patch (0.x.y) con arreglos y retoques.
-- **Cada PR sube la versión** en `package.json` y `package-lock.json` (las dos primeras apariciones de `version`) y añade su entrada arriba en `CHANGELOG.md`, en español, con fecha y número de PR. Lo hace quien abre el PR; la versión la lleva Claude.
+- **Cada PR añade su línea en español** bajo `## Sin publicar`, al principio de `CHANGELOG.md` (con número de PR). Así los PR abiertos a la vez no chocan por la versión.
+- **La versión se sube al fusionar**: en el último commit del PR que se fusiona, Claude cambia `version` en `package.json` y `package-lock.json` (las dos primeras apariciones) y mueve lo de `Sin publicar` a una sección `## X.Y.Z — fecha`. El resto de PR abiertos rebasan sin tocar versión.
 - La versión se ve en el juego (`[data-version]` en la portada; viene de `package.json` vía `__APP_VERSION__` en `vite.config.ts`).
-- Las etiquetas `vX.Y.Z` y su release (con la sección del CHANGELOG) las crea solas `.github/workflows/release.yml` al fusionar en master. No hace falta etiquetar a mano. Ese workflow, lanzado a mano una vez, rellena v0.1.0 a v0.3.0.
-- Si dos PR abiertos suben la versión, el segundo en fusionarse rebasa y reajusta número y changelog.
+- Las etiquetas `vX.Y.Z` y su release (con la sección del CHANGELOG) las crea solas `.github/workflows/release.yml` al llegar a master con una versión nueva. No hace falta etiquetar a mano. Ese workflow, lanzado a mano una vez, rellena v0.1.0 a v0.3.0.

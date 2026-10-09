@@ -1,6 +1,8 @@
 # Registro de cambios
 
-Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su entrada arriba.
+Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
+
+## Sin publicar
 
 ## 0.4.0 — 2026-10-09
 - Nuevo nombre: **Block Rogue** (antes Derrumbe, y antes Tetrogue). Título, portada y paquete.
