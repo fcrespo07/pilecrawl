@@ -167,7 +167,7 @@ export class UI {
     $('perks').classList.toggle('cursed', g.cursedOffer);
     $('perk-stripe').textContent = g.cursedOffer ? 'Oferta maldita' : 'Subida de nivel';
     $('perk-sub').textContent = g.cursedOffer
-      ? 'Todas son malas: elige la menos mala. La siguiente será rara o mejor'
+      ? 'Todas son malas: elige la menos mala. El reroll saca otras maldiciones; la siguiente oferta será rara o mejor'
       : g.blessedOffer
         ? 'Recompensa por la maldición: rara o mejor'
         : 'Elige una mejora';
@@ -261,7 +261,7 @@ export class UI {
       const p = Game.perkDef(id);
       const n = Math.max(1, this.game.perkStacks(id));
       const tip = $('tooltip');
-      tip.style.setProperty('--c', `var(--${p.rarity})`);
+      tip.style.setProperty('--c', `var(--${rarityKey(p)})`);
       tip.innerHTML = `<div class="tt-head"><span class="tt-name">${p.name}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${rarityLabel(p)}</span></div>${effectsHTML(p, n)}`;
       const r = chip.getBoundingClientRect();
       const stage = $('stage').getBoundingClientRect();

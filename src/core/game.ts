@@ -86,6 +86,9 @@ export const RULES_VERSION = 4;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
+
+/** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
+export const GARBAGE_MIN_INTERVAL = 3;
 export const CURSE_CHANCE = 0.12;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
@@ -873,7 +876,8 @@ export class Game {
   }
 
   garbageInterval(): number {
-    return Math.max(5, 15 - Math.floor(this.level / 2)) + this.mods.garbageDelay;
+    // suelo después de sumar los perks: Terremoto y Marea juntos no pueden subir basura en cada pieza
+    return Math.max(GARBAGE_MIN_INTERVAL, Math.max(5, 15 - Math.floor(this.level / 2)) + this.mods.garbageDelay);
   }
 
   garbageProgress(): number {
