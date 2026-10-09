@@ -51,7 +51,7 @@ export class Particles {
       const s = this.free.pop() ?? new Sprite();
       s.texture = this.textures[shape];
       s.anchor.set(0.5);
-      s.blendMode = 'add';
+      s.blendMode = 'normal';
       s.tint = o.color;
       s.alpha = 1;
       s.visible = true;

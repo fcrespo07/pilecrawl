@@ -48,7 +48,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Los perks cambian reglas, no solo suman números. Cada mejora buena tiene su contrapartida.
 - Sin emojis en la interfaz. Los iconos son SVG propios.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
-- Efectos visuales pesados (bloom, CRT) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
+- Las ondas de choque (distorsión de pantalla) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
 - Récord en `localStorage` (`tetrogue.best`). Se envuelve en try/catch.
 
 ## Estado

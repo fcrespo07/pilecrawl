@@ -242,7 +242,7 @@ export class Renderer {
     this.cells = new Pool(this.cellLayer, this.tex.cell);
     this.ghosts = new Pool(this.cellLayer, this.tex.ghost);
     this.trails = new Pool(this.fxLayer, this.tex.trail, 'add');
-    this.flashes = new Pool(this.fxLayer, Texture.WHITE, 'add');
+    this.flashes = new Pool(this.fxLayer, Texture.WHITE);
     this.glows = new Pool(this.fxLayer, this.tex.dot, 'add');
     this.particles = new Particles({ dot: this.tex.dot, spark: this.tex.dot, square: Texture.WHITE });
     this.fxLayer.addChild(this.particles.container);
@@ -255,7 +255,7 @@ export class Renderer {
     this.screenFlash.width = W;
     this.screenFlash.height = H;
     this.screenFlash.alpha = 0;
-    this.screenFlash.blendMode = 'add';
+    this.screenFlash.blendMode = 'normal';
     this.overlay.addChild(this.vignette, this.screenFlash);
 
     this.drawBoardBg();
@@ -308,10 +308,11 @@ export class Renderer {
   }
 
   applyQuality() {
-    // el bloom y el CRT eran parte del estilo neón: sobre papel el bloom aclara todo a blanco
+    // el bloom y el CRT eran parte del estilo neón: sobre papel el bloom aclara todo a blanco.
+    // F ahora apaga las ondas de choque, que son el efecto pesado que queda.
     this.bloom.enabled = false;
     this.crt.enabled = false;
-    this.root.filters = [this.bloom, ...this.shocks.map((s) => s.f), this.rgb, this.crt];
+    this.root.filters = this.highQuality ? this.shocks.map((s) => s.f) : [];
   }
 
   // ───────────── coordenadas ─────────────
@@ -358,9 +359,9 @@ export class Renderer {
     s.f.enabled = true;
   }
 
-  flash(color = 0xffffff, alpha = 0.35) {
+  flash(color = INK, alpha = 0.35) {
     this.screenFlash.tint = color;
-    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha);
+    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha * 0.4);
   }
 
   floatText(str: string, x: number, y: number, o: { color?: number; size?: number; life?: number; vy?: number; delay?: number; font?: string } = {}) {
@@ -422,7 +423,7 @@ export class Renderer {
     });
 
     ev.on('lock', ({ cells }) => {
-      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: 0xffffff, life: 0.16, max: 0.16 });
+      for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: INK, life: 0.16, max: 0.16 });
     });
 
     ev.on('clear', (c) => {
@@ -434,7 +435,7 @@ export class Renderer {
       const big = c.lines >= 4 || c.spin !== null || c.perfect;
 
       c.rows.forEach((row, ri) => {
-        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: 0xffffff, life: 0.35, max: 0.35 });
+        this.flashList.push({ x: BOARD_X, y: this.py(row), w: BOARD_W, h: CELL, color: INK, life: 0.35, max: 0.35 });
         c.rowValues[ri].forEach((v, x) => {
           const color = isGold(v) ? GOLD_COLOR : colorOfId(cellType(v));
           this.particles.emit({
@@ -450,7 +451,7 @@ export class Renderer {
       let label = c.lines >= 4 ? 'TETRIS' : lineNames[c.lines];
       if (c.spin) label = `${c.spinName}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
       if (c.cascade > 0) label = `CADENA ×${c.cascade + 1}`;
-      const color = c.lines >= 4 ? 0x2ef2ff : c.spin ? 0xd36bff : c.cascade ? 0xff8a3d : 0xffffff;
+      const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : INK;
       if (c.lines >= 2 || c.spin || c.cascade) this.floatText(label, cxMid, cyMid - 10, { color, size: big ? 40 : 28, life: 1.4 });
       if (c.b2b) this.floatText('BACK-TO-BACK', cxMid, cyMid - 52, { color: 0xffb13d, size: 18, life: 1.4 });
       let below = cyMid + (big ? 38 : 30);
@@ -464,7 +465,7 @@ export class Renderer {
 
       if (c.perfect) {
         this.floatText('PERFECT CLEAR', cxMid, BOARD_Y + BOARD_H / 2, { color: 0xffe14d, size: 46, life: 2.2, vy: -10 });
-        this.flash(0xffffff, 0.3);
+        this.flash(INK, 0.3);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
         this.bloomBoost = 0.6;
       }
@@ -475,7 +476,7 @@ export class Renderer {
         this.shockwave(cxMid, cyRows, { amplitude: c.lines >= 4 ? 18 : 12 });
         this.rgbAmt = c.lines >= 4 ? 5 : 3;
         this.bloomBoost = Math.max(this.bloomBoost, 0.35);
-        this.flash(c.lines >= 4 ? 0x2ef2ff : 0xc04dff, 0.12);
+        this.flash(c.lines >= 4 ? 0x1f5fa8 : 0x7a3fa0, 0.12);
       }
     });
 
@@ -510,7 +511,7 @@ export class Renderer {
       });
       const [x, y] = cells[0];
       this.shockwave(this.cx(x), this.cy(y), { amplitude: 14, wavelength: 150, speed: 500 });
-      this.flash(0xffffff, 0.3);
+      this.flash(INK, 0.3);
       this.shake(0.4);
       this.rgbAmt = 6;
       this.floatText(`PRISMA ×${removed.length}`, this.cx(x), this.cy(y) - 30, { color: 0xff7ad9, size: 30 });
@@ -556,7 +557,7 @@ export class Renderer {
     });
 
     ev.on('revive', () => {
-      this.flash(0xffffff, 0.5);
+      this.flash(INK, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
       this.floatText('¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xff4d6a, size: 34, life: 2 });
@@ -569,7 +570,7 @@ export class Renderer {
     });
 
     ev.on('perk', ({ perk }) => {
-      this.flash(0xffffff, 0.25);
+      this.flash(INK, 0.25);
       this.floatText(perk.name.toUpperCase(), BOARD_X + BOARD_W / 2, BOARD_Y + 160, { color: this.accent, size: 26, life: 1.4 });
     });
   }
