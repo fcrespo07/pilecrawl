@@ -3,11 +3,11 @@
 import { isModeId, type ModeId } from './core/modes';
 
 const BEST_KEY: Record<Exclude<ModeId, 'daily'>, string> = {
-  normal: 'derrumbe.best',
-  timed: 'derrumbe.best.timed',
+  normal: 'blockrogue.best',
+  timed: 'blockrogue.best.timed',
 };
-const DAILY_KEY = 'derrumbe.daily';
-const MODE_KEY = 'derrumbe.mode';
+const DAILY_KEY = 'blockrogue.daily';
+const MODE_KEY = 'blockrogue.mode';
 
 interface DailyRecord {
   date: string;
