@@ -7,6 +7,11 @@ import {
 } from './layout';
 import { Particles } from './particles';
 
+// paleta de papel y tinta (igual que los tokens de style.css)
+const INK = 0x1b1a17;
+const PAPER = 0xf3ecdc;
+const PAPER_PANEL = 0xfbf6ea;
+
 // ───────────────────────── utilidades de color ─────────────────────────
 
 function lerpColor(a: number, b: number, t: number): number {
@@ -108,8 +113,8 @@ function makeTrailTexture(): Texture {
 function makeBackground(): Texture {
   return canvasTex(W / 4, H / 4, (c) => {
     const g = c.createLinearGradient(0, 0, 0, H / 4);
-    g.addColorStop(0, '#05060f');
-    g.addColorStop(1, '#0d0a20');
+    g.addColorStop(0, '#e9e1cc');
+    g.addColorStop(1, '#e2d8bf');
     c.fillStyle = g;
     c.fillRect(0, 0, W / 4, H / 4);
   });
@@ -211,7 +216,7 @@ export class Renderer {
       resolution,
       autoDensity: true,
       antialias: true,
-      background: '#05060f',
+      background: '#e9e1cc',
       preference: 'webgl',
     });
 
@@ -269,41 +274,19 @@ export class Renderer {
     bgSprite.width = W;
     bgSprite.height = H;
     this.bg.addChild(bgSprite);
-    const big = makeDotTexture(128);
-    for (let i = 0; i < 5; i++) {
-      const s = new Sprite(big);
-      s.anchor.set(0.5);
-      s.width = s.height = 500 + Math.random() * 300;
-      s.alpha = 0.10;
-      s.blendMode = 'add';
-      this.bg.addChild(s);
-      this.blobs.push({ s, ph: Math.random() * 10, sp: 0.05 + Math.random() * 0.08 });
-    }
-    for (let i = 0; i < 110; i++) {
-      const s = new Sprite(this.tex.dot);
-      s.anchor.set(0.5);
-      const depth = Math.random();
-      s.width = s.height = 2 + depth * 5;
-      s.alpha = 0.15 + depth * 0.5;
-      s.x = Math.random() * W;
-      s.y = Math.random() * H;
-      s.blendMode = 'add';
-      this.bg.addChild(s);
-      this.stars.push({ s, speed: 6 + depth * 30 });
-    }
   }
 
   private drawBoardBg() {
     const g = this.boardBg;
     g.clear();
-    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: 0x03040a, alpha: 0.85 });
+    g.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).fill({ color: PAPER_PANEL, alpha: 1 });
     for (let x = 1; x < COLS; x++) {
       g.moveTo(BOARD_X + x * CELL, BOARD_Y).lineTo(BOARD_X + x * CELL, BOARD_Y + BOARD_H);
     }
     for (let y = 1; y < 20; y++) {
       g.moveTo(BOARD_X, BOARD_Y + y * CELL).lineTo(BOARD_X + BOARD_W, BOARD_Y + y * CELL);
     }
-    g.stroke({ width: 1, color: 0xffffff, alpha: 0.05 });
+    g.stroke({ width: 1, color: INK, alpha: 0.12 });
   }
 
   private setupFilters() {
@@ -325,8 +308,9 @@ export class Renderer {
   }
 
   applyQuality() {
-    this.bloom.enabled = this.highQuality;
-    this.crt.enabled = this.highQuality;
+    // el bloom y el CRT eran parte del estilo neón: sobre papel el bloom aclara todo a blanco
+    this.bloom.enabled = false;
+    this.crt.enabled = false;
     this.root.filters = [this.bloom, ...this.shocks.map((s) => s.f), this.rgb, this.crt];
   }
 
@@ -380,7 +364,7 @@ export class Renderer {
   }
 
   floatText(str: string, x: number, y: number, o: { color?: number; size?: number; life?: number; vy?: number; delay?: number; font?: string } = {}) {
-    const color = o.color ?? 0xffffff;
+    const color = o.color ?? INK;
     const t = new Text({
       text: str,
       style: {
@@ -388,7 +372,7 @@ export class Renderer {
         fontWeight: 'normal',
         fontSize: (o.size ?? 28) * 0.9,
         fill: color,
-        stroke: { color: 0x05060f, width: Math.max(3, (o.size ?? 28) / 7) },
+        stroke: { color: PAPER, width: Math.max(3, (o.size ?? 28) / 7) },
         dropShadow: { color, blur: 14, distance: 0, alpha: 0.9 },
         letterSpacing: 1,
         align: 'center',
@@ -474,7 +458,7 @@ export class Renderer {
         this.floatText(`COMBO ×${c.combo}`, cxMid, below, { color: 0x9dff4d, size: 20 + Math.min(c.combo, 10) * 1.5, life: 1.2 });
         below += 32;
       }
-      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: 0xffffff, size: 16, life: 1.1, vy: -30 });
+      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: INK, size: 16, life: 1.1, vy: -30 });
       below += 28;
       if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_COLOR, size: 18, life: 1.3, vy: -30 });
 
@@ -657,20 +641,20 @@ export class Renderer {
     const band = 24;
     for (const [x, y, w, h] of [[HOLD_X, HOLD_Y, HOLD_W, holdH], [NEXT_X, NEXT_Y, NEXT_W, nextH]]) {
       const shape = [x + c, y, x + w, y, x + w, y + h - c, x + w - c, y + h, x, y + h, x, y + c];
-      p.poly(shape).fill({ color: 0x090b18, alpha: 0.88 });
-      p.poly(shape).stroke({ width: 1.5, color: this.accent, alpha: 0.45 });
-      p.poly([x + c, y, x + w, y, x + w, y + band, x, y + band, x, y + c]).fill({ color: this.accent, alpha: 0.9 });
+      p.poly(shape).fill({ color: PAPER_PANEL, alpha: 1 });
+      p.poly(shape).stroke({ width: 2, color: INK, alpha: 1 });
+      p.poly([x + c, y, x + w, y, x + w, y + band, x, y + band, x, y + c]).fill({ color: INK, alpha: 1 });
       // franjas de peligro al final de la banda
       for (let k = 0; k < 3; k++) {
         const sx = x + w - 30 + k * 8;
-        p.poly([sx, y + 5, sx + 4, y + 5, sx + 1, y + band - 5, sx - 3, y + band - 5]).fill({ color: 0x05060f, alpha: 0.55 });
+        p.poly([sx, y + 5, sx + 4, y + 5, sx + 1, y + band - 5, sx - 3, y + band - 5]).fill({ color: PAPER, alpha: 0.5 });
       }
     }
     if (!this.labels.length) {
       for (const [txt, x] of [['HOLD', HOLD_X + 16], ['NEXT', NEXT_X + 16]] as const) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 12, fill: 0x05060f, letterSpacing: 4 },
+          style: { fontFamily: '"Chakra Petch", sans-serif', fontWeight: '700', fontSize: 12, fill: PAPER, letterSpacing: 4 },
           resolution: 2,
         });
         t.anchor.set(0, 0.5);
@@ -686,9 +670,9 @@ export class Renderer {
     const g = this.game;
     const f = this.frame;
     f.clear();
-    const dangerCol = lerpColor(this.accent, 0xff1e3c, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
-    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 0.95 });
-    f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.3 });
+    const dangerCol = lerpColor(INK, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
+    f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 3, color: dangerCol, alpha: 1 });
+    f.rect(BOARD_X - 9, BOARD_Y - 9, BOARD_W + 18, BOARD_H + 18).stroke({ width: 1, color: dangerCol, alpha: 0.4 });
 
     // medidor de basura
     const gp = g.garbageProgress();
@@ -699,7 +683,7 @@ export class Renderer {
     }
     // progreso de nivel (barra fina debajo del tablero)
     const lp = g.linesIntoLevel / g.linesNeeded();
-    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: 0xffffff, alpha: 0.08 });
+    f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W, 4).fill({ color: INK, alpha: 0.15 });
     f.rect(BOARD_X, BOARD_Y + BOARD_H + 12, BOARD_W * lp, 4).fill({ color: this.accent, alpha: 1 });
   }
 
