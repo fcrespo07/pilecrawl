@@ -681,7 +681,7 @@ kbd {
 @media (pointer: coarse) { .home-btn kbd { display: none; } }
 
 /* ═════════════ Selector de modo ═════════════ */
-.mode-select { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(100%, 720px); }
+.mode-select { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(100%, 720px); margin-bottom: 8px; }
 .mode-opt {
   position: relative;
   display: grid;
