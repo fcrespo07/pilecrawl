@@ -24,6 +24,8 @@ src/main.ts             bucle principal, conecta juego, input, render, UI y audi
 src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas, niveles, perks aplicados
 src/core/pieces.ts      piezas y tablas de rebotes (kicks)
 src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, roll
+src/core/modes.ts       modos de juego (partida, desafío diario, contrarreloj) y semilla del diario
+src/records.ts          récords por modo y último modo elegido (localStorage)
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
 src/fx/renderer.ts      PixiJS: tablero, ghost, partículas, filtros, shake, textos
@@ -42,6 +44,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Piezas extra:** cada perk de pieza mete una pieza en `mods.extraPieces`. Las piezas están en `pieces.ts` (M1, D2, V3, I3, X5, P5).
 - **Basura:** desde el nivel 4 sube una fila cada `garbageInterval()` piezas.
 - **Bombas, taladro y prisma:** se marcan en la cola (`makeSpec`) y se resuelven en `lockPiece`.
+- **Modos:** `MODES` en `modes.ts`. El modo va en `Game.start(seed, mode)` y en la repetición. El diario usa `dailySeed(fecha UTC)`, desbloqueos fijos y una mejora inicial con azar propio; el contrarreloj termina por pasos (`timeLimitMs`), así que la pausa y la elección de carta no gastan tiempo. Un modo nuevo que cambie reglas debe vivir en `game.ts` leyendo `MODES[this.mode]`, no en la UI.
 - **Eventos:** el juego emite eventos tipados (`game.events`). Los efectos y la UI escuchan, sin que `game.ts` sepa de Pixi ni del DOM.
 
 ## Decisiones de diseño
