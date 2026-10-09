@@ -7,7 +7,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## 0.4.0 — 2026-10-09
 - Nuevo nombre: **Block Rogue** (antes Derrumbe, y antes Tetrogue). Título, portada y paquete.
 - Las partidas guardadas se migran desde las claves `tetrogue.*` y `derrumbe.*`.
-- La versión se muestra en el juego y se lleva con este registro y etiquetas `vX.Y.Z`.
+- Interfaz de papel y tinta: aspecto de boletín impreso en HUD, menús y tablero (#2).
+- Página de inicio a pantalla completa con récord, cómo se juega y controles (#9).
+- La versión se muestra al pie de la portada y se lleva con este registro y etiquetas `vX.Y.Z`.
 
 ## 0.3.0 — 2026-10-09
 - Tablero de 11×18, fantasma rayado y barra de reserva y cola sobre el tablero (#8).

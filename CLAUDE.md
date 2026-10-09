@@ -19,7 +19,7 @@ Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se 
 ## Estructura
 
 ```
-index.html              HUD, overlays (inicio, perks, pausa, fin)
+index.html              portada (home), HUD, overlays (perks, pausa, fin)
 src/main.ts             bucle principal, conecta juego, input, render, UI y audio
 src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas, niveles, perks aplicados
 src/core/pieces.ts      piezas y tablas de rebotes (kicks)
