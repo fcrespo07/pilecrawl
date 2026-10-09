@@ -3,16 +3,11 @@
    ═══════════════════════════════════════════════════════════ */
 
 /* Fuentes autoalojadas (Google Fonts, SIL OFL; licencias en src/fonts/OFL.txt).
-   Bungee y Chakra Petch las usa también el lienzo de Pixi (renderer.ts). */
+   Bungee y Chakra Petch se cargan desde fonts.css, que también usa el lienzo de Pixi. */
 @font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 600; font-display: swap; src: url(./fonts/fraunces-latin-600.woff2) format('woff2'); }
 @font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 800; font-display: swap; src: url(./fonts/fraunces-latin-800.woff2) format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/ibm-plex-mono-latin-400.woff2) format('woff2'); }
 @font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url(./fonts/ibm-plex-mono-latin-600.woff2) format('woff2'); }
-@font-face { font-family: 'Bungee'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/bungee-latin-400.woff2) format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 400; font-display: swap; src: url(./fonts/chakra-petch-latin-400.woff2) format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 500; font-display: swap; src: url(./fonts/chakra-petch-latin-500.woff2) format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 600; font-display: swap; src: url(./fonts/chakra-petch-latin-600.woff2) format('woff2'); }
-@font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 700; font-display: swap; src: url(./fonts/chakra-petch-latin-700.woff2) format('woff2'); }
 
 :root {
   --accent: #d7402b;

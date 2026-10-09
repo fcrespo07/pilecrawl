@@ -1,6 +1,7 @@
 import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { AdvancedBloomFilter, CRTFilter, RGBSplitFilter, ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, type Cell, type Game, type PieceSpec } from '../core/game';
+
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
   accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, NEXT_W, NEXT_X, NEXT_Y, W,
@@ -11,6 +12,10 @@ import { Particles } from './particles';
 const INK = 0x1b1a17;
 const PAPER = 0xf3ecdc;
 const PAPER_PANEL = 0xfbf6ea;
+
+/** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
+const REDUCED_MOTION =
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ───────────────────────── utilidades de color ─────────────────────────
 
@@ -337,9 +342,10 @@ export class Renderer {
     this.snapPiece = true;
   }
 
-  shake(amount: number) { this.trauma = Math.min(1, this.trauma + amount); }
+  shake(amount: number) { this.trauma = Math.min(1, this.trauma + amount * (REDUCED_MOTION ? 0.25 : 1)); }
 
   shockwave(x: number, y: number, opts: { amplitude?: number; wavelength?: number; speed?: number; dur?: number } = {}) {
+    if (REDUCED_MOTION) return;
     // si acaba de salir otra onda, se refuerza esa en vez de apilar distorsiones
     const recent = this.shocks.find((s) => s.f.enabled && s.t < 0.2);
     const s = recent ?? this.shocks.find((s) => !s.f.enabled) ?? this.shocks.reduce((a, b) => (a.t > b.t ? a : b));
@@ -361,7 +367,7 @@ export class Renderer {
 
   flash(color = INK, alpha = 0.35) {
     this.screenFlash.tint = color;
-    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha * 0.4);
+    this.screenFlash.alpha = Math.max(this.screenFlash.alpha, alpha * (REDUCED_MOTION ? 0.2 : 0.4));
   }
 
   floatText(str: string, x: number, y: number, o: { color?: number; size?: number; life?: number; vy?: number; delay?: number; font?: string } = {}) {
