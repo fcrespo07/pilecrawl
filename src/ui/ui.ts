@@ -3,6 +3,7 @@ import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
+import { skinOf } from '../fx/skins';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { loadBest, submitScore } from '../records';
@@ -150,7 +151,7 @@ export class UI {
     const g = this.game;
     const shownLevel = g.level - g.pendingLevelUps + 1;
     $('perk-level').textContent = pad2(shownLevel);
-    $('perks').style.setProperty('--level', hex(accentFor(shownLevel)));
+    $('perks').style.setProperty('--level', this.levelColor(shownLevel));
     $('reroll-count').textContent = String(g.rerolls);
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
     const box = $('cards');
@@ -266,7 +267,15 @@ export class UI {
 
   // ───────────── HUD ─────────────
 
+  /** Color del nivel; en las pieles oscuras, aclarado para que se lea. */
+  private levelColor(level: number): string {
+    const c = hex(accentFor(level));
+    return skinOf(this.game.mods.skin).dark ? `color-mix(in srgb, ${c} 55%, white)` : c;
+  }
+
   update(dt: number) {
+    const skin = this.game.mods.skin ?? 'papel';
+    if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
     const g = this.game;
 
     if (this.perksOpen && this.choiceDelay > 0) {
@@ -296,7 +305,7 @@ export class UI {
       $('time').textContent = timed ? clock(left, true) : clock(g.time);
       $('time-box').classList.toggle('urgent', timed && left <= 10_000);
     }
-    document.documentElement.style.setProperty('--level', hex(accentFor(g.level)));
+    document.documentElement.style.setProperty('--level', this.levelColor(g.level));
 
     const need = g.linesNeeded();
     $('lvl-progress').textContent = `${g.linesIntoLevel}/${need}`;

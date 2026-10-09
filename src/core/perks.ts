@@ -1,4 +1,5 @@
 import type { Game } from './game';
+import type { SkinId } from '../fx/skins';
 import { UNLOCK_LEVEL } from './meta';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
@@ -57,6 +58,12 @@ export interface Mods {
   collector: number;
   /** al revivir se vacía todo el tablero y la puntuación sube (Fénix) */
   phoenix: boolean;
+  /** piel de la interfaz (solo aspecto); null = papel */
+  skin: SkinId | null;
+  /** sin pieza fantasma (Apagón; solo se deja de dibujar) */
+  noGhost: boolean;
+  /** todas las piezas del mismo color (Terminal; solo aspecto) */
+  monochrome: boolean;
 }
 
 export function baseMods(): Mods {
@@ -100,6 +107,9 @@ export function baseMods(): Mods {
     anchor: false,
     collector: 0,
     phoenix: false,
+    skin: null,
+    noGhost: false,
+    monochrome: false,
   };
 }
 
@@ -212,6 +222,12 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
     apply: (m) => { m.reflexPoints += 60; m.gravitySpeed *= 1.08; },
   },
+  {
+    id: 'blueprint', name: 'Plano', rarity: 'common', max: 1,
+    pros: () => ['<b>+200 ms</b> antes de que la pieza se fije', 'La interfaz pasa a <b>papel de plano</b>'],
+    cons: () => ['<b>−10%</b> a toda la puntuación'],
+    apply: (m) => { m.lockDelay += 200; m.scoreMult *= 0.9; m.skin = 'plano'; },
+  },
   // ───────── Raras ─────────
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
@@ -299,6 +315,18 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.choices = 4; m.linesReduction -= 1; },
   },
+  {
+    id: 'blackout', name: 'Apagón', rarity: 'rare', max: 1,
+    pros: () => ['<b>+25%</b> a toda la puntuación', 'La interfaz pasa a <b>modo noche</b>'],
+    cons: () => ['<b>No ves la pieza fantasma</b>'],
+    apply: (m) => { m.scoreMult *= 1.25; m.noGhost = true; m.skin = 'apagon'; },
+  },
+  {
+    id: 'terminal', name: 'Terminal', rarity: 'rare', max: 1,
+    pros: () => ['Ves <b>+2 piezas</b> en la cola', 'La interfaz pasa a <b>pantalla de fósforo</b>'],
+    cons: () => ['Todas las piezas se ven <b>del mismo color</b>', '<b>−15%</b> a toda la puntuación'],
+    apply: (m) => { m.preview += 2; m.monochrome = true; m.scoreMult *= 0.85; m.skin = 'terminal'; },
+  },
   // ───────── Épicas ─────────
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
@@ -353,6 +381,12 @@ export const PERKS: PerkDef[] = [
     pros: () => ['<b>+6%</b> a toda la puntuación por cada <b>mejora distinta</b> que tengas'],
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.collector += 0.06; m.linesReduction -= 1; },
+  },
+  {
+    id: 'neon', name: 'Neón', rarity: 'epic', max: 1,
+    pros: () => ['Los combos dan <b>el doble</b> de puntos', 'La interfaz pasa a <b>neón</b>'],
+    cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
+    apply: (m) => { m.comboMult *= 2; m.gravitySpeed *= 1.15; m.skin = 'neon'; },
   },
   // ───────── Legendarias ─────────
   {

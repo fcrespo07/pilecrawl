@@ -4,6 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.7.0 — 2026-10-09
+- Cuatro mejoras que cambian la piel de la interfaz mientras las tienes: Plano (común), Apagón y Terminal (raras) y Neón (épica). Si tienes varias, manda la última. La piel es solo aspecto (#14).
+- Las reglas pasan a la versión 3 por las cartas nuevas (#14).
+- La tecla 4 de la elección de cartas ya solo aparece con Abanico (#14).
+
 ## 0.6.0 — 2026-10-09
 - Once mejoras nuevas: Respiro, Ahorro, Cosecha, Reflejos (comunes); Reciclaje, Vértigo, Salvavidas, Abanico (raras); Ancla, Coleccionista (épicas) y Fénix (legendaria). Con Abanico se eligen 4 cartas (tecla 4) (#13).
 - Las reglas pasan a la versión 2: las repeticiones grabadas antes no valen (#13).
