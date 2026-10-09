@@ -2,14 +2,15 @@ import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } fr
 import { AdvancedBloomFilter, CRTFilter, RGBSplitFilter, ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, type Cell, type Game, type PieceSpec } from '../core/game';
 
-/** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
-const REDUCED_MOTION =
-  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
   accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, NEXT_W, NEXT_X, NEXT_Y, W,
 } from './layout';
 import { Particles } from './particles';
+
+/** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
+const REDUCED_MOTION =
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ───────────────────────── utilidades de color ─────────────────────────
 
