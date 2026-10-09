@@ -152,7 +152,7 @@ export class UI {
     const g = this.game;
     const shownLevel = g.level - g.pendingLevelUps + 1;
     $('perk-level').textContent = pad2(shownLevel);
-    $('perks').style.setProperty('--accent', hex(accentFor(shownLevel)));
+    $('perks').style.setProperty('--level', hex(accentFor(shownLevel)));
     $('reroll-count').textContent = String(g.rerolls);
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
     const box = $('cards');
@@ -288,7 +288,7 @@ export class UI {
     $('b2b-box').classList.toggle('on', g.b2b);
     $('rerolls').textContent = String(g.rerolls);
     $('time').textContent = clock(g.time);
-    document.documentElement.style.setProperty('--accent', hex(accentFor(g.level)));
+    document.documentElement.style.setProperty('--level', hex(accentFor(g.level)));
 
     const need = g.linesNeeded();
     $('lvl-progress').textContent = `${g.linesIntoLevel}/${need}`;
