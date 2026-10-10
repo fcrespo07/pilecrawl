@@ -73,6 +73,7 @@
           <!-- Accesos secundarios (catálogo, tutorial): van en esta fila, no en la primera pantalla -->
           <div class="home-links" id="home-links">
             <button id="catalog-open" class="home-btn home-link" type="button">Catálogo de mejoras</button>
+            <button id="home-tutorial" class="home-btn home-link ghost" type="button">Tutorial<i class="new-tag" hidden>Nuevo</i></button>
           </div>
 
         <section class="home-card" aria-labelledby="h-how">
@@ -187,6 +188,9 @@
       <div id="tooltip"></div>
       <div id="lab-badge" class="lab-badge" hidden>Laboratorio · no puntúa</div>
 
+      <!-- Entrenador del tutorial (src/ui/tutorial.ts): aquí en pantallas con ratón -->
+      <aside class="coach coach-d" aria-live="polite" hidden></aside>
+
       <!-- ═════════════ Elección de mejoras ═════════════ -->
       <div id="perks" class="overlay">
         <div class="stripe-title"><span id="perk-stripe">Subida de nivel</span></div>
@@ -255,6 +259,8 @@
         <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
       </div>
     </div>
+    <!-- Igual, fuera del escenario, para pantallas táctiles: allí el escenario se encoge y no cabría -->
+    <aside class="coach coach-m" aria-live="polite" hidden></aside>
     <!-- ═════════════ Rankings (solo con servidor: VITE_RANKING=1) ═════════════ -->
     <div id="ranking" class="rank-modal" role="dialog" aria-modal="true" aria-labelledby="rank-title" hidden>
       <div class="rank-panel">

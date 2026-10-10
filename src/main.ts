@@ -7,11 +7,12 @@ import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
 import { dailySeed, utcDate, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
-import { loadLastMode, saveLastMode } from './records';
+import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
 import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
 import { adProviderFromEnv } from './ads/providers';
+import { Tutorial } from './ui/tutorial';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
@@ -29,6 +30,16 @@ const stage = document.getElementById('stage')!;
 mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
 const rankingUI = new RankingUI(() => home.focus({ preventScroll: true }));
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
+const tutorial = new Tutorial(game, {
+  onPlay: () => void startRun(),
+  onRetry: () => void startRun('tutorial'),
+  onHome: () => {
+    // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
+    game.reset();
+    showHome(true);
+  },
+  onDone: saveTutorialDone,
+});
 const panelLeft = document.getElementById('panel-left')!;
 const panelRight = document.getElementById('panel-right')!;
 const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
@@ -52,6 +63,8 @@ function layout() {
   const avail = window.innerHeight - reserve;
   const s = Math.min(window.innerWidth / W, avail / H);
   stage.style.top = `${avail / 2}px`;
+  // el cuadro del tutorial en pantallas táctiles se coloca fuera del escenario y necesita su escala
+  document.documentElement.style.setProperty('--s', String(s));
   stage.style.transform = `translate(-50%, -50%) scale(${s})`;
   return s;
 }
@@ -86,13 +99,14 @@ function wireAudioAndFeel() {
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
-    if (!game.sandbox) recordBestLevel(level);
+    // el tutorial y el laboratorio no cuentan para desbloquear rarezas
+    if (game.mode !== 'tutorial' && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
     audio.stopMusic();
     audio.gameOver();
-    ui.showGameOver();
+    if (game.mode !== 'tutorial') ui.showGameOver();
     modeSelect.refresh();
     offerPublish();
     refreshPanels();
@@ -125,6 +139,7 @@ function wireTouch() {
 }
 
 const home = document.getElementById('home')!;
+const TUTORIAL_SEED = 0x7a11;
 const catalog = document.getElementById('catalog')!;
 
 function showCatalog(on: boolean) {
@@ -136,6 +151,11 @@ function showCatalog(on: boolean) {
 
 function showHome(show: boolean) {
   home.classList.toggle('hidden', !show);
+  if (show) {
+    tutorial.stop();
+    audio.stopMusic();
+    document.querySelector<HTMLElement>('#home-tutorial .new-tag')!.hidden = loadTutorialDone();
+  }
   // detrás de la portada nada debe recibir foco ni dibujarse
   stage.inert = show;
   if (show) {
@@ -156,7 +176,8 @@ let starting = false;
 function offerPublish() {
   const r = currentRun;
   // las partidas del laboratorio nunca puntúan (el servidor también las rechaza)
-  if (!net.RANKING_ENABLED || !r || game.sandbox) return rankingUI.offerPublish(null);
+  const rankedMode = r?.mode === 'normal' || r?.mode === 'daily' || r?.mode === 'timed';
+  if (!net.RANKING_ENABLED || !r || !rankedMode || game.sandbox) return rankingUI.offerPublish(null);
   if (r.mode !== 'daily' && !r.runId) {
     // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
     return net.loadPlayer() ? rankingUI.offerUnavailable('Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
@@ -165,16 +186,15 @@ function offerPublish() {
   rankingUI.offerPublish(done);
 }
 
-async function startRun() {
+async function startRun(forced?: 'tutorial') {
   if (starting) return;
-  lab.close();
   starting = true;
-  const mode = modeSelect.mode;
+  const mode = forced ?? modeSelect.mode;
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
   const date = utcDate();
   // las partidas libres con ranking usan la semilla y los desbloqueos del servidor; si falla, se juega sin ranking
   let ranked: net.RankedStart | null = null;
-  if (net.RANKING_ENABLED && mode !== 'daily' && net.loadPlayer()) {
+  if (net.RANKING_ENABLED && (mode === 'normal' || mode === 'timed') && net.loadPlayer()) {
     try {
       ranked = await net.startRanked(mode);
     } catch {
@@ -182,6 +202,8 @@ async function startRun() {
     }
   }
   starting = false;
+  lab.close();
+  tutorial.stop();
   showHome(false);
   audio.init();
   audio.setIntensity(1);
@@ -191,9 +213,12 @@ async function startRun() {
   stepAcc = 0;
   renderer.reset();
   game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
-  game.start(mode === 'daily' ? dailySeed(date) : ranked ? ranked.seed : randomSeed(), mode);
+  // el tutorial siempre reparte igual: mismas piezas y mismas cartas
+  const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
+  game.start(seed, mode);
   currentRun = { mode, date, runId: ranked?.runId };
   ui.startGame(date);
+  if (mode === 'tutorial') tutorial.start();
 }
 
 const fxToggle = document.getElementById('fx-toggle')!;
@@ -235,7 +260,8 @@ function onKeyDown(e: KeyboardEvent) {
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
-      void startRun();
+      // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
+      void startRun(st === 'over' && game.mode === 'tutorial' ? 'tutorial' : undefined);
     }
     return;
   }
@@ -298,6 +324,7 @@ async function boot() {
   labBtn.hidden = !LAB_ENABLED;
   labBtn.addEventListener('click', () => lab.open());
   document.getElementById('home-play')!.addEventListener('click', () => void startRun());
+  document.getElementById('home-tutorial')!.addEventListener('click', () => void startRun('tutorial'));
   document.getElementById('home-more-link')!.addEventListener('click', () => {
     document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
@@ -341,6 +368,7 @@ async function boot() {
     }
     renderer.render(dt);
     ui.update(dt);
+    tutorial.update();
   });
 
   document.body.classList.add('ready');

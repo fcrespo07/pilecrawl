@@ -1,8 +1,8 @@
 // Récords por modo en localStorage. Cada modo compite contra sí mismo:
 // tres minutos de contrarreloj no se comparan con una partida sin límite.
-import { isModeId, type ModeId } from './core/modes';
+import { isModeId, MODES, type ModeId } from './core/modes';
 
-const BEST_KEY: Record<Exclude<ModeId, 'daily'>, string> = {
+const BEST_KEY: Record<Exclude<ModeId, 'daily' | 'tutorial'>, string> = {
   normal: 'blockrogue.best',
   timed: 'blockrogue.best.timed',
 };
@@ -42,6 +42,7 @@ function loadDaily(): DailyRecord | null {
 
 /** Récord del modo. En el diario, solo cuenta el de `date` (el de otro día no vale). */
 export function loadBest(mode: ModeId, date: string): number {
+  if (mode === 'tutorial') return 0;
   if (mode === 'daily') {
     const d = loadDaily();
     return d && d.date === date ? d.best : 0;
@@ -51,7 +52,7 @@ export function loadBest(mode: ModeId, date: string): number {
 
 /** Guarda la puntuación si mejora el récord. Devuelve si lo ha mejorado. */
 export function submitScore(mode: ModeId, date: string, score: number): boolean {
-  if (score <= loadBest(mode, date)) return false;
+  if (mode === 'tutorial' || score <= loadBest(mode, date)) return false;
   if (mode === 'daily') write(DAILY_KEY, JSON.stringify({ date, best: score } satisfies DailyRecord));
   else write(BEST_KEY[mode], String(score));
   return true;
@@ -60,9 +61,21 @@ export function submitScore(mode: ModeId, date: string, score: number): boolean 
 /** Último modo elegido en la portada, para dejarlo marcado la próxima vez. */
 export function loadLastMode(): ModeId {
   const m = read(MODE_KEY);
-  return isModeId(m) ? m : 'normal';
+  // el tutorial no se elige en la portada: no puede quedar como último modo
+  return isModeId(m) && !MODES[m].tutorial ? m : 'normal';
 }
 
 export function saveLastMode(mode: ModeId) {
   write(MODE_KEY, mode);
+}
+
+const TUTORIAL_KEY = 'blockrogue.tutorial';
+
+/** El tutorial se ha terminado alguna vez: la portada deja de marcarlo como nuevo. */
+export function loadTutorialDone(): boolean {
+  return read(TUTORIAL_KEY) === '1';
+}
+
+export function saveTutorialDone() {
+  write(TUTORIAL_KEY, '1');
 }

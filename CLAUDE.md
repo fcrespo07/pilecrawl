@@ -25,7 +25,7 @@ src/core/game.ts        lógica: tablero, piezas, rotación con rebotes, líneas
 src/core/pieces.ts      piezas y tablas de rebotes (kicks)
 src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, roll
 src/core/hypers.ts      hiperperks (habilidades activas: una por partida, se cargan con líneas)
-src/core/modes.ts       modos de juego (partida, desafío diario, contrarreloj) y semilla del diario
+src/core/modes.ts       modos de juego (partida, desafío diario, contrarreloj, tutorial) y semilla del diario
 src/records.ts          récords por modo y último modo elegido (localStorage)
 src/net/ranking.ts      cliente del ranking (opcional: VITE_RANKING=1); src/ui/ranking.ts, tabla y publicar
 src/ads/providers.ts    proveedores de anuncios (AdSense) para el hueco de la portada
@@ -39,6 +39,7 @@ src/fx/particles.ts     sistema de partículas con pool
 src/fx/audio.ts         efectos y música procedural
 src/fx/layout.ts        coordenadas lógicas (960×720) y paleta de acentos
 src/ui/ui.ts            HUD DOM, cartas de perks, pausa, fin de partida, tooltips
+src/ui/tutorial.ts      cuadro de consejos del tutorial (escucha eventos; no toca reglas)
 src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con la forma)
 ```
 
@@ -56,6 +57,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Bombas, taladro y prisma:** se marcan en la cola (`makeSpec`) y se resuelven en `lockPiece`.
 - **Modos:** `MODES` en `modes.ts`. El modo va en `Game.start(seed, mode)` y en la repetición. El diario usa `dailySeed(fecha UTC)`, desbloqueos fijos y una mejora inicial con azar propio; el contrarreloj termina por pasos (`timeLimitMs`), así que la pausa y la elección de carta no gastan tiempo. Un modo nuevo que cambie reglas debe vivir en `game.ts` leyendo `MODES[this.mode]`, no en la UI.
 - **Ranking:** el servidor (`server/app.ts`) solo acepta repeticiones con exactamente las claves de `Replay` (`validate.ts`): cualquier campo nuevo en una repetición, como la marca del modo de pruebas, la hace rechazar. Un cambio de reglas sube `RULES_VERSION`. Las partidas libres usan semilla y desbloqueos del servidor.
+- **Tutorial:** modo `tutorial` (`MODES.tutorial.tutorial`), no sale en el selector (`PLAY_MODE_IDS`) y no guarda récord ni mejor nivel. Sus reglas viven en `game.ts` (`setupTutorial`, `TUTORIAL_*`): 2 filas casi llenas y piezas fijas al principio, 3 líneas por nivel, hiperperk segura al nivel 3 y cargada con 3 líneas, sin basura. El guion está en `src/ui/tutorial.ts` (pasos con `done` y textos para teclado y táctil). Entrada: botón «Tutorial» de la portada.
 - **Eventos:** el juego emite eventos tipados (`game.events`). Los efectos y la UI escuchan, sin que `game.ts` sepa de Pixi ni del DOM.
 
 ## Decisiones de diseño
