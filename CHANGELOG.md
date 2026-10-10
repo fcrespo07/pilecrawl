@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.15.1 — 2026-10-10
 - Despliegue: el namespace se crea antes de la configuración (si no, `kubectl apply -f k8s/config.yaml` fallaba) y el Ingress de Traefik pasa a ser opcional (`k8s/ingress.example.yaml`), porque la vía recomendada es Cloudflare Tunnel. Nueva guía para que un agente despliegue por ti (#27).
 
 ## 0.15.0 — 2026-10-10
