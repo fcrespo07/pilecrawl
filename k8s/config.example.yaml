@@ -1,0 +1,19 @@
+# Copia a config.yaml (ignorado por git), rellena y aplica con `kubectl apply -f k8s/config.yaml`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blockrogue
+  namespace: blockrogue
+data:
+  nick-blocklist: ""        # palabras prohibidas en apodos, separadas por comas
+  trust-proxy: "cloudflare" # cloudflare (Cloudflare Tunnel), proxy (Traefik) o none. Si lo dejas vacío, el límite por IP ve la IP del proxy
+  cors-origins: ""          # solo si el juego se sirve desde otro dominio (p. ej. un portal)
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: blockrogue
+  namespace: blockrogue
+type: Opaque
+stringData:
+  admin-token: "CAMBIA-ESTO-por-una-clave-larga-y-aleatoria"   # `openssl rand -hex 32`

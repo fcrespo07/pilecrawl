@@ -5,15 +5,18 @@ import { audio } from './fx/audio';
 import { H, W } from './fx/layout';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
-import { dailySeed, utcDate } from './core/modes';
+import { dailySeed, utcDate, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
 import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
+import { adConsentManaged, adProviderFromEnv, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
+import { RankingUI, type FinishedRun } from './ui/ranking';
+import * as net from './net/ranking';
 import { renderCatalog } from './ui/catalog';
 import { Lab, LAB_ENABLED } from './ui/lab';
 
@@ -24,12 +27,20 @@ const ui = new UI(game);
 const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
-// sin proveedor de anuncios por ahora: el hueco queda plegado
-mountAd(document.getElementById('ad-slot')!, null);
+mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
+if (adConsentManaged()) {
+  const prefs = document.getElementById('ad-prefs')!;
+  prefs.hidden = false;
+  prefs.addEventListener('click', () => {
+    resetAdConsent();
+    location.reload();
+  });
+}
+const rankingUI = new RankingUI(() => home.focus({ preventScroll: true }));
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
-  onPlay: () => startRun(),
-  onRetry: () => startRun('tutorial'),
+  onPlay: () => void startRun(),
+  onRetry: () => void startRun('tutorial'),
   onHome: () => {
     // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
     game.reset();
@@ -105,6 +116,7 @@ function wireAudioAndFeel() {
     audio.gameOver();
     if (game.mode !== 'tutorial') ui.showGameOver();
     modeSelect.refresh();
+    offerPublish();
     refreshPanels();
   });
 }
@@ -165,7 +177,39 @@ function showHome(show: boolean) {
   } else renderer.app.ticker.start();
 }
 
-function startRun(forced?: 'tutorial') {
+/** Partida en curso: lo que hace falta para publicarla al acabar. */
+let currentRun: { mode: ModeId; date: string; runId?: string } | null = null;
+let starting = false;
+
+function offerPublish() {
+  const r = currentRun;
+  // las partidas del laboratorio nunca puntúan (el servidor también las rechaza)
+  const rankedMode = r?.mode === 'normal' || r?.mode === 'daily' || r?.mode === 'timed';
+  if (!net.RANKING_ENABLED || !r || !rankedMode || game.sandbox) return rankingUI.offerPublish(null);
+  if (r.mode !== 'daily' && !r.runId) {
+    // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
+    return net.loadPlayer() ? rankingUI.offerUnavailable('Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
+  }
+  const done: FinishedRun = { replay: game.replay(), score: game.score, mode: r.mode, date: r.date, runId: r.runId };
+  rankingUI.offerPublish(done);
+}
+
+async function startRun(forced?: 'tutorial') {
+  if (starting) return;
+  starting = true;
+  const mode = forced ?? modeSelect.mode;
+  // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
+  const date = utcDate();
+  // las partidas libres con ranking usan la semilla y los desbloqueos del servidor; si falla, se juega sin ranking
+  let ranked: net.RankedStart | null = null;
+  if (net.RANKING_ENABLED && (mode === 'normal' || mode === 'timed') && net.loadPlayer()) {
+    try {
+      ranked = await net.startRanked(mode);
+    } catch {
+      ranked = null;
+    }
+  }
+  starting = false;
   lab.close();
   tutorial.stop();
   showHome(false);
@@ -176,12 +220,11 @@ function startRun(forced?: 'tutorial') {
   hitstop = 0;
   stepAcc = 0;
   renderer.reset();
-  game.bestLevel = loadMeta().bestLevel;
-  // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
-  const mode = forced ?? modeSelect.mode;
-  const date = utcDate();
+  game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
-  game.start(mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : randomSeed(), mode);
+  const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
+  game.start(seed, mode);
+  currentRun = { mode, date, runId: ranked?.runId };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
 }
@@ -204,6 +247,9 @@ function onKeyDown(e: KeyboardEvent) {
   // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
   if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
 
+  // escribiendo el apodo, o con la tabla abierta: las teclas son de la interfaz, no del juego
+  if (rankingUI.isOpen || (e.target as HTMLElement | null)?.closest?.('input, textarea, #publish')) return;
+
   // globales
   if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }
   if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); return; }
@@ -223,7 +269,7 @@ function onKeyDown(e: KeyboardEvent) {
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
       // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
-      startRun(st === 'over' && game.mode === 'tutorial' ? 'tutorial' : undefined);
+      void startRun(st === 'over' && game.mode === 'tutorial' ? 'tutorial' : undefined);
     }
     return;
   }
@@ -285,13 +331,28 @@ async function boot() {
   const labBtn = document.getElementById('lab-open')!;
   labBtn.hidden = !LAB_ENABLED;
   labBtn.addEventListener('click', () => lab.open());
-  document.getElementById('home-play')!.addEventListener('click', () => startRun());
-  document.getElementById('home-tutorial')!.addEventListener('click', () => startRun('tutorial'));
+  document.getElementById('home-play')!.addEventListener('click', () => void startRun());
+  document.getElementById('home-tutorial')!.addEventListener('click', () => void startRun('tutorial'));
   document.getElementById('home-more-link')!.addEventListener('click', () => {
     document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
+  if (net.RANKING_ENABLED) {
+    const entry = document.getElementById('home-rank')!;
+    entry.classList.remove('is-locked');
+    entry.querySelector('.home-soon')!.remove();
+    entry.querySelector('.lock-ico')?.remove();
+    const open = document.getElementById('rank-open')!;
+    open.hidden = false;
+    open.addEventListener('click', () => rankingUI.open());
+  }
+  const privacy = import.meta.env.VITE_PRIVACY_URL;
+  if (privacy) {
+    const a = document.getElementById('privacy-link') as HTMLAnchorElement;
+    a.href = privacy;
+    a.hidden = false;
+  }
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
-  document.getElementById('retry-btn')!.addEventListener('click', () => startRun());
+  document.getElementById('retry-btn')!.addEventListener('click', () => void startRun());
 
   wireAudioAndFeel();
   wireTouch();

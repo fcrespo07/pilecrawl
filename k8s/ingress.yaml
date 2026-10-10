@@ -1,0 +1,15 @@
+# Traefik viene con k3s. Cambia el dominio. Con Cloudflare Tunnel no hace falta abrir puertos ni gestionar certificados.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blockrogue
+  namespace: blockrogue
+spec:
+  rules:
+    - host: juego.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: blockrogue, port: { number: 80 } }

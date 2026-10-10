@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockrogue
+  namespace: blockrogue
+spec:
+  # SQLite y el límite de peticiones viven en un solo proceso: una réplica, y sin solapar versiones
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: blockrogue }
+  template:
+    metadata:
+      labels: { app: blockrogue }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: blockrogue
+          # cambia el nombre si renombras el repositorio (ver docs/despliegue.md)
+          image: ghcr.io/fcrespo07/tetris-roguelite:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8787
+          env:
+            - name: ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef: { name: blockrogue, key: admin-token, optional: true }
+            - name: NICK_BLOCKLIST
+              valueFrom:
+                configMapKeyRef: { name: blockrogue, key: nick-blocklist, optional: true }
+            - name: TRUST_PROXY
+              valueFrom:
+                configMapKeyRef: { name: blockrogue, key: trust-proxy, optional: true }
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef: { name: blockrogue, key: cors-origins, optional: true }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+          readinessProbe:
+            httpGet: { path: /api/health, port: 8787 }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: 8787 }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 50m, memory: 96Mi }
+            limits: { cpu: "1", memory: 384Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: blockrogue-data }

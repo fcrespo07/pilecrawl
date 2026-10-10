@@ -1,0 +1,38 @@
+# Opcional: Cloudflare Tunnel. La Pi abre una conexión de salida hacia Cloudflare y no hace falta
+# abrir ningún puerto del router. Crea el túnel en el panel de Cloudflare Zero Trust, copia su token y:
+#   kubectl -n blockrogue create secret generic cloudflared --from-literal=token='<TOKEN>'
+# En el panel, apunta el nombre de dominio público a http://blockrogue.blockrogue.svc.cluster.local:80
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: blockrogue
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: cloudflared }
+  template:
+    metadata:
+      labels: { app: cloudflared }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:2025.9.1
+          args: [tunnel, --no-autoupdate, --metrics, "0.0.0.0:2000", run]
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef: { name: cloudflared, key: token }
+          livenessProbe:
+            httpGet: { path: /ready, port: 2000 }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            limits: { cpu: 300m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }

@@ -1,0 +1,11 @@
+# Base de datos y copias. k3s trae el aprovisionador "local-path": el volumen es una carpeta del disco de la Pi.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blockrogue-data
+  namespace: blockrogue
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
