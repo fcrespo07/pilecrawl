@@ -142,6 +142,18 @@ function startRun() {
   ui.startGame(date);
 }
 
+const fxToggle = document.getElementById('fx-toggle')!;
+
+/** Efectos de pantalla (shaders): se guardan, y un equipo lento los apaga solo. */
+function setEffects(on: boolean, save = true) {
+  renderer.highQuality = on;
+  renderer.applyQuality();
+  fxToggle.setAttribute('aria-pressed', String(on));
+  fxToggle.querySelector('span')!.textContent = on ? 'Efectos: sí' : 'Efectos: no';
+  if (!save) return;
+  try { localStorage.setItem('blockrogue.fx', on ? '1' : '0'); } catch { /* sin almacenamiento */ }
+}
+
 function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
 
@@ -149,8 +161,7 @@ function onKeyDown(e: KeyboardEvent) {
   if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }
   if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); return; }
   if (e.code === 'KeyF' && !e.repeat) {
-    renderer.highQuality = !renderer.highQuality;
-    renderer.applyQuality();
+    setEffects(!renderer.highQuality);
     return;
   }
 
@@ -200,6 +211,11 @@ async function boot() {
     const s = layout();
     renderer.setResolution(renderResolution(s));
   });
+  let fxOn = true;
+  try { fxOn = localStorage.getItem('blockrogue.fx') !== '0'; } catch { /* sin almacenamiento */ }
+  setEffects(fxOn, false);
+  renderer.onAutoOff = () => setEffects(false, false);
+  fxToggle.addEventListener('click', () => { setEffects(!renderer.highQuality); fxToggle.blur(); });
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', (e) => input.keyUp(e));
   window.addEventListener('blur', () => {
