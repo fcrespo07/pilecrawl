@@ -44,9 +44,9 @@ function chipHTML(id: string, stacks: number): string {
   return `<div class="chip-wrap r-${rarityKey(p)}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
 }
 
-/** Marca del dorso de las cartas: una «B» de Pilecrawl hecha con bloques. */
+/** Marca del dorso de las cartas: una «P» de Pilecrawl hecha con bloques. */
 const CARD_MARK = (() => {
-  const rows = ['###.', '#..#', '###.', '#..#', '###.'];
+  const rows = ['###.', '#..#', '###.', '#...', '#...'];
   const cells = rows.flatMap((r, y) => [...r].map((ch, x) => (ch === '#' ? `<rect x="${x * 10 + 1}" y="${y * 10 + 1}" width="8" height="8"/>` : '')));
   return `<svg class="card-mark" viewBox="0 0 40 50" aria-hidden="true">${cells.join('')}</svg>`;
 })();
