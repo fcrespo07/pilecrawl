@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.10.1 — 2026-10-10
 - Portada rediseñada como menú principal: Arcade (con sus tres modos y récords) y, bloqueadas con «Próximamente», Historia y Rankings. Hueco de anuncio plegado y aislado en `src/ui/adSlot.ts`, sin ninguna red de anuncios (#18).
 
 ## 0.10.0 — 2026-10-09
