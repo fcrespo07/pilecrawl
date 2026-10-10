@@ -1,6 +1,10 @@
 # Despliegue de Pilecrawl en una Raspberry Pi con k3s: guía para un agente
 
-**Para quién es:** un agente (p. ej. Claude Code) que despliega este juego en la Raspberry Pi del usuario, de principio a fin. Dónde ejecutarlo: **en la propia Pi** (lo más simple, con `sudo k3s kubectl`) o en un PC con `kubectl` apuntando a la Pi (kubeconfig de k3s, `/etc/rancher/k3s/k3s.yaml`, cambiando `127.0.0.1` por la IP de la Pi). En esta guía `K` significa `sudo k3s kubectl`; si usas otro `kubectl`, sustitúyelo.
+**Para quién es:** un agente (p. ej. Claude Code) que despliega este juego en la Raspberry Pi del usuario, de principio a fin. Dónde ejecutarlo: **en la propia Pi** (lo más simple, con `sudo k3s kubectl`) o en un PC con `kubectl` apuntando a la Pi (kubeconfig de k3s, `/etc/rancher/k3s/k3s.yaml`, cambiando `127.0.0.1` por la IP de la Pi). Define esto al empezar cada sesión de shell (los bloques de abajo usan `K`):
+
+```bash
+K() { sudo k3s kubectl "$@"; }   # si usas otro kubectl (PC), cámbialo por: K() { kubectl "$@"; }
+```
 
 **Reglas para el agente**
 1. Ejecuta los pasos en orden. Cada uno tiene **Comprobar** (¿ya está hecho? entonces sáltalo: todo es idempotente) y **Verificar** (¿ha funcionado?). Si la verificación falla, mira **Si falla** antes de seguir; no avances con un paso roto.
@@ -59,7 +63,7 @@ command -v curl openssl git   # deben existir; si falta alguno: sudo apt install
 Variables: `REPO=<usuario>/<repositorio>` en minúsculas (p. ej. `fcrespo07/tetris-roguelite`); `IMAGE=ghcr.io/$REPO:latest`.
 
 **3A. GHCR (por defecto).** La construye el workflow `Imagen` al llegar a `master`.
-- **Comprobar que existe:** `curl -s -o /dev/null -w '%{http_code}\n' https://ghcr.io/v2/$REPO/manifests/latest` da 401 aunque exista (necesita token anónimo). Mejor: `K run probe --rm -i --restart=Never --image=$IMAGE -- true` tras el paso 6. Alternativa: pide al usuario que confirme en GitHub → Actions que el último workflow «Imagen» de `master` terminó en verde, y que hizo público el paquete (U1).
+- **Comprobar que se puede descargar** (ya con k3s del paso 2): `K run probe -n default --rm -i --restart=Never --image=$IMAGE --command -- true` (tarda un poco; debe terminar sin `ErrImagePull`). Si falla, pide al usuario que confirme en GitHub → Actions que el último workflow «Imagen» de `master` terminó en verde y que hizo público el paquete (U1), o pasa a 3B.
 - Si en `k8s/deployment.yaml` la línea `image:` no coincide con `$IMAGE`, cámbiala (`sed -i "s#image: .*#image: $IMAGE#" k8s/deployment.yaml`), **sin hacer commit** si el usuario no lo ha pedido.
 
 **3B. Construcción local en la Pi (si no se quiere el paquete público).**
@@ -73,7 +77,7 @@ sudo docker build -t blockrogue:local \
   --build-arg VITE_AD_SLOT="<bloque o vacío>" --build-arg VITE_AD_CONSENT="<none o vacío>" .
 sudo docker save blockrogue:local | sudo k3s ctr images import -
 ```
-**Verificar:** `sudo k3s ctr images ls | grep blockrogue:local`. Luego, tras el paso 6, cambia la imagen: `K -n blockrogue set image deployment/blockrogue blockrogue=blockrogue:local` y `K -n blockrogue patch deployment blockrogue -p '{"spec":{"template":{"spec":{"containers":[{"name":"blockrogue","imagePullPolicy":"IfNotPresent"}]}}}}'`.
+**Verificar:** `sudo k3s ctr images ls | grep blockrogue:local`. En el paso 5 tendrás que cambiar la imagen del Deployment **justo después de `apply -k` y antes de `rollout status`** (ahí se indica).
 
 **Importante con 3A:** los valores de anuncios y privacidad se fijan al **construir** la imagen. En GHCR salen de las *variables* del repositorio (Settings → Secrets and variables → Actions → Variables): `VITE_PRIVACY_URL`, `VITE_AD_PROVIDER`, `VITE_AD_CLIENT`, `VITE_AD_SLOT`, `VITE_AD_CONSENT`. Si el usuario quiere anuncios o página de privacidad, tiene que ponerlas ahí **y relanzar el workflow** (Actions → Imagen → Run workflow) antes de seguir. Sin anuncios no hace falta tocar nada.
 
@@ -99,12 +103,15 @@ K apply -f k8s/config.yaml
 
 ```bash
 K apply -k k8s/
+# SOLO con la imagen local (3B): cambiar antes de esperar, o el pod quedará en ImagePullBackOff
+K -n blockrogue set image deployment/blockrogue blockrogue=blockrogue:local
+K -n blockrogue patch deployment blockrogue -p '{"spec":{"template":{"spec":{"containers":[{"name":"blockrogue","imagePullPolicy":"IfNotPresent"}]}}}}'
 K -n blockrogue rollout status deployment/blockrogue --timeout=180s
 ```
 **Verificar:**
 ```bash
 K -n blockrogue get pods                                  # 1/1 Running
-K -n blockrogue port-forward svc/blockrogue 8080:80 &     # PF=$!
+K -n blockrogue port-forward svc/blockrogue 8080:80 & PF=$!
 sleep 2
 curl -s localhost:8080/api/health                         # {"ok":true}
 curl -s localhost:8080/api/config                         # JSON con rulesVersion y modes
@@ -149,7 +156,7 @@ curl -s -X DELETE $D/api/players/me -H "Authorization: Bearer $TOKEN"           
 ```
 Si el apodo ya existe de una prueba anterior, el POST devuelve 409: bórralo con el token guardado o usa otro apodo.
 
-**Prueba del límite por IP (opcional, solo si dudas de `trust-proxy`):** registra 6 jugadores seguidos desde tu red; el sexto debe dar 429. Si el **primero** ya da 429 o el límite salta con tráfico normal, `trust-proxy` no se aplicó: `K -n blockrogue get configmap blockrogue -o yaml | grep trust-proxy` y `K -n blockrogue rollout restart deployment/blockrogue`. Borra los jugadores de prueba después.
+**Prueba del límite por IP (opcional, solo si dudas de `trust-proxy`):** registra 6 jugadores seguidos desde tu red; el quinto o el sexto debe dar 429 (el jugador de prueba de arriba ya cuenta, y si lo borraste, el límite sigue contando). Si el **primero** ya da 429 o el límite salta con tráfico normal, `trust-proxy` no se aplicó: `K -n blockrogue get configmap blockrogue -o yaml | grep trust-proxy` y `K -n blockrogue rollout restart deployment/blockrogue`. Borra los jugadores de prueba después.
 
 Pide al usuario que **abra el juego en su navegador**, juegue una partida corta hasta perder, pulse «Publicar puntuación» con un apodo y vea su posición en Rankings. Es la prueba que más importa, y solo él puede hacerla.
 
