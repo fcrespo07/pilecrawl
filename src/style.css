@@ -940,3 +940,29 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .home kbd { border-radius: 0; background: var(--raise); color: var(--ink); border: 2px solid var(--ink); font-family: var(--f-ui); }
 .home-btn kbd { background: transparent; color: var(--on-hi); border-color: var(--on-hi); }
 .home-soon { font-size: 14px; color: var(--hot); }
+
+/* ═════════════ Portada: menú principal (Arcade, Historia, Rankings) ═════════════ */
+.home-inner { width: min(100%, 760px); }
+.home-title { margin-bottom: 18px; }
+.home-lead { margin-bottom: 22px; }
+.home-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.home-entry { background: var(--panel); clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); padding: 22px 22px 26px; display: grid; align-content: start; gap: 8px; }
+.home-entry h2 { margin: 0; font-family: var(--f-display); font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--hi); display: flex; align-items: center; gap: 10px; }
+.home-entry-desc { margin: 0; font-size: 17px; color: var(--muted); }
+.home-arcade { grid-column: 1 / -1; box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); justify-items: center; text-align: center; }
+.home-arcade h2 { font-size: 20px; }
+.home-arcade .mode-select { margin: 10px 0 14px; text-align: left; }
+.home-entry.is-locked { opacity: 0.7; box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); }
+.home-entry.is-locked h2 { color: var(--muted); }
+.home-entry .home-soon { margin-top: 6px; }
+.lock-ico { width: 20px; height: 20px; flex: none; shape-rendering: crispEdges; }
+.ad-slot { display: grid; place-items: center; margin: 0 auto 14px; max-width: 100%; overflow: hidden; }
+.ad-slot[data-state="empty"] { display: none; }
+@media (max-width: 560px) {
+  .home-menu { grid-template-columns: 1fr; }
+  .home-entry { padding: 18px 16px 22px; }
+}
+@media (max-height: 500px) {
+  .home-entry-desc { display: none; }
+  .home-entry { padding: 12px 16px 16px; }
+}

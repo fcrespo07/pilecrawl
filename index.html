@@ -32,11 +32,32 @@
           <p class="home-kicker">Roguelite de bloques</p>
           <h1 class="home-title">Block Rogue</h1>
           <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
-          <div class="home-cta">
+        </header>
+
+        <!-- Menú principal: Arcade es el juego de hoy; Historia y Rankings reservan su sitio -->
+        <div class="home-menu">
+          <section class="home-entry home-arcade" aria-labelledby="h-arcade">
+            <h2 id="h-arcade">Arcade</h2>
+            <p class="home-entry-desc">Partidas sueltas para batir tu récord.</p>
             <div id="mode-select" class="mode-select"></div>
             <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
-          </div>
-        </header>
+          </section>
+
+          <section class="home-entry is-locked" aria-labelledby="h-story" aria-disabled="true">
+            <h2 id="h-story"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Historia</h2>
+            <p class="home-entry-desc">Una aventura con jefes y escenarios.</p>
+            <p class="home-soon">Próximamente</p>
+          </section>
+
+          <section class="home-entry is-locked" aria-labelledby="h-rank" aria-disabled="true">
+            <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
+            <p class="home-entry-desc">Las mejores puntuaciones de Arcade.</p>
+            <p class="home-soon">Próximamente</p>
+          </section>
+        </div>
+
+        <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts) -->
+        <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
 
         <section class="home-card" aria-labelledby="h-how">
           <h2 id="h-how">Cómo se juega</h2>
@@ -62,12 +83,6 @@
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
           <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil hay botones táctiles.</p>
-        </section>
-
-        <section class="home-card home-ranking" aria-labelledby="h-rank">
-          <h2 id="h-rank">Ranking global</h2>
-          <p class="home-soon">Próximamente</p>
-          <p class="home-note">Aquí aparecerán las mejores puntuaciones de todos los jugadores.</p>
         </section>
 
         <footer class="home-foot">Block Rogue · versión <span data-version></span></footer>
