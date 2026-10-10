@@ -48,7 +48,7 @@ describe('jugadores', () => {
     const { call, register } = setup();
     const token = await register('Fer');
     expect((await call('GET', '/api/players/me', undefined, token)).body.nickname).toBe('Fer');
-    expect((await call('GET', '/api/players/me', undefined, `${token.slice(0, -1)}x`)).status).toBe(401);
+    expect((await call('GET', '/api/players/me', undefined, `${token.slice(0, -1)}${token.endsWith('x') ? 'y' : 'x'}`)).status).toBe(401);
     expect((await call('GET', '/api/players/me')).status).toBe(401);
     expect((await call('DELETE', '/api/players/me', undefined, token)).status).toBe(200);
     expect((await call('GET', '/api/players/me', undefined, token)).status).toBe(401);
