@@ -987,7 +987,7 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 }
 
 /* ═════════════ Portada v2: la primera pantalla solo sirve para jugar ═════════════ */
-.home-inner { padding-top: 0; gap: 0; }
+#home .home-inner { padding-top: 0; gap: 0; }
 .home-first { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 0 16px; text-align: center; }
 .home-first .home-hero { padding: 0; }
 .home-first .home-title { margin: 14px 0 18px; }
