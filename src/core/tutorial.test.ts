@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COLS, Game, ROWS, TUTORIAL_HOLE, TUTORIAL_HYPER_CHARGE, TUTORIAL_LINES } from './game';
 import { MODES, PLAY_MODE_IDS } from './modes';
+import { runReplay } from './replay';
 
 /** Sube de nivel sumando las líneas que faltan (sin jugar piezas). */
 function levelUp(g: Game) {
@@ -70,6 +71,11 @@ describe('tutorial', () => {
     g.choosePerk(0);
     expect(g.hyper!.charge).toBe(TUTORIAL_HYPER_CHARGE);
     expect(original.charge).toBeGreaterThan(TUTORIAL_HYPER_CHARGE);
+  });
+
+  it('una repetición del tutorial no es puntuable', () => {
+    const g = tutorial();
+    expect(runReplay(g.replay())).toMatchObject({ ok: false, reason: 'modo no puntuable' });
   });
 
   it('el modo normal no cambia: ni líneas ni hiperperk forzada', () => {

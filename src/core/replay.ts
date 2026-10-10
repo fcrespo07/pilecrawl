@@ -1,5 +1,5 @@
 import { Game, RULES_VERSION, type Replay, type ReplayAction } from './game';
-import { isModeId } from './modes';
+import { isModeId, MODES } from './modes';
 
 export interface ReplayResult {
   game: Game;
@@ -42,6 +42,8 @@ export function runReplay(r: Replay): ReplayResult {
   if (!isStep(r.steps) || !Array.isArray(r.actions)) return { game, ok: false, reason: 'formato no válido' };
   const mode = r.mode ?? 'normal';
   if (!isModeId(mode)) return { game, ok: false, reason: 'modo no válido' };
+  // el tutorial (tablero precargado) no puntúa: que no se cuele en un ranking
+  if (MODES[mode].tutorial) return { game, ok: false, reason: 'modo no puntuable' };
   game.bestLevel = r.bestLevel;
   game.start(r.seed, mode);
 
