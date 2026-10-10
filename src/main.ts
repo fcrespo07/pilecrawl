@@ -9,6 +9,7 @@ import { dailySeed, utcDate } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, saveLastMode } from './records';
 import { ModeSelect } from './ui/modeSelect';
+import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
@@ -22,6 +23,10 @@ const stage = document.getElementById('stage')!;
 // sin proveedor de anuncios por ahora: el hueco queda plegado
 mountAd(document.getElementById('ad-slot')!, null);
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
+const panelLeft = document.getElementById('panel-left')!;
+const panelRight = document.getElementById('panel-right')!;
+const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
+refreshPanels();
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
@@ -81,6 +86,7 @@ function wireAudioAndFeel() {
     audio.gameOver();
     ui.showGameOver();
     modeSelect.refresh();
+    refreshPanels();
   });
 }
 
@@ -120,6 +126,7 @@ function showHome(show: boolean) {
     document.body.dataset.skin = 'pixel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
+    refreshPanels();
     home.scrollTop = 0;
     home.focus({ preventScroll: true });
   } else renderer.app.ticker.start();

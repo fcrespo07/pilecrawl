@@ -30,13 +30,24 @@
       <div class="home-inner">
         <!-- Primera pantalla: solo jugar. Todo lo demás queda debajo, al desplazar -->
         <section class="home-first" aria-labelledby="h-arcade">
-          <header class="home-hero">
-            <p class="home-kicker">Roguelite de bloques</p>
-            <h1 class="home-title">Block Rogue</h1>
-          </header>
-          <h2 id="h-arcade" class="home-mode-label">Arcade</h2>
-          <div id="mode-select" class="mode-select"></div>
-          <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+          <div class="home-stage">
+            <aside id="panel-left" class="home-panel panel-left" aria-label="Tus mejores puntuaciones"></aside>
+
+            <div class="home-center">
+              <header class="home-hero">
+                <p class="home-kicker">Roguelite de bloques</p>
+                <h1 class="home-title">Block Rogue</h1>
+              </header>
+              <h2 id="h-arcade" class="home-mode-label">Arcade</h2>
+              <div id="mode-select" class="mode-select"></div>
+              <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+              <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
+                   Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
+              <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
+            </div>
+
+            <aside id="panel-right" class="home-panel panel-right" aria-label="Desafío diario"></aside>
+          </div>
           <button class="home-more-hint" id="home-more-link" type="button">Cómo se juega y más<span aria-hidden="true">&#9660;</span></button>
         </section>
 
@@ -60,9 +71,6 @@
 
           <!-- Accesos secundarios (catálogo, tutorial): van en esta fila, no en la primera pantalla -->
           <div class="home-links" id="home-links"></div>
-
-          <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts) -->
-          <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
 
         <section class="home-card" aria-labelledby="h-how">
           <h2 id="h-how">Cómo se juega</h2>
