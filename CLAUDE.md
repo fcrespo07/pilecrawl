@@ -1,4 +1,4 @@
-# Block Rogue — contexto del proyecto
+# Pilecrawl — contexto del proyecto
 
 Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se sube de nivel y el jugador elige 1 de 3 mejoras (perks) que cambian las reglas. Las mejoras se acumulan y pueden combinarse.
 
@@ -64,7 +64,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
 - Efectos de pantalla (ondas de choque + `postfx.ts`: rejilla, aberración, pixelado, tinte): sutiles y ligados a eventos. Se apagan con F o con el botón del menú de pausa; se guarda en `blockrogue.fx`. `prefers-reduced-motion` los reduce y un equipo lento (>34 ms/fotograma durante 3 s) los apaga solo. `Renderer.ultiBurst(color)` es el gancho para las ultis.
 - Récord en `localStorage` (`blockrogue.best`). Se envuelve en try/catch.
-- Nombre: Block Rogue (antes Tetrogue y Derrumbe). `src/storage.ts` migra las claves `tetrogue.*` y `derrumbe.*` a `blockrogue.*`.
+- Nombre: Pilecrawl (antes Block Rogue, Derrumbe y Tetrogue). Las claves guardadas siguen en `blockrogue.*` (`src/storage.ts` migra `tetrogue.*` y `derrumbe.*` a esas); la semilla del diario tampoco cambia, para no alterar los retos.
 
 ## Estado
 
