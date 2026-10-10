@@ -11,7 +11,7 @@ import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from '
 import { ModeSelect } from './ui/modeSelect';
 import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
-import { adProviderFromEnv } from './ads/providers';
+import { adConsentManaged, adProviderFromEnv, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
@@ -28,6 +28,14 @@ const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
 mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
+if (adConsentManaged()) {
+  const prefs = document.getElementById('ad-prefs')!;
+  prefs.hidden = false;
+  prefs.addEventListener('click', () => {
+    resetAdConsent();
+    location.reload();
+  });
+}
 const rankingUI = new RankingUI(() => home.focus({ preventScroll: true }));
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {

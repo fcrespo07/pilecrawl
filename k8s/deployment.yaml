@@ -33,6 +33,9 @@ spec:
             - name: NICK_BLOCKLIST
               valueFrom:
                 configMapKeyRef: { name: blockrogue, key: nick-blocklist, optional: true }
+            - name: TRUST_PROXY
+              valueFrom:
+                configMapKeyRef: { name: blockrogue, key: trust-proxy, optional: true }
             - name: CORS_ORIGINS
               valueFrom:
                 configMapKeyRef: { name: blockrogue, key: cors-origins, optional: true }

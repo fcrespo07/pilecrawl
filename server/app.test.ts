@@ -3,6 +3,8 @@ import { createApp, weekStart } from './app';
 import { loadConfig, type Config } from './config';
 import { openDb } from './db';
 import { dailySeed } from '../src/core/modes';
+import { clientIp } from './ip';
+import type { IncomingMessage } from 'node:http';
 import { playHuman } from '../src/core/testplayer';
 
 const NOW = Date.parse('2026-10-14T12:00:00Z'); // miércoles
@@ -196,6 +198,33 @@ describe('modos sin ranking', () => {
     expect((await call('GET', '/api/leaderboard?mode=tutorial')).status).toBe(400);
     const g = playHuman(777, 400_000, 'normal', 0);
     expect((await call('POST', '/api/runs', { runId: 'x', replay: { ...g.replay(), mode: 'tutorial' } }, token)).status).toBe(422);
+  });
+});
+
+describe('IP del cliente', () => {
+  const req = (headers: Record<string, string>) => ({ headers, socket: { remoteAddress: '10.9.9.9' } }) as unknown as IncomingMessage;
+  it('no se fía de la cabecera sin proxy y usa el último valor detrás de uno', () => {
+    const h = { 'x-forwarded-for': '6.6.6.6, 1.2.3.4', 'cf-connecting-ip': '5.5.5.5' };
+    expect(clientIp(req(h), { trustProxy: 'none' })).toBe('10.9.9.9');
+    expect(clientIp(req(h), { trustProxy: 'proxy' })).toBe('1.2.3.4');
+    expect(clientIp(req(h), { trustProxy: 'cloudflare' })).toBe('5.5.5.5');
+    expect(clientIp(req({}), { trustProxy: 'cloudflare' })).toBe('10.9.9.9');
+  });
+});
+
+describe('copias del diario', () => {
+  it('rechaza reenviar la misma repetición y no sirve la del día hasta que acaba el plazo', async () => {
+    const { call, register } = setup();
+    const a = await register('Ana');
+    const b = await register('Beto');
+    const date = '2026-10-14';
+    const g = playHuman(dailySeed(date), 400_000, 'daily', 9999);
+    const first = await call('POST', '/api/runs', { date, replay: g.replay() }, a);
+    expect(first.status).toBe(200);
+    expect((await call('POST', '/api/runs', { date, replay: g.replay() }, b)).status).toBe(422);
+    expect((await call('GET', `/api/runs/${first.body.runId}/replay`)).status).toBe(403);
+    clock += 2 * 86_400_000;
+    expect((await call('GET', `/api/runs/${first.body.runId}/replay`)).status).toBe(200);
   });
 });
 

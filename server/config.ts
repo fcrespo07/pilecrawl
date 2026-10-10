@@ -10,8 +10,12 @@ export interface Config {
   staticDir: string;
   /** Orígenes que pueden llamar a la API desde otra web (portales). Vacío = solo el propio. */
   corsOrigins: string[];
-  /** Detrás de un proxy (Traefik, Cloudflare): la IP real viene en `X-Forwarded-For`. */
-  trustProxy: boolean;
+  /**
+   * De dónde sale la IP del cliente. `none`: la del socket. `proxy`: el último valor de `X-Forwarded-For`
+   * (un solo proxy delante, p. ej. Traefik). `cloudflare`: `CF-Connecting-IP` (Cloudflare Tunnel).
+   * El primer valor de `X-Forwarded-For` lo escribe el cliente: nunca se usa.
+   */
+  trustProxy: 'none' | 'proxy' | 'cloudflare';
   /** Clave para las rutas de moderación. Vacío = moderación desactivada. */
   adminToken: string;
   /** Palabras que no pueden aparecer en un apodo (minúsculas). */
@@ -37,7 +41,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     dbPath: env.DB_PATH ?? './data/blockrogue.db',
     staticDir: env.STATIC_DIR ?? '',
     corsOrigins: list(env.CORS_ORIGINS),
-    trustProxy: env.TRUST_PROXY === '1',
+    trustProxy: env.TRUST_PROXY === 'cloudflare' ? 'cloudflare' : env.TRUST_PROXY === 'proxy' || env.TRUST_PROXY === '1' ? 'proxy' : 'none',
     adminToken: env.ADMIN_TOKEN ?? '',
     nickBlocklist: list(env.NICK_BLOCKLIST).map((s) => s.toLowerCase()),
     backupDir: env.BACKUP_DIR ?? '',

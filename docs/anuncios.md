@@ -36,4 +36,10 @@ Con poca gente, no paga ni la luz de la Pi. Además AdSense a veces rechaza webs
 
 ## Consentimiento y RGPD: lo que falta
 
-Para visitantes del Espacio Económico Europeo y Reino Unido, Google exige una **plataforma de gestión del consentimiento certificada** (CMP) para servir anuncios personalizados; el aviso mínimo de este proyecto **no lo es**. Antes de lanzar con tráfico europeo real, activa el mensaje gratuito de Google (AdSense → Privacidad y mensajes), pon `VITE_AD_CONSENT=none` para quitar el aviso propio y comprueba en la documentación actual de Google que cumples. Esto es una advertencia práctica, no asesoramiento legal.
+Para visitantes del Espacio Económico Europeo y Reino Unido, Google exige una **plataforma de gestión del consentimiento certificada** (CMP, estándar TCF) para servir anuncios. El aviso Sí/No de este proyecto **no lo es**: con él, lo normal es que Google limite o no muestre anuncios a ese tráfico. Qué hacer:
+
+- **Para tráfico europeo:** activa el mensaje gratuito de Google (AdSense → Privacidad y mensajes), pon `VITE_AD_CONSENT=none` para quitar el aviso propio y comprueba en la documentación actual de Google que cumples.
+- **Cuidado con `VITE_AD_CONSENT=none`:** carga los anuncios **sin preguntar**. Solo es legal fuera de la UE o si otro CMP (el de Google) ya pide el consentimiento antes. Con el aviso propio, la portada trae un enlace «Preferencias de anuncios» (pie de página) que borra la respuesta y vuelve a preguntar, porque retirar el consentimiento tiene que ser tan fácil como darlo.
+- Hasta tener el CMP, la opción prudente es **no activar anuncios** (dejar `VITE_AD_PROVIDER` vacío) o probarlos solo con tráfico de fuera del EEE.
+
+Esto es una advertencia práctica, no asesoramiento legal.

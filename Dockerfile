@@ -18,7 +18,7 @@ RUN npm run build && npm run build:server
 
 # Etapa 2: solo lo necesario para ejecutar. Node 22 lleva SQLite dentro: no hay dependencias nativas.
 FROM node:22-alpine
-ENV NODE_ENV=production STATIC_DIR=/app/dist DB_PATH=/data/blockrogue.db BACKUP_DIR=/data/backups PORT=8787 TRUST_PROXY=1
+ENV NODE_ENV=production STATIC_DIR=/app/dist DB_PATH=/data/blockrogue.db BACKUP_DIR=/data/backups PORT=8787 TRUST_PROXY=none
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server/server.mjs ./server.mjs

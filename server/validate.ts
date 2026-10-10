@@ -7,7 +7,7 @@ import { runReplay } from '../src/core/replay';
 export const RANKED_MODES = ['normal', 'daily', 'timed'] as const;
 export const isRankedMode = (m: unknown): m is (typeof RANKED_MODES)[number] => RANKED_MODES.includes(m as never);
 
-export const MAX_STEPS = 1_000_000;
+export const MAX_STEPS = 300_000;
 export const MAX_ACTIONS = 100_000;
 
 /** Claves que puede llevar una repetición. Cualquier otra (marcas de depuración, trucos) la rechaza. */

@@ -43,8 +43,10 @@ export function openDb(path: string): DatabaseSync {
       level       INTEGER NOT NULL,
       lines       INTEGER NOT NULL,
       steps       INTEGER NOT NULL,
+      hash        TEXT NOT NULL,
       created_at  INTEGER NOT NULL
     );
+    CREATE INDEX IF NOT EXISTS runs_hash ON runs (mode, period, hash);
 
     -- Mejor puntuación de cada jugador por modo y ámbito: 'all', 'w:AAAA-MM-DD' (lunes) o 'd:AAAA-MM-DD'.
     CREATE TABLE IF NOT EXISTS bests (

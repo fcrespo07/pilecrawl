@@ -94,6 +94,21 @@ function askConsent(host: HTMLElement, onFilled: () => void, accepted: () => voi
   onFilled();
 }
 
+/** ¿Hay aviso de consentimiento propio activo? Entonces la portada ofrece cambiar la respuesta. */
+export function adConsentManaged(): boolean {
+  const env = import.meta.env;
+  return env.VITE_AD_PROVIDER === 'adsense' && env.VITE_AD_CONSENT !== 'none' && adProviderFromEnv() !== null;
+}
+
+/** Olvida la respuesta: la próxima carga vuelve a preguntar y, si había dicho «sí», ya no carga el script. */
+export function resetAdConsent() {
+  try {
+    localStorage.removeItem(CONSENT_KEY);
+  } catch {
+    /* sin almacenamiento: no había respuesta guardada */
+  }
+}
+
 /** Proveedor del build actual, o null (sin anuncios). */
 export function adProviderFromEnv(): AdProvider | null {
   const env = import.meta.env;

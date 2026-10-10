@@ -58,6 +58,8 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const createLimit = new RateLimiter(5, 3_600_000);
   const startLimit = new RateLimiter(120, 3_600_000);
   const runLimit = new RateLimiter(60, 3_600_000);
+  /** Revalidar cuesta CPU en un único hilo: tope global, aunque falle el límite por IP. */
+  const revalidations = new RateLimiter(30, 60_000);
   const adminFails = new RateLimiter(10, 600_000);
 
   const q = {
@@ -71,7 +73,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     useStart: db.prepare('UPDATE starts SET used = 1 WHERE id = ? AND used = 0'),
     oldStarts: db.prepare('DELETE FROM starts WHERE created_at < ?'),
     insertRun: db.prepare(
-      'INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     ),
     getBest: db.prepare('SELECT score FROM bests WHERE player_id = ? AND mode = ? AND scope = ?'),
     upsertBest: db.prepare(
@@ -79,6 +81,14 @@ export function createApp(cfg: Config, db: DatabaseSync) {
        ON CONFLICT (player_id, mode, scope) DO UPDATE SET score = excluded.score, level = excluded.level, lines = excluded.lines, run_id = excluded.run_id`,
     ),
     insertReplay: db.prepare('INSERT OR REPLACE INTO replays (run_id, data) VALUES (?, ?)'),
+    // repeticiones de periodos viejos: solo se conservan las de la mejor de cada tabla y las de «siempre»
+    pruneOld: db.prepare(
+      `DELETE FROM replays WHERE run_id IN (
+         SELECT b.run_id FROM bests b
+         WHERE b.scope != 'all' AND substr(b.scope, 3) < ?
+           AND b.score < (SELECT MAX(x.score) FROM bests x WHERE x.mode = b.mode AND x.scope = b.scope)
+           AND b.run_id NOT IN (SELECT run_id FROM bests WHERE scope = 'all'))`,
+    ),
     pruneReplays: db.prepare('DELETE FROM replays WHERE run_id NOT IN (SELECT run_id FROM bests)'),
     bumpLevel: db.prepare('UPDATE players SET best_level = MAX(best_level, ?) WHERE id = ?'),
     top: db.prepare(
@@ -95,6 +105,8 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     total: db.prepare(
       'SELECT COUNT(*) AS n FROM bests b JOIN players p ON p.id = b.player_id WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0',
     ),
+    dupHash: db.prepare('SELECT 1 FROM runs WHERE mode = ? AND period = ? AND hash = ? LIMIT 1'),
+    replayInfo: db.prepare('SELECT r.mode, r.period FROM runs r WHERE r.id = ?'),
     replayOf: db.prepare('SELECT data FROM replays WHERE run_id = ?'),
     deleteRun: db.prepare('DELETE FROM runs WHERE id = ?'),
     runOwner: db.prepare('SELECT player_id, mode, period FROM runs WHERE id = ?'),
@@ -218,6 +230,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     if (method === 'POST' && path === '/api/runs') {
       const me = needPlayer(req);
       if (!runLimit.allow(`r:${me.id}`, now)) throw new ApiError(429, 'demasiados envíos, prueba más tarde');
+      if (!revalidations.allow('v', now)) throw new ApiError(429, 'el servidor está ocupado, prueba en un minuto');
       const body = await readJson(req);
       const v = verifyReplay(body.replay);
       if (typeof v === 'string') throw new ApiError(422, v);
@@ -252,14 +265,19 @@ export function createApp(cfg: Config, db: DatabaseSync) {
         period = utcDate(new Date(now));
       }
 
+      // la misma repetición (mismas acciones) no vale dos veces en un periodo: así no se copia la de otro
+      const hash = createHash('sha256').update(JSON.stringify([v.replay.seed, v.steps, v.replay.actions])).digest('hex');
+      if (q.dupHash.get(mode, period, hash)) throw new ApiError(422, 'esa repetición ya se envió');
+
       let result: { runId: number; improved: string[] };
       db.exec('BEGIN');
       try {
-        const info = q.insertRun.run(me.id, mode, period, v.replay.seed, v.replay.version, v.score, v.level, v.lines, v.steps, now);
+        const info = q.insertRun.run(me.id, mode, period, v.replay.seed, v.replay.version, v.score, v.level, v.lines, v.steps, hash, now);
         const runId = Number(info.lastInsertRowid);
         const improved = scopesFor(mode, period).filter((s) => recordBestFor(me.id, mode, s, v, runId));
         if (improved.length) q.insertReplay.run(runId, gzipSync(JSON.stringify(v.replay)));
         q.pruneReplays.run();
+        q.pruneOld.run(utcDate(new Date(now - 30 * DAY)));
         // lo desbloqueado en el ranking es lo que el servidor ha visto jugar
         q.bumpLevel.run(v.level, me.id);
         db.exec('COMMIT');
@@ -297,12 +315,16 @@ export function createApp(cfg: Config, db: DatabaseSync) {
           me: me ? { nickname: me.nickname, ...rankOf(me.id, mode, scope) } : null,
         },
         200,
-        { 'cache-control': 'public, max-age=10' },
+        { 'cache-control': me ? 'private, no-store' : 'public, max-age=10' },
       );
     }
 
     const replayMatch = /^\/api\/runs\/(\d+)\/replay$/.exec(path);
     if (method === 'GET' && replayMatch) {
+      // la repetición de un diario no se sirve hasta que se cierra su ventana de envío (D+2 UTC): antes se podría copiar
+      const info = q.replayInfo.get(Number(replayMatch[1])) as { mode: ModeId; period: string } | undefined;
+      if (info?.mode === 'daily' && today < new Date(Date.parse(`${info.period}T00:00:00Z`) + 2 * DAY).toISOString().slice(0, 10))
+        throw new ApiError(403, 'la repetición del diario se publica cuando acaba el plazo de envío');
       const row = q.replayOf.get(Number(replayMatch[1])) as { data: Uint8Array } | undefined;
       if (!row) throw new ApiError(404, 'repetición no disponible');
       return new Response(gunzipSync(row.data), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' } });

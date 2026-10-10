@@ -6,6 +6,7 @@ metadata:
   namespace: blockrogue
 data:
   nick-blocklist: ""        # palabras prohibidas en apodos, separadas por comas
+  trust-proxy: "cloudflare" # cloudflare (Cloudflare Tunnel), proxy (Traefik) o none. Si lo dejas vacío, el límite por IP ve la IP del proxy
   cors-origins: ""          # solo si el juego se sirve desde otro dominio (p. ej. un portal)
 ---
 apiVersion: v1

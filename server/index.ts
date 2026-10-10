@@ -3,8 +3,9 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { createReadStream, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 import { createApp } from './app';
-import { loadConfig, type Config } from './config';
+import { loadConfig } from './config';
 import { openDb } from './db';
+import { clientIp } from './ip';
 
 const MAX_BODY = 512 * 1024;
 const MIME: Record<string, string> = {
@@ -23,15 +24,6 @@ const MIME: Record<string, string> = {
 const cfg = loadConfig();
 const db = openDb(cfg.dbPath);
 const api = createApp(cfg, db);
-
-function clientIp(req: IncomingMessage, c: Config): string {
-  if (c.trustProxy) {
-    const fwd = req.headers['x-forwarded-for'];
-    const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0]?.trim();
-    if (first) return first;
-  }
-  return req.socket.remoteAddress ?? 'desconocida';
-}
 
 async function readBody(req: IncomingMessage): Promise<Buffer | null> {
   const chunks: Buffer[] = [];

@@ -52,10 +52,10 @@ openssl rand -hex 32                            # pégalo como admin-token
 | `ADMIN_TOKEN` | Clave para ocultar jugadores y borrar partidas. Vacía: moderación desactivada. | (Secret) |
 | `NICK_BLOCKLIST` | Palabras prohibidas en apodos, separadas por comas. | vacía: ponla tú |
 | `CORS_ORIGINS` | Solo si el juego se sirve desde otro dominio. | vacía |
-| `TRUST_PROXY` | Usar `X-Forwarded-For` para la IP (límite de peticiones). | `1` |
+| `TRUST_PROXY` | De dónde sale la IP del cliente para los límites: `cloudflare` (Cloudflare Tunnel, usa `CF-Connecting-IP`), `proxy` (un solo proxy delante, p. ej. Traefik: último valor de `X-Forwarded-For`) o `none` (la del socket). | `none` |
 | `DB_PATH` / `BACKUP_DIR` / `BACKUP_KEEP` | Base de datos y copias diarias (`VACUUM INTO`), 7 por defecto. | `/data/...` |
 
-`TRUST_PROXY=1` solo es seguro si **todo** el tráfico pasa por Traefik o Cloudflare; si expusieras el pod directamente, cualquiera podría falsear su IP.
+Pon en `k8s/config.yaml` `trust-proxy: cloudflare` si usas el túnel o `proxy` si usas Traefik. Con `none` detrás de un proxy, el límite por IP vería la IP del proxy y contaría a todos juntos. Solo es seguro si **todo** el tráfico pasa por ese proxy; si expusieras el pod directamente, cualquiera podría falsear su IP. El primer valor de `X-Forwarded-For` nunca se usa porque lo escribe el cliente.
 
 ## 5. Desplegar
 
@@ -102,9 +102,9 @@ La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`,
 - **Desafío diario:** la semilla es la del día (pública, sale del código) y los desbloqueos son fijos. **Decisión: cuenta el mejor de varios intentos** (la recomendación del plan; más partidas, más impresiones de anuncios). Cambiar a «un solo intento» es una comprobación más en `server/app.ts` (rechazar si ya hay una partida del jugador para esa fecha). Admite el día de hoy y el de ayer (una partida puede cruzar la medianoche UTC).
 - **Tablas:** diaria; semanal (lunes UTC) y de siempre para partida libre y contrarreloj. Solo cuenta la mejor de cada jugador.
 - **Validación:** la repetición se rechaza si lleva cualquier campo que no conozca el servidor. Así el modo de pruebas (`sandbox: true`) y cualquier otro truco quedan fuera automáticamente.
-- **Lo que no impide:** un bot que juegue de verdad, con entradas perfectas. La repetición lo hace visible: `GET /api/runs/<runId>/replay` devuelve la de cada primer puesto para revisarla.
+- **Lo que no impide:** un bot que juegue de verdad, con entradas perfectas. La repetición lo hace visible: `GET /api/runs/<runId>/replay` devuelve la de cada primer puesto para revisarla; la de un diario no se sirve hasta dos días después (plazo de envío), y una repetición idéntica a otra del mismo periodo se rechaza, para que nadie copie la del primero.
 - **Si cambias las reglas:** sube `RULES_VERSION` (ya es la práctica) y las partidas con la versión anterior se rechazan; las tablas viejas siguen ahí. Para empezar de cero, borra `bests`.
-- **Límites:** 240 peticiones/min por IP, 5 jugadores nuevos/hora por IP, 60 envíos y 120 partidas iniciadas por hora y jugador. Cuerpo máximo 512 KB. Repetición válida: hasta 1 000 000 pasos.
+- **Límites:** 240 peticiones/min por IP, 5 jugadores nuevos/hora por IP, 60 envíos y 120 partidas iniciadas por hora y jugador. Cuerpo máximo 512 KB. Repetición válida: hasta 300 000 pasos (unos 40 minutos de juego). Tope global de 30 revalidaciones por minuto. Las repeticiones de tablas diarias y semanales de más de 30 días se borran salvo la del primer puesto.
 
 ## 9. Borrador de página de privacidad
 
