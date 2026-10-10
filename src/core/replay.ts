@@ -36,6 +36,7 @@ function validAction(a: unknown): a is ReplayAction {
  */
 export function runReplay(r: Replay): ReplayResult {
   const game = new Game();
+  if (r.sandbox) return { game, ok: false, reason: 'partida de laboratorio' };
   if (r.version !== RULES_VERSION) return { game, ok: false, reason: `versión ${r.version} ≠ ${RULES_VERSION}` };
   if (!Number.isInteger(r.seed) || r.seed < 0 || r.seed > 0xffffffff) return { game, ok: false, reason: 'semilla no válida' };
   if (typeof r.bestLevel !== 'number' || Number.isNaN(r.bestLevel)) return { game, ok: false, reason: 'bestLevel no válido' };

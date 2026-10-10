@@ -9,22 +9,32 @@ import { dailySeed, utcDate, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, saveLastMode } from './records';
 import { ModeSelect } from './ui/modeSelect';
+import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
 import { adProviderFromEnv } from './ads/providers';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
+import { renderCatalog } from './ui/catalog';
+import { Lab, LAB_ENABLED } from './ui/lab';
 
 const game = new Game();
 const renderer = new Renderer(game);
 const input = new Input(game);
 const ui = new UI(game);
+const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
 mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
 const rankingUI = new RankingUI(() => home.focus({ preventScroll: true }));
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
+const panelLeft = document.getElementById('panel-left')!;
+const panelRight = document.getElementById('panel-right')!;
+const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
+refreshPanels();
+// la cuenta atrás y el número del diario cambian con la portada abierta
+window.setInterval(refreshPanels, 30_000);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
@@ -76,7 +86,7 @@ function wireAudioAndFeel() {
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
-    recordBestLevel(level);
+    if (!game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
@@ -85,6 +95,7 @@ function wireAudioAndFeel() {
     ui.showGameOver();
     modeSelect.refresh();
     offerPublish();
+    refreshPanels();
   });
 }
 
@@ -114,6 +125,14 @@ function wireTouch() {
 }
 
 const home = document.getElementById('home')!;
+const catalog = document.getElementById('catalog')!;
+
+function showCatalog(on: boolean) {
+  catalog.classList.toggle('hidden', !on);
+  home.classList.toggle('hidden', on);
+  (on ? catalog : home).scrollTop = 0;
+  (on ? catalog : home).focus({ preventScroll: true });
+}
 
 function showHome(show: boolean) {
   home.classList.toggle('hidden', !show);
@@ -124,6 +143,7 @@ function showHome(show: boolean) {
     document.body.dataset.skin = 'pixel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
+    refreshPanels();
     home.scrollTop = 0;
     home.focus({ preventScroll: true });
   } else renderer.app.ticker.start();
@@ -135,7 +155,8 @@ let starting = false;
 
 function offerPublish() {
   const r = currentRun;
-  if (!net.RANKING_ENABLED || !r) return rankingUI.offerPublish(null);
+  // las partidas del laboratorio nunca puntúan (el servidor también las rechaza)
+  if (!net.RANKING_ENABLED || !r || game.sandbox) return rankingUI.offerPublish(null);
   if (r.mode !== 'daily' && !r.runId) {
     // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
     return net.loadPlayer() ? rankingUI.offerUnavailable('Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
@@ -146,6 +167,7 @@ function offerPublish() {
 
 async function startRun() {
   if (starting) return;
+  lab.close();
   starting = true;
   const mode = modeSelect.mode;
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
@@ -189,6 +211,9 @@ function setEffects(on: boolean, save = true) {
 function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
 
+  // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
+  if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
+
   // escribiendo el apodo, o con la tabla abierta: las teclas son de la interfaz, no del juego
   if (rankingUI.isOpen || (e.target as HTMLElement | null)?.closest?.('input, textarea, #publish')) return;
 
@@ -201,6 +226,11 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if (st === 'ready' || st === 'over') {
+    // en el catálogo no se arranca partida: Esc vuelve a la portada
+    if (!catalog.classList.contains('hidden')) {
+      if (e.code === 'Escape') showCatalog(false);
+      return;
+    }
     // con la portada visible, Espacio desplaza la página: solo Enter arranca
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
@@ -211,6 +241,7 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) {
+    if (lab.isOpen) { lab.close(); return; }
     if (st === 'playing' || st === 'paused') {
       game.togglePause();
       input.releaseAll();
@@ -260,7 +291,16 @@ async function boot() {
       ui.setPaused(true);
     }
   });
+  renderCatalog(catalog);
+  document.getElementById('catalog-open')!.addEventListener('click', () => showCatalog(true));
+  document.getElementById('catalog-back')!.addEventListener('click', () => showCatalog(false));
+  const labBtn = document.getElementById('lab-open')!;
+  labBtn.hidden = !LAB_ENABLED;
+  labBtn.addEventListener('click', () => lab.open());
   document.getElementById('home-play')!.addEventListener('click', () => void startRun());
+  document.getElementById('home-more-link')!.addEventListener('click', () => {
+    document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   if (net.RANKING_ENABLED) {
     const entry = document.getElementById('home-rank')!;
     entry.classList.remove('is-locked');

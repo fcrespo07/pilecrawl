@@ -22,6 +22,7 @@ export interface Verified {
 export function verifyReplay(input: unknown): Verified | string {
   if (typeof input !== 'object' || input === null || Array.isArray(input)) return 'repetición no válida';
   const r = input as Record<string, unknown>;
+  if (r.sandbox) return 'partida de laboratorio: no puntúa';
   for (const k of Object.keys(r)) if (!ALLOWED_KEYS.has(k)) return `campo no permitido: ${k}`;
   if (r.version !== RULES_VERSION) return `versión de reglas ${String(r.version)} ≠ ${RULES_VERSION}`;
   if (!isModeId(r.mode)) return 'modo no válido';
