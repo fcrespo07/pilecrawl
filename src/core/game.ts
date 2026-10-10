@@ -104,6 +104,11 @@ export const CURSE_FROM_LEVEL = 5;
 /** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
 export const GARBAGE_MIN_INTERVAL = 3;
 export const CURSE_CHANCE = 0.12;
+/** Tutorial: columna donde empieza el hueco de 2 de ancho, primeras piezas, líneas por nivel y líneas que carga la hiperperk. */
+export const TUTORIAL_HOLE = 7;
+export const TUTORIAL_PIECES = ['O', 'T', 'J', 'I'];
+export const TUTORIAL_LINES = 3;
+export const TUTORIAL_HYPER_CHARGE = 3;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
 export type ReplayAction =
@@ -304,7 +309,18 @@ export class Game {
     }
     this.state = 'playing';
     this.fillQueue();
+    if (def.tutorial) this.setupTutorial();
     this.spawn();
+  }
+
+  /**
+   * Tutorial: dos filas casi llenas con el hueco a la derecha y las primeras piezas fijas, para que
+   * la primera limpieza sea fácil. Las cartas y la hiperperk salen en los niveles 2 y 3 (ver `addLevelProgress`).
+   */
+  private setupTutorial() {
+    for (let y = ROWS - 2; y < ROWS; y++)
+      for (let x = 0; x < COLS; x++) if (x !== TUTORIAL_HOLE && x !== TUTORIAL_HOLE + 1) this.board[y][x] = ((x + y) % 7) + 1;
+    this.queue.splice(0, TUTORIAL_PIECES.length, ...TUTORIAL_PIECES.map((k) => this.makeSpec(PIECES[k])));
   }
 
   // ─────────────────────────── Cola y bolsa ───────────────────────────
@@ -884,7 +900,7 @@ export class Game {
 
     // Ancla: con un combo de dos o más piezas seguidas, la basura no avanza
     const anchored = (m.anchor && this.combo >= 1) || this.hyperActive('slowmo');
-    if (this.level >= 4 && !anchored) {
+    if (this.level >= 4 && !anchored && !MODES[this.mode].tutorial) {
       this.garbageCounter++;
       const interval = this.garbageInterval();
       this.events.emit('garbageWarn', { progress: this.garbageCounter / interval });
@@ -989,6 +1005,7 @@ export class Game {
   // ─────────────────────────── Niveles y perks ───────────────────────────
 
   linesNeeded(): number {
+    if (MODES[this.mode].tutorial) return TUTORIAL_LINES;
     // 8 líneas al principio, +1 cada 2 niveles (tope 16)
     const base = Math.min(16, 8 + Math.floor((this.level - 1) / 2));
     return Math.max(4, base - this.mods.linesReduction);
@@ -1004,6 +1021,8 @@ export class Game {
       if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak, this.level)) {
         this.hyperPending = true;
       }
+      // en el tutorial la hiperperk sale seguro en la segunda subida
+      if (MODES[this.mode].tutorial && this.level === 3 && !this.hyper) this.hyperPending = true;
       if (this.mods.interest > 0) {
         const amount = Math.round(this.score * this.mods.interest);
         this.score += amount;
@@ -1098,10 +1117,11 @@ export class Game {
       const hyper = this.hyperChoices[index];
       if (!hyper) return;
       this.record([this.steps, 'pick', index]);
-      this.hyper = hyper;
+      // en el tutorial se carga con pocas líneas para poder soltarla enseguida
+      this.hyper = MODES[this.mode].tutorial ? { ...hyper, charge: TUTORIAL_HYPER_CHARGE } : hyper;
       this.hyperPending = false;
       this.hyperCharge = 0;
-      this.events.emit('hyperPick', { hyper });
+      this.events.emit('hyperPick', { hyper: this.hyper });
       // la hiperperk no gasta la subida de nivel: después viene la carta normal
       this.newOffer();
       return;

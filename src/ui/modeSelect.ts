@@ -1,5 +1,5 @@
 // Selector de modo de la portada: una opción por modo con su récord.
-import { dailyNumber, MODE_IDS, MODES, msToNextDaily, utcDate, type ModeId } from '../core/modes';
+import { dailyNumber, PLAY_MODE_IDS, MODES, msToNextDaily, utcDate, type ModeId } from '../core/modes';
 import { loadBest } from '../records';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
@@ -40,7 +40,7 @@ export class ModeSelect {
   /** Vuelve a pintar las opciones: los récords y el número del diario cambian entre partidas. */
   refresh() {
     const date = (this.date = utcDate());
-    this.root.innerHTML = MODE_IDS.map((id) => {
+    this.root.innerHTML = PLAY_MODE_IDS.map((id) => {
       const m = MODES[id];
       const name = id === 'daily' ? `${m.name} <i>#${dailyNumber(date)}</i>` : m.name;
       const best = loadBest(id, date);
