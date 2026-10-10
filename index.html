@@ -40,7 +40,10 @@
             <h2 id="h-arcade">Arcade</h2>
             <p class="home-entry-desc">Partidas sueltas para batir tu récord.</p>
             <div id="mode-select" class="mode-select"></div>
-            <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+            <div class="home-actions">
+              <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+              <button id="home-tutorial" class="home-btn ghost" type="button">Tutorial<i class="new-tag" hidden>Nuevo</i></button>
+            </div>
           </section>
 
           <section class="home-entry is-locked" aria-labelledby="h-story">
@@ -158,6 +161,9 @@
       </div>
       <div id="tooltip"></div>
 
+      <!-- Entrenador del tutorial (src/ui/tutorial.ts): aquí en pantallas con ratón -->
+      <aside class="coach coach-d" aria-live="polite" hidden></aside>
+
       <!-- ═════════════ Elección de mejoras ═════════════ -->
       <div id="perks" class="overlay">
         <div class="stripe-title"><span id="perk-stripe">Subida de nivel</span></div>
@@ -198,6 +204,8 @@
         <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
       </div>
     </div>
+    <!-- Igual, fuera del escenario, para pantallas táctiles: allí el escenario se encoge y no cabría -->
+    <aside class="coach coach-m" aria-live="polite" hidden></aside>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
