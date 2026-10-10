@@ -1,4 +1,4 @@
-# Traefik viene con k3s. Cambia el dominio. Con Cloudflare Tunnel no hace falta abrir puertos ni gestionar certificados.
+# Solo si NO usas Cloudflare Tunnel: `kubectl apply -f k8s/ingress.example.yaml` (copia y cambia el dominio). Traefik viene con k3s. Cambia el dominio. Con Cloudflare Tunnel no hace falta abrir puertos ni gestionar certificados.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

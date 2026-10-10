@@ -1,7 +1,7 @@
 # kubectl apply -k k8s/
+# El Ingress de Traefik (ingress.example.yaml) no va aquí: con Cloudflare Tunnel no hace falta.
 resources:
   - namespace.yaml
   - pvc.yaml
   - deployment.yaml
   - service.yaml
-  - ingress.yaml   # quítalo de aquí si usas Cloudflare Tunnel en vez de Traefik

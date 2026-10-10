@@ -1,4 +1,4 @@
-# Despliegue de Block Rogue en tu Raspberry Pi (k3s)
+# Despliegue de Pilecrawl en tu Raspberry Pi (k3s)
 
 Una sola imagen contiene el juego (ficheros estáticos) y el servidor del ranking (Node 22 + SQLite). Corre en **un pod**, con un volumen para la base de datos. Todo lo de abajo lo ejecutas tú: desde la nube no se puede desplegar nada en tu casa.
 
@@ -60,6 +60,7 @@ Pon en `k8s/config.yaml` `trust-proxy: cloudflare` si usas el túnel o `proxy` s
 ## 5. Desplegar
 
 ```bash
+sudo k3s kubectl apply -f k8s/namespace.yaml     # el namespace antes que la configuración
 sudo k3s kubectl apply -f k8s/config.yaml
 sudo k3s kubectl apply -k k8s/
 sudo k3s kubectl -n blockrogue get pods -w
@@ -68,9 +69,9 @@ sudo k3s kubectl -n blockrogue port-forward svc/blockrogue 8080:80    # prueba e
 
 ## 6. Sacarlo a internet
 
-**Cloudflare Tunnel (recomendado).** La Pi abre una conexión de salida hacia Cloudflare; no abres ningún puerto, no importa que tu IP cambie ni que tu operador use CGNAT, y el HTTPS lo pone Cloudflare. Necesitas una cuenta (gratis) y un dominio (unos 10 €/año, en Cloudflare o con los DNS apuntados a ellos). Crea el túnel en Zero Trust → Networks → Tunnels, copia el token y sigue los comentarios de `k8s/cloudflared.example.yaml`. Apunta el nombre público a `http://blockrogue.blockrogue.svc.cluster.local:80`. Quita `ingress.yaml` de `k8s/kustomization.yaml`.
+**Cloudflare Tunnel (recomendado).** La Pi abre una conexión de salida hacia Cloudflare; no abres ningún puerto, no importa que tu IP cambie ni que tu operador use CGNAT, y el HTTPS lo pone Cloudflare. Necesitas una cuenta (gratis) y un dominio (unos 10 €/año, en Cloudflare o con los DNS apuntados a ellos). Crea el túnel en Zero Trust → Networks → Tunnels, copia el token y sigue los comentarios de `k8s/cloudflared.example.yaml`. Apunta el nombre público a `http://blockrogue.blockrogue.svc.cluster.local:80`. El Ingress de Traefik ya no se aplica por defecto (`k8s/ingress.example.yaml` es solo para quien no use el túnel).
 
-**Sin túnel**: abrir 80/443 en el router hacia la Pi, DNS dinámico y certificados con Traefik. Funciona, pero tu IP de casa queda a la vista, recibirás escaneos a diario y no sirve si tu operador usa CGNAT. No lo recomiendo.
+**Sin túnel**: abrir 80/443 en el router hacia la Pi, DNS dinámico y certificados con Traefik. Aplica el Ingress copiando `k8s/ingress.example.yaml` a `k8s/ingress.yaml` (ignóralo en git si quieres), cambiando `host:` por tu dominio y ejecutando `sudo k3s kubectl apply -f k8s/ingress.yaml`. Funciona, pero tu IP de casa queda a la vista, recibirás escaneos a diario y no sirve si tu operador usa CGNAT. No lo recomiendo.
 
 ### Riesgos reales de exponer la Pi desde casa
 
