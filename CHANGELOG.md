@@ -5,6 +5,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 - **Catálogo y laboratorio**: una página nueva en la portada con todas las mejoras (por rareza), maldiciones e hiperperks y lo que hace cada una. Y un laboratorio en la pausa para probar: añadir y quitar mejoras, cambiar la hiperperk, la velocidad de caída, el nivel, las vidas y los rerolls. El laboratorio solo existe en desarrollo o con `?lab` en la dirección; usarlo marca la partida (`sandbox`): no guarda récord ni mejor nivel, y su repetición se rechaza para que no entre en rankings.
 
+## 0.12.1 — 2026-10-10
+- Bombardeo ya no deja la pantalla negra: el modo noche conserva el cielo de estrellas y las colinas de la piel Píxel, solo más oscuro (sin reglas nuevas) (#21).
+
 ## 0.12.0 — 2026-10-10
 - **Racha**: un medidor nuevo en el HUD que sube con varias líneas a la vez, combos, giros y jugando rápido, y baja con cada pieza. Mejora las cartas que salen (la pantalla de cartas enseña la probabilidad de cada rareza) y adelanta las hiperperks: ya no se eligen siempre en el nivel 4, sino que desde el 3 pueden salir al subir (más cuanta más racha) y, si no han salido, salen seguro en el 8. Plano, Apagón, Terminal y Neón dejan de ser perks y pierden sus efectos de juego (puntos, cola, fantasma, combos): cada hiperperk pone su piel mientras está activa, y al soltarla el estallido de pantalla sale de su color. Reglas versión 6 (#20).
 

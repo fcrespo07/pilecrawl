@@ -57,8 +57,8 @@
 /* Pieles que ponen algunos perks (src/fx/skins.ts). Cambian los colores y conservan los bloques
    de píxeles; el lienzo de Pixi lee los suyos de SKINS. */
 body[data-skin='apagon'] {
-  --bg: #0c0d13; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
-  --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(12, 13, 19, 0.8); --veil-b: rgba(12, 13, 19, 0.96);
+  --bg: #0a0c20; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
+  --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(10, 12, 32, 0.8); --veil-b: rgba(10, 12, 32, 0.96);
   --accent: #e8e2d0; --hi: #e8e2d0; --hi-deep: #9a958a; --hi-light: #ffffff; --on-hi: #0c0d13; --hi2: #b9b4a6; --hot: #ff7a6b;
   --shade: #101219; --raise: #262a38; --raise-hi: #343a4c;
 }
