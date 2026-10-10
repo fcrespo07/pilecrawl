@@ -55,7 +55,7 @@ openssl rand -hex 32                            # pégalo como admin-token
 | `TRUST_PROXY` | De dónde sale la IP del cliente para los límites: `cloudflare` (Cloudflare Tunnel, usa `CF-Connecting-IP`), `proxy` (un solo proxy delante, p. ej. Traefik: último valor de `X-Forwarded-For`) o `none` (la del socket). | `none` |
 | `DB_PATH` / `BACKUP_DIR` / `BACKUP_KEEP` | Base de datos y copias diarias (`VACUUM INTO`), 7 por defecto. | `/data/...` |
 
-Pon en `k8s/config.yaml` `trust-proxy: cloudflare` si usas el túnel o `proxy` si usas Traefik. Con `none` detrás de un proxy, el límite por IP vería la IP del proxy y contaría a todos juntos. Solo es seguro si **todo** el tráfico pasa por ese proxy; si expusieras el pod directamente, cualquiera podría falsear su IP. El primer valor de `X-Forwarded-For` nunca se usa porque lo escribe el cliente.
+Pon en `k8s/config.yaml` `trust-proxy: cloudflare` si usas el túnel o `proxy` si usas Traefik. **Importante:** el ConfigMap es opcional y, si `trust-proxy` no está aplicado, detrás de Cloudflare todos los jugadores comparten la IP del pod de `cloudflared`: el ranking parecerá roto al registrar al sexto jugador en una hora (límite de 5 por IP). Con `none` detrás de un proxy, el límite por IP vería la IP del proxy y contaría a todos juntos. Solo es seguro si **todo** el tráfico pasa por ese proxy; si expusieras el pod directamente, cualquiera podría falsear su IP. El primer valor de `X-Forwarded-For` nunca se usa porque lo escribe el cliente.
 
 ## 5. Desplegar
 

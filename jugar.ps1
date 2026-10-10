@@ -1,4 +1,4 @@
-# Arranca Block Rogue en local, abre el navegador y para el servidor al salir (Ctrl+C o cerrar la ventana).
+# Arranca Pilecrawl en local, abre el navegador y para el servidor al salir (Ctrl+C o cerrar la ventana).
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -26,7 +26,7 @@ try {
     }
     if (-not $ready) { throw "No he podido conectar con $url" }
 
-    Write-Host "Block Rogue en $url - Ctrl+C para parar" -ForegroundColor Cyan
+    Write-Host "Pilecrawl en $url - Ctrl+C para parar" -ForegroundColor Cyan
     Start-Process $url
     Wait-Process -Id $server.Id
 }

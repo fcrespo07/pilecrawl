@@ -3,7 +3,12 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.15.0 — 2026-10-10
 - **Ranking en línea y despliegue**: servidor propio (`server/`, Node 22 + SQLite) que vuelve a jugar cada repetición con el motor del juego y calcula él la puntuación (desafío diario con semilla del día; partida libre y contrarreloj con semilla del servidor, de un solo uso). Tablas diaria, semanal y de siempre; apodo anónimo y borrado de datos; moderación por clave. En el juego: botón «Rankings» en la portada y «Publicar puntuación» al acabar (solo con `VITE_RANKING=1`). Imagen Docker arm64, manifiestos para k3s (`k8s/`), workflow de imagen y guías en `docs/` (despliegue en la Raspberry, anuncios). Adaptador de anuncios AdSense sin identificadores en el código y con aviso de consentimiento propio (#26).
+
+## 0.14.1 — 2026-10-10
+- Nuevo nombre: **Pilecrawl** (antes Block Rogue). Cambian títulos, portada, paquete y textos de los scripts. Las claves guardadas no cambian, así que los récords, ajustes y el reto diario se conservan (#25).
 
 ## 0.14.0 — 2026-10-10
 - **Tutorial**: botón en la portada que abre una partida guiada y corta. Enseña mover, soltar y girar, subir de nivel, elegir mejoras (ventaja y precio, reroll, ofertas malditas), la racha y la hiperperk (aquí sale segura y se carga con 3 líneas). El cuadro de consejos avanza según lo que haces, funciona con teclado y con botones táctiles y se puede dejar con «Salir». No guarda récord ni cuenta para desbloquear rarezas (#24).
