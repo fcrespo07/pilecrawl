@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-server
+data
+.git
+.github
+k8s
+docs
+*.md
+!package*.json

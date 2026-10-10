@@ -49,10 +49,11 @@
             <p class="home-soon">Próximamente</p>
           </section>
 
-          <section class="home-entry is-locked" aria-labelledby="h-rank">
+          <section id="home-rank" class="home-entry is-locked" aria-labelledby="h-rank">
             <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
             <p class="home-entry-desc">Las mejores puntuaciones de Arcade.</p>
             <p class="home-soon">Próximamente</p>
+            <button id="rank-open" class="home-btn small" type="button" hidden>Ver rankings</button>
           </section>
         </div>
 
@@ -194,8 +195,43 @@
         </div>
         <div id="over-stats" class="over-stats"></div>
         <div id="over-perks" class="over-perks"></div>
+        <div id="publish" class="publish" hidden>
+          <form id="publish-nick" class="rank-nick" hidden>
+            <div><input id="publish-nick-input" maxlength="16" minlength="3" autocomplete="off" placeholder="Apodo" aria-label="Apodo para el ranking" required /><button class="btn small" type="submit"><span>Crear apodo</span></button></div>
+          </form>
+          <button id="publish-btn" class="btn small" type="button" hidden><span>Publicar puntuación</span></button>
+          <p id="publish-msg" class="rank-msg" role="status"></p>
+        </div>
         <button id="retry-btn" class="btn"><span>Otra partida</span><kbd>Enter</kbd></button>
         <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
+      </div>
+    </div>
+    <!-- ═════════════ Rankings (solo con servidor: VITE_RANKING=1) ═════════════ -->
+    <div id="ranking" class="rank-modal" role="dialog" aria-modal="true" aria-labelledby="rank-title" hidden>
+      <div class="rank-panel">
+        <header>
+          <h2 id="rank-title">Rankings</h2>
+          <button id="ranking-close" class="rank-x" type="button" aria-label="Cerrar">X</button>
+        </header>
+        <div class="rank-tabs" role="group" aria-label="Modo">
+          <button type="button" data-rmode="normal" aria-pressed="true">Partida</button>
+          <button type="button" data-rmode="daily" aria-pressed="false">Diario</button>
+          <button type="button" data-rmode="timed" aria-pressed="false">Contrarreloj</button>
+        </div>
+        <div class="rank-tabs small" role="group" aria-label="Periodo">
+          <button type="button" data-rscope="daily" aria-pressed="true" hidden>Hoy</button>
+          <button type="button" data-rscope="weekly" aria-pressed="true">Semana</button>
+          <button type="button" data-rscope="all" aria-pressed="false">Siempre</button>
+        </div>
+        <ol id="ranking-list" class="rank-list"></ol>
+        <form id="ranking-nick" class="rank-nick" hidden>
+          <label for="ranking-nick-input">Para entrar en la tabla, elige un apodo (3 a 16 caracteres)</label>
+          <div><input id="ranking-nick-input" maxlength="16" minlength="3" autocomplete="off" required /><button class="home-btn small" type="submit">Crear</button></div>
+          <p id="ranking-nick-msg" class="rank-msg" role="status"></p>
+        </form>
+        <p id="ranking-me" class="rank-me" hidden>Juegas como <b id="ranking-me-name"></b>. <button id="ranking-delete" class="rank-link" type="button">Borrar mis datos</button></p>
+        <p class="rank-fine">Se guardan tu apodo, un identificador anónimo y tus partidas publicadas. Nada más.
+          <a id="privacy-link" href="#" target="_blank" rel="noopener" hidden>Privacidad</a></p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

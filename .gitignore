@@ -2,3 +2,6 @@ node_modules
 dist
 *.log
 .claude/
+dist-server
+data
+k8s/config.yaml

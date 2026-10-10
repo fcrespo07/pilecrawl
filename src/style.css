@@ -985,3 +985,53 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
   .home-entry-desc { display: none; }
   .home-entry { padding: 12px 16px 16px; }
 }
+
+/* ═════════════ Ranking en línea ═════════════ */
+[hidden] { display: none !important; }
+.home-btn.small { font-size: 13px; padding: 10px 22px; min-height: 40px; }
+.publish { display: grid; justify-items: center; gap: 8px; min-height: 8px; }
+.rank-msg { margin: 0; min-height: 1.2em; font-size: 17px; color: var(--muted); }
+.rank-nick { display: grid; gap: 6px; justify-items: center; }
+.rank-nick label { font-size: 17px; color: var(--muted); }
+.rank-nick > div { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.rank-nick input, .rank-modal input {
+  font: inherit; font-size: 20px; color: var(--ink); background: var(--panel);
+  border: 4px solid var(--ink); padding: 6px 10px; width: 14em; max-width: 100%; border-radius: 0;
+}
+.rank-nick input:focus-visible { outline: 4px solid var(--hi); outline-offset: 2px; }
+.rank-modal {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
+  background: rgba(5, 6, 15, 0.82); overflow-y: auto;
+}
+.rank-panel {
+  width: min(100%, 560px); background: var(--panel); color: var(--ink);
+  box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); clip-path: var(--chamfer);
+  padding: 22px 22px 26px; display: grid; gap: 12px;
+}
+.rank-panel header { display: flex; justify-content: space-between; align-items: center; }
+.rank-panel h2 { margin: 0; font-family: var(--f-display); font-size: 16px; font-weight: 400; color: var(--hi); }
+.rank-x { font-family: var(--f-display); font-size: 14px; color: var(--ink); background: transparent; border: 4px solid var(--ink); padding: 6px 10px; cursor: pointer; }
+.rank-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.rank-tabs button {
+  flex: 1; font-family: var(--f-display); font-size: 10px; padding: 10px 6px; color: var(--ink);
+  background: transparent; border: 4px solid var(--ink); cursor: pointer;
+}
+.rank-tabs.small button { font-size: 9px; padding: 8px 6px; }
+.rank-tabs button[aria-pressed="true"] { background: var(--hi); color: var(--on-hi, #05060f); border-color: var(--hi); }
+.rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 46vh; overflow-y: auto; font-size: 19px; }
+.rank-list li { display: grid; grid-template-columns: 2.4em 1fr auto 3.6em; gap: 8px; padding: 3px 8px; align-items: baseline; }
+.rank-list li.me { background: var(--panel-hi); color: var(--hi); }
+.rank-list li.gap { border-top: 2px dashed var(--muted); }
+.rank-list .r { color: var(--muted); }
+.rank-list .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-list .s { font-variant-numeric: tabular-nums; }
+.rank-list .l { color: var(--muted); font-size: 16px; }
+.rank-list .rank-empty { display: block; text-align: center; color: var(--muted); padding: 18px 0; }
+.rank-me, .rank-fine { margin: 0; font-size: 16px; color: var(--muted); }
+.rank-link { font: inherit; color: var(--hot); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.rank-fine a { color: var(--ink); }
+
+/* Aviso de consentimiento de anuncios (dentro del hueco de la portada) */
+.ad-consent { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 12px 16px; font-size: 17px; color: var(--muted); max-width: 520px; }
+.ad-consent p { margin: 0; }
+.ad-consent div { display: flex; gap: 10px; }

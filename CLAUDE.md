@@ -14,7 +14,7 @@ Juego de bloques que caen, roguelite, en web. Cada cierto número de líneas se 
 - Desarrollo: `npm run dev` (puerto 5173, `--strictPort`).
 - Arrancar y abrir navegador: `powershell -ExecutionPolicy Bypass -File jugar.ps1`. Ctrl+C para la sesión.
 - Comprobar tipos: `npm run typecheck`.
-- Build de producción: `npm run build` (typecheck + vite build).
+- Build de producción: `npm run build` (typecheck + vite build). Servidor: `npm run server` (compila y arranca; ver `docs/despliegue.md`).
 
 ## Estructura
 
@@ -27,6 +27,10 @@ src/core/perks.ts       definición de perks (ventajas/desventajas), rarezas, ro
 src/core/hypers.ts      hiperperks (habilidades activas: una por partida, se cargan con líneas)
 src/core/modes.ts       modos de juego (partida, desafío diario, contrarreloj) y semilla del diario
 src/records.ts          récords por modo y último modo elegido (localStorage)
+src/net/ranking.ts      cliente del ranking (opcional: VITE_RANKING=1); src/ui/ranking.ts, tabla y publicar
+src/ads/providers.ts    proveedores de anuncios (AdSense) para el hueco de la portada
+server/                 servidor del ranking: Node 22 + SQLite, revalida repeticiones con src/core
+docs/                   despliegue en la Raspberry (k3s) y anuncios; k8s/ y Dockerfile en la raíz
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
 src/fx/renderer.ts      PixiJS: tablero, ghost, partículas, filtros, shake, textos
@@ -51,6 +55,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Basura:** desde el nivel 4 sube una fila cada `garbageInterval()` piezas.
 - **Bombas, taladro y prisma:** se marcan en la cola (`makeSpec`) y se resuelven en `lockPiece`.
 - **Modos:** `MODES` en `modes.ts`. El modo va en `Game.start(seed, mode)` y en la repetición. El diario usa `dailySeed(fecha UTC)`, desbloqueos fijos y una mejora inicial con azar propio; el contrarreloj termina por pasos (`timeLimitMs`), así que la pausa y la elección de carta no gastan tiempo. Un modo nuevo que cambie reglas debe vivir en `game.ts` leyendo `MODES[this.mode]`, no en la UI.
+- **Ranking:** el servidor (`server/app.ts`) solo acepta repeticiones con exactamente las claves de `Replay` (`validate.ts`): cualquier campo nuevo en una repetición, como la marca del modo de pruebas, la hace rechazar. Un cambio de reglas sube `RULES_VERSION`. Las partidas libres usan semilla y desbloqueos del servidor.
 - **Eventos:** el juego emite eventos tipados (`game.events`). Los efectos y la UI escuchan, sin que `game.ts` sepa de Pixi ni del DOM.
 
 ## Decisiones de diseño

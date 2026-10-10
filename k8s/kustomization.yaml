@@ -1,0 +1,7 @@
+# kubectl apply -k k8s/
+resources:
+  - namespace.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml   # quítalo de aquí si usas Cloudflare Tunnel en vez de Traefik
