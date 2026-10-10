@@ -170,7 +170,7 @@ function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
 
   // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
-  if ((e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
+  if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
 
   // globales
   if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }

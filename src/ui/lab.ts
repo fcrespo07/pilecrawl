@@ -41,7 +41,11 @@ export class Lab {
     $('lab').classList.add('visible');
   }
 
-  close() { $('lab').classList.remove('visible'); }
+  close() {
+    $('lab').classList.remove('visible');
+    // el overlay solo se oculta con opacidad: sin esto el foco se queda en el buscador
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
 
   private onClick(el: HTMLElement) {
     const btn = el.closest<HTMLElement>('[data-act]');
