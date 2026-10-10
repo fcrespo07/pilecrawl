@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.12.0 — 2026-10-10
+- **Racha**: un medidor nuevo en el HUD que sube con varias líneas a la vez, combos, giros y jugando rápido, y baja con cada pieza. Mejora las cartas que salen (la pantalla de cartas enseña la probabilidad de cada rareza) y adelanta las hiperperks: ya no se eligen siempre en el nivel 4, sino que desde el 3 pueden salir al subir (más cuanta más racha) y, si no han salido, salen seguro en el 8. Plano, Apagón, Terminal y Neón dejan de ser perks y pierden sus efectos de juego (puntos, cola, fantasma, combos): cada hiperperk pone su piel mientras está activa, y al soltarla el estallido de pantalla sale de su color. Reglas versión 6 (#20).
+
 ## 0.11.0 — 2026-10-10
 - La cola de siguientes vuelve a una columna a la derecha del tablero y la reserva a otra a la izquierda (más cómodo y lo que el jugador espera). Efectos de pantalla con un shader propio: rejilla de monitor suave, aberración cromática con los golpes, pixelado al subir de nivel y pulso de color con la hiperperk. F o el botón «Efectos» del menú de pausa los apaga (se guarda); un equipo lento los apaga solo y avisa. En reposo no hay filtro de pantalla (la rejilla es estática). `Renderer.ultiBurst(color)` queda como gancho para las ultis (#19).
 

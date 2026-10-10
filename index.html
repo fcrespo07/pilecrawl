@@ -65,7 +65,7 @@
             <li><b>Limpia líneas.</b> Tablero de 11×18, rotación con rebotes, reserva y giros.</li>
             <li><b>Sube de nivel.</b> Cada pocas líneas. La basura sube desde el nivel 4.</li>
             <li><b>Elige una mejora.</b> Ventajas con desventajas que cambian las reglas y se combinan.</li>
-            <li><b>Suelta tu hiperperk.</b> Al nivel 4 eliges una habilidad muy fuerte. Se carga con líneas y la activas cuando quieras.</li>
+            <li><b>Mantén la racha.</b> Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.</li>
           </ol>
         </section>
 
@@ -130,6 +130,12 @@
           <div id="hyper-state" class="hy-state"></div>
         </section>
 
+        <section class="panel p-streak" id="streak-box">
+          <header>Racha <span id="streak-num">0</span></header>
+          <div class="hy-bar"><i id="streak-fill"></i></div>
+          <div id="streak-odds" class="st-odds"></div>
+        </section>
+
         <section class="panel p-controls">
           <header>Controles</header>
           <ul class="keys">
@@ -157,6 +163,7 @@
         <div class="stripe-title"><span id="perk-stripe">Subida de nivel</span></div>
         <div class="perk-title">NIVEL <span id="perk-level">02</span></div>
         <div class="perk-sub" id="perk-sub">Elige una mejora</div>
+        <div class="perk-odds" id="perk-odds"></div>
         <div id="cards"></div>
         <div class="perk-actions">
           <button id="reroll" class="btn ghost small"><span>Reroll</span><kbd>R</kbd><b id="reroll-count">1</b></button>

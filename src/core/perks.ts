@@ -1,5 +1,4 @@
 import type { Game } from './game';
-import type { SkinId } from '../fx/skins';
 import { UNLOCK_LEVEL } from './meta';
 
 export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
@@ -58,12 +57,6 @@ export interface Mods {
   collector: number;
   /** al revivir se vacía todo el tablero y la puntuación sube (Fénix) */
   phoenix: boolean;
-  /** piel de la interfaz (solo aspecto); null = la de base (píxel) */
-  skin: SkinId | null;
-  /** sin pieza fantasma (Apagón; solo se deja de dibujar) */
-  noGhost: boolean;
-  /** todas las piezas del mismo color (Terminal; solo aspecto) */
-  monochrome: boolean;
 }
 
 export function baseMods(): Mods {
@@ -107,9 +100,6 @@ export function baseMods(): Mods {
     anchor: false,
     collector: 0,
     phoenix: false,
-    skin: null,
-    noGhost: false,
-    monochrome: false,
   };
 }
 
@@ -224,12 +214,6 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
     apply: (m) => { m.reflexPoints += 60; m.gravitySpeed *= 1.08; },
   },
-  {
-    id: 'blueprint', name: 'Plano', rarity: 'common', max: 1,
-    pros: () => ['<b>+200 ms</b> antes de que la pieza se fije', 'La interfaz pasa a <b>papel de plano</b>'],
-    cons: () => ['<b>−10%</b> a toda la puntuación'],
-    apply: (m) => { m.lockDelay += 200; m.scoreMult *= 0.9; m.skin = 'plano'; },
-  },
   // ───────── Raras ─────────
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
@@ -317,18 +301,6 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.choices = 4; m.linesReduction -= 1; },
   },
-  {
-    id: 'blackout', name: 'Apagón', rarity: 'rare', max: 1,
-    pros: () => ['<b>+25%</b> a toda la puntuación', 'La interfaz pasa a <b>modo noche</b>'],
-    cons: () => ['<b>No ves la pieza fantasma</b>'],
-    apply: (m) => { m.scoreMult *= 1.25; m.noGhost = true; m.skin = 'apagon'; },
-  },
-  {
-    id: 'terminal', name: 'Terminal', rarity: 'rare', max: 1,
-    pros: () => ['Ves <b>+2 piezas</b> en la cola', 'La interfaz pasa a <b>pantalla de fósforo</b>'],
-    cons: () => ['Todas las piezas se ven <b>del mismo color</b>', '<b>−15%</b> a toda la puntuación'],
-    apply: (m) => { m.preview += 2; m.monochrome = true; m.scoreMult *= 0.85; m.skin = 'terminal'; },
-  },
   // ───────── Épicas ─────────
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
@@ -383,12 +355,6 @@ export const PERKS: PerkDef[] = [
     pros: () => ['<b>+6%</b> a toda la puntuación por cada <b>mejora distinta</b> que tengas'],
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.collector += 0.06; m.linesReduction -= 1; },
-  },
-  {
-    id: 'neon', name: 'Neón', rarity: 'epic', max: 1,
-    pros: () => ['Los combos dan <b>el doble</b> de puntos', 'La interfaz pasa a <b>neón</b>'],
-    cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
-    apply: (m) => { m.comboMult *= 2; m.gravitySpeed *= 1.15; m.skin = 'neon'; },
   },
   // ───────── Legendarias ─────────
   {
@@ -511,6 +477,31 @@ function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] 
   return out;
 }
 
+/** Rarezas que pueden salir en una oferta y su peso: por carta (con la suerte) × cartas disponibles. */
+function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean) {
+  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
+  const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
+  let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
+  if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
+  // peso por carta × cartas disponibles: cada rareza sale tan a menudo como cuando se sorteaba carta a carta
+  const weights = rarities.map((r) => rarityWeight(r, luck) * byRarity(r).length);
+  return { rarities, weights, byRarity };
+}
+
+/** Probabilidad de que la oferta sea de cada rareza (lo que se enseña en la pantalla de cartas). */
+export function offerOdds(
+  owned: Map<string, number>,
+  luck: number,
+  bestLevel = Infinity,
+  blessed = false,
+): Record<Rarity, number> {
+  const { rarities, weights } = offerRarities(owned, luck, bestLevel, blessed);
+  const total = weights.reduce((s, w) => s + w, 0);
+  const odds: Record<Rarity, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
+  rarities.forEach((r, i) => (odds[r] = total > 0 ? weights[i] / total : 0));
+  return odds;
+}
+
 /**
  * Oferta de una subida de nivel: primero se sortea una rareza (con sus pesos, la suerte, los
  * desbloqueos y cuántas cartas quedan de ella) y las cartas son todas de esa rareza. Si no quedan bastantes, se completa con
@@ -525,18 +516,13 @@ export function rollOffer(
   /** Tras una oferta maldita la siguiente es rara o mejor (si hay alguna disponible). */
   blessed = false,
 ): PerkDef[] {
-  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
-  const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
-  let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
-  if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
+  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed);
   if (!rarities.length) return [];
-  // peso por carta × cartas disponibles: cada rareza sale tan a menudo como cuando se sorteaba carta a carta
-  const w = (r: Rarity) => rarityWeight(r, luck) * byRarity(r).length;
-  const total = rarities.reduce((s, r) => s + w(r), 0);
+  const total = weights.reduce((s, w) => s + w, 0);
   let x = rand() * total;
   let idx = 0;
   for (; idx < rarities.length - 1; idx++) {
-    x -= w(rarities[idx]);
+    x -= weights[idx];
     if (x <= 0) break;
   }
   const picks = drawUniform(byRarity(rarities[idx]), n, rand);

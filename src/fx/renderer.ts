@@ -353,7 +353,7 @@ export class Renderer {
 
   /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve a la de base). */
   private updateSkin() {
-    const id = this.game.mods.skin ?? 'pixel';
+    const id = this.game.skinNow() ?? 'pixel';
     if (id === this.skinId) return;
     this.skinId = id;
     this.skin = skinOf(id);
@@ -370,11 +370,6 @@ export class Renderer {
    *  Los acentos de nivel (ACCENTS) ya son claros y no pasan por aquí. */
   tone(c: number): number {
     return this.skin.dark ? lerpColor(c, 0xffffff, 0.45) : c;
-  }
-
-  /** Color de una pieza: con Terminal, todas del color de la tinta. */
-  private pieceColor(c: number): number {
-    return this.game.mods.monochrome ? this.skin.ink : c;
   }
 
   private drawBoardBg() {
@@ -713,7 +708,8 @@ export class Renderer {
 
     ev.on('hyper', ({ hyper }) => {
       this.flash(HYPER_COLOR, 0.5);
-      this.ultiBurst(HYPER_COLOR);
+      // el estallido lleva el color de la piel que pone la hiperperk
+      this.ultiBurst((hyper.skin && SKINS[hyper.skin].burst) || HYPER_COLOR);
       this.shake(0.5);
       this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 170, speed: 650 });
       this.floatText(`¡${hyper.name.toUpperCase()}!`, mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });
@@ -914,7 +910,7 @@ export class Renderer {
       for (let x = 0; x < COLS; x++) {
         const v = row[x];
         if (!v) continue;
-        let color = this.pieceColor(colorOfId(cellType(v)));
+        let color = colorOfId(cellType(v));
         if (isGold(v)) color = lerpColor(GOLD_COLOR, 0xffffff, 0.25 + 0.25 * Math.sin(this.time * 4 + x * 0.7 + y * 0.5));
         if (y >= grayRow) color = lerpColor(color, 0x30323c, 0.85);
         this.placeCell(this.cells, this.px(x), this.py(y), CELL, color);
@@ -926,7 +922,7 @@ export class Renderer {
     if (spec.bomb || spec.hyperBomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
     if (spec.prism) return hsv((this.time * 0.6 + i * 0.12) % 1, 0.75, 1);
     if (spec.gold) return lerpColor(GOLD_COLOR, 0xffffff, 0.2 + 0.2 * Math.sin(this.time * 5 + i));
-    return this.pieceColor(spec.def.color);
+    return spec.def.color;
   }
 
   private drawActive(sec: number) {
@@ -948,8 +944,8 @@ export class Renderer {
     }
 
     const shape = a.def.shapes[a.rot];
-    // ghost (Apagón lo esconde)
-    const gy = g.mods.noGhost ? -99 : g.ghostY();
+    // ghost
+    const gy = g.ghostY();
     shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;

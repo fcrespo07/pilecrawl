@@ -106,6 +106,8 @@ describe('ofertas', () => {
       for (let lvl = 0; lvl < 15; lvl++) {
         g['addLevelProgress'](g.linesNeeded());
         g['beginChoice']();
+        // si la racha trae hiperperk, va antes que la oferta y no cuenta como una
+        if (g.choosingHyper) g.choosePerk(0);
         if (g.cursedOffer) {
           cursed++;
           expect(g.offerLevel()).toBeGreaterThanOrEqual(5);

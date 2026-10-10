@@ -1,6 +1,7 @@
 import { Game, STEP_MS } from '../core/game';
 import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
-import { HYPER_LEVEL, type HyperDef } from '../core/hypers';
+import type { HyperDef } from '../core/hypers';
+import { STREAK_MAX } from '../core/streak';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
@@ -14,6 +15,7 @@ const rarityKey = (p: PerkDef) => (p.curse ? 'curse' : p.rarity);
 const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]);
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
+const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
 
 function $(id: string) {
   return document.getElementById(id)!;
@@ -61,6 +63,7 @@ export class UI {
   private segsKey = '';
   private livesKey = -1;
   private hyperKey = '';
+  private streakKey = '';
   private overTimer = 0;
 
   constructor(private game: Game) {
@@ -97,6 +100,7 @@ export class UI {
     this.segsKey = '';
     this.livesKey = -1;
     this.hyperKey = '';
+    this.streakKey = '';
     $('hud').classList.add('visible');
   }
 
@@ -191,19 +195,30 @@ export class UI {
     // oferta maldita: aviso claro en el título y el color de las maldiciones
     const cursed = !hyper && g.cursedOffer;
     $('perks').classList.toggle('cursed', cursed);
-    $('perk-stripe').textContent = cursed ? 'Oferta maldita' : 'Subida de nivel';
+    $('perk-stripe').textContent = hyper ? 'Hiperperk por racha' : cursed ? 'Oferta maldita' : 'Subida de nivel';
     $('perk-sub').textContent = hyper
-      ? 'Elige tu hiperperk: solo una por partida'
+      ? 'Tu racha ha traído una hiperperk: elige una, solo hay una por partida'
       : cursed
         ? 'Todas son malas: elige la menos mala. El reroll saca otras maldiciones; la siguiente oferta será rara o mejor'
         : g.blessedOffer
           ? 'Recompensa por la maldición: rara o mejor'
           : 'Elige una mejora';
+    $('perk-odds').innerHTML = cursed || hyper ? '' : this.oddsHTML();
     // re-dispara la animación del título
     const title = document.querySelector<HTMLElement>('.perk-title')!;
     title.style.animation = 'none';
     void title.offsetWidth;
     title.style.animation = '';
+  }
+
+  /** Racha y probabilidad de cada rareza: es lo que decide el reroll de esta oferta. */
+  private oddsHTML(): string {
+    const g = this.game;
+    const odds = g.offerOdds();
+    const parts = (Object.keys(odds) as Rarity[])
+      .filter((r) => odds[r] > 0)
+      .map((r) => `<span class="odd r-${r}"><i></i>${RARITY_LABEL[r]} <b>${pctTxt(odds[r])}</b></span>`);
+    return `<span class="odd odd-streak">Racha <b>${Math.round(g.streak)}</b></span>${parts.join('')}`;
   }
 
   private stackLabel(cur: number, max: number): string {
@@ -323,7 +338,7 @@ export class UI {
     const state = !h ? 'none' : active ? 'active' : ready ? 'ready' : 'charging';
     const meter = g.hyperMeter();
     const text = !h
-      ? `Se elige al llegar al nivel ${HYPER_LEVEL}`
+      ? 'Sale con la racha'
       : active
         ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s`
         : ready
@@ -341,8 +356,23 @@ export class UI {
     document.querySelector<HTMLElement>('[data-touch="hyper"]')?.classList.toggle('ready', ready);
   }
 
+  /** Medidor de racha: barra y lo que da ahora (rareza rara o mejor e hiperperk). */
+  private updateStreak() {
+    const g = this.game;
+    $('streak-fill').style.transform = `scaleX(${g.streak / STREAK_MAX})`;
+    const odds = g.offerOdds();
+    const better = 1 - odds.common;
+    const hyper = g.hyperOfferChance();
+    const key = `${Math.round(g.streak)}|${pctTxt(better)}|${pctTxt(hyper)}`;
+    if (key === this.streakKey) return;
+    this.streakKey = key;
+    $('streak-num').textContent = String(Math.round(g.streak));
+    $('streak-odds').innerHTML =
+      `<span>Rara+ <b>${pctTxt(better)}</b></span>` + (hyper > 0 ? `<span class="hy">Hiper <b>${pctTxt(hyper)}</b></span>` : '');
+  }
+
   update(dt: number) {
-    const skin = this.game.mods.skin ?? 'pixel';
+    const skin = this.game.skinNow() ?? 'pixel';
     if (document.body.dataset.skin !== skin) document.body.dataset.skin = skin;
     const g = this.game;
 
@@ -389,6 +419,7 @@ export class UI {
     }
 
     this.updateHyper();
+    this.updateStreak();
 
     const key = g.perkOrder.map((id) => `${id}${g.perkStacks(id)}`).join(',');
     if (key !== this.perkKey) {
