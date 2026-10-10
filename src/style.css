@@ -57,8 +57,8 @@
 /* Pieles que ponen algunos perks (src/fx/skins.ts). Cambian los colores y conservan los bloques
    de píxeles; el lienzo de Pixi lee los suyos de SKINS. */
 body[data-skin='apagon'] {
-  --bg: #0c0d13; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
-  --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(12, 13, 19, 0.8); --veil-b: rgba(12, 13, 19, 0.96);
+  --bg: #0a0c20; --panel: #1b1e29; --panel-hi: #232736; --line: #d9d4c4; --text: #d9d4c4; --muted: #9a958a;
+  --ink: #d9d4c4; --paper: #1b1e29; --veil-a: rgba(10, 12, 32, 0.8); --veil-b: rgba(10, 12, 32, 0.96);
   --accent: #e8e2d0; --hi: #e8e2d0; --hi-deep: #9a958a; --hi-light: #ffffff; --on-hi: #0c0d13; --hi2: #b9b4a6; --hot: #ff7a6b;
   --shade: #101219; --raise: #262a38; --raise-hi: #343a4c;
 }
@@ -1036,3 +1036,137 @@ body.tutorial #perk-list .empty { display: none; }
   .coach-m { top: 6px; left: 6px; width: max(150px, calc(50vw - 480px * var(--s, 0.4) - 12px)); max-height: calc(100vh - 12px); overflow: hidden; }
   .coach-m .coach-text { font-size: 15px; }
 }
+
+/* ═════════════ Portada v2: la primera pantalla solo sirve para jugar ═════════════ */
+#home .home-inner { padding-top: 0; gap: 0; }
+.home-first { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 0 16px; text-align: center; }
+.home-first .home-hero { padding: 0; }
+.home-first .home-title { margin: 14px 0 18px; }
+.home-mode-label { margin: 0; font-family: var(--f-display); font-size: 12px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.home-first .mode-select { margin: 0 0 14px; text-align: left; }
+.home-first .home-btn { min-width: 280px; padding: 18px 28px; font-size: 18px; }
+.home-more-hint { margin-top: 18px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; padding: 6px 10px; }
+.home-more-hint span { font-size: 10px; animation: hint-bob 1.2s steps(2) infinite; }
+.home-more-hint:hover, .home-more-hint:focus-visible { color: var(--hi); outline: none; }
+@keyframes hint-bob { 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .home-more-hint span { animation: none; } }
+.home-more { display: grid; gap: 14px; padding: 8px 0 56px; }
+.home-more .home-lead { margin: 0 auto 8px; text-align: center; }
+.home-more .home-menu { margin-bottom: 0; }
+.home-more .ad-slot { margin-bottom: 0; }
+.home-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.home-links:empty { display: none; }
+@media (max-width: 560px) {
+  .home-inner { padding-left: 16px; padding-right: 16px; }
+  .home-first { gap: 8px; padding-top: 16px; }
+  .home-first .home-btn { width: 100%; min-width: 0; }
+  .home-first .home-title { margin: 8px 0 12px; }
+  .home-more-hint { margin-top: 10px; }
+}
+@media (max-height: 500px) {
+  .home-first { min-height: 0; padding: 12px 0; }
+  .home-first .home-title { margin: 2px 0 8px; }
+  .home-first .home-btn { padding: 10px 24px; }
+  .home-more-hint { display: none; }
+}
+
+/* ═════════════ Portada v3: boceto del usuario (paneles a los lados, jugar en el centro) ═════════════ */
+#home .home-inner { width: min(100%, 1120px); }
+.home-stage { width: 100%; display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 520px) minmax(200px, 1fr); gap: 24px; align-items: center; }
+.home-center { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+.home-center .mode-select { grid-template-columns: 1fr; width: 100%; gap: 8px; }
+.home-center .mode-opt { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 10px 14px; gap: 2px 12px; }
+.home-center .mode-opt b { grid-column: 1; }
+.home-center .mode-opt small { grid-column: 2; grid-row: 1; margin: 0; text-align: right; }
+.home-center .mode-opt span { grid-column: 1 / -1; display: none; }
+.home-center .mode-opt:has(input:checked) span { display: block; }
+.home-center .home-btn { width: 100%; min-width: 0; padding: 22px 28px; font-size: 22px; margin-top: 6px; }
+.home-center .ad-slot { margin: 56px auto 0; width: 100%; }
+.home-panel { background: var(--panel); clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); padding: 20px 18px 24px; display: grid; gap: 10px; align-content: start; text-align: left; }
+.home-panel h2 { margin: 0; font-family: var(--f-display); font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--hi); line-height: 1.5; }
+.home-panel h2 i { font-style: normal; color: var(--hi2); }
+.rank-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.rank-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 16px; color: var(--muted); }
+.rank-list b { font-family: var(--f-display); font-weight: 400; font-size: 12px; color: var(--ink); }
+.rank-big { margin: 4px 0; font-family: var(--f-display); font-size: 22px; color: var(--ink); }
+.rank-note { margin: 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
+.home-first .home-hero .home-title { margin: 12px 0 14px; }
+@media (max-width: 900px) {
+  /* móvil y tablet: Jugar primero; los paneles bajan, debajo del botón */
+  .home-stage { grid-template-columns: minmax(0, 520px); justify-content: center; }
+  .home-center { order: 1; }
+  .panel-left { order: 2; }
+  .panel-right { order: 3; }
+  .home-first { justify-content: flex-start; padding-top: 20px; }
+}
+@media (max-width: 560px) {
+  .home-center .home-btn { padding: 16px 20px; font-size: 18px; }
+  .home-panel { padding: 16px 14px 18px; }
+}
+@media (max-width: 900px) and (max-height: 500px) { .home-panel { display: none; } }
+/* ───────────── catálogo y laboratorio ───────────── */
+
+.home-catalog { margin-top: 0; }
+.cat-head { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.cat-head .home-title { margin: 0; font-size: clamp(22px, 5vw, 36px); text-shadow: 4px 4px 0 var(--hot); }
+.cat-body-all { display: grid; gap: 18px; }
+.cat-section h2 small { font-family: var(--f-ui); font-size: 16px; color: var(--muted); margin-left: 6px; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 12px; }
+.cat-item { --c: var(--common); display: flex; gap: 10px; padding: 10px; background: var(--raise); border-left: 4px solid var(--c); align-items: flex-start; }
+.cat-item.r-rare { --c: var(--rare); }
+.cat-item.r-epic { --c: var(--epic); }
+.cat-item.r-legendary { --c: var(--legendary); }
+.cat-item.r-curse { --c: var(--curse); }
+.cat-item.r-hyper { --c: var(--hyper); }
+.cat-item .b-ico { width: 32px; height: 32px; flex: none; color: var(--c); }
+.cat-item .b-ico svg { width: 100%; height: 100%; }
+.cat-item .b-name { font-family: var(--f-display); font-size: 11px; color: var(--ink); margin-bottom: 6px; line-height: 1.4; }
+.cat-item .b-name small { display: block; font-family: var(--f-ui); font-size: 14px; color: var(--c); margin-top: 2px; }
+.cat-item .fx li { font-size: 15px; }
+.cat-lock { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+.lab-badge {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 20;
+  font-family: var(--f-display); font-size: 9px; padding: 5px 10px 4px;
+  background: var(--danger); color: #05060f; pointer-events: none;
+}
+.lab-badge[hidden] { display: none; }
+#lab { z-index: 12; gap: 10px; }
+.lab-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 14px; width: 860px; max-height: 590px; text-align: left; }
+.lab-col { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.lab-col input[type="search"], .lab-col select {
+  font: inherit; font-size: 16px; padding: 7px 10px; background: var(--panel); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 0;
+}
+.lab-list { overflow-y: auto; max-height: 540px; padding-right: 4px; display: grid; gap: 4px; align-content: start; scrollbar-width: thin; }
+.lab-list h3 { margin: 8px 0 2px; font-family: var(--f-display); font-size: 10px; color: var(--muted); font-weight: 400; }
+.lab-list .empty { color: var(--muted); }
+.lab-row { --c: var(--common); display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: var(--panel); border-left: 4px solid var(--c); }
+.lab-row.r-rare { --c: var(--rare); }
+.lab-row.r-epic { --c: var(--epic); }
+.lab-row.r-legendary { --c: var(--legendary); }
+.lab-row.r-curse { --c: var(--curse); }
+.lab-row.on { background: var(--raise); }
+.lab-row .b-ico { width: 24px; height: 24px; flex: none; color: var(--c); }
+.lab-row .b-ico svg { width: 100%; height: 100%; }
+.lab-name { flex: 1; font-size: 17px; color: var(--ink); }
+.lab-name small { margin-left: 8px; font-size: 14px; color: var(--c); }
+.lab-row b, .lab-ctl b { min-width: 38px; text-align: center; font-family: var(--f-display); font-size: 10px; color: var(--ink); }
+.lab-row button, .lab-ctl button {
+  font: inherit; font-size: 18px; width: 30px; height: 28px; padding: 0; cursor: pointer;
+  background: var(--raise); color: var(--ink); border: 2px solid var(--ink); border-radius: 0;
+}
+.lab-row button:disabled, .lab-ctl button:disabled { opacity: 0.3; cursor: default; }
+.lab-row button:not(:disabled):hover, .lab-ctl button:not(:disabled):hover { background: var(--hi); color: var(--on-hi); }
+.lab-controls { gap: 10px; }
+.lab-ctl { display: flex; align-items: center; gap: 8px; }
+.lab-ctl > span { width: 64px; font-size: 18px; color: var(--muted); }
+.lab-ctl input[type="range"] { flex: 1; min-width: 0; }
+.lab-ctl select { flex: 1; min-width: 0; }
+.lab-ctl button#lab-charge { width: auto; padding: 0 10px; font-size: 16px; }
+@media (max-width: 700px) {
+  .cat-grid { grid-template-columns: 1fr; }
+}
+.home-link { font-size: 14px; padding: 12px 20px; }
+.home-center .home-title { font-size: clamp(26px, 7.4vw, 44px); white-space: nowrap; text-shadow: 4px 4px 0 var(--hot), 8px 8px 0 var(--raise); }
+@media (max-width: 900px) { .home-center .ad-slot { margin-top: 48px; } }

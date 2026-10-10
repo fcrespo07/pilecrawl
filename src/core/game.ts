@@ -1,7 +1,7 @@
 import { Emitter } from './emitter';
 import { baseMods, offerOdds, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef, type Rarity } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
-import { rollHypers, type HyperDef, type HyperId } from './hypers';
+import { HYPER_BY_ID, rollHypers, type HyperDef, type HyperId } from './hypers';
 import {
   HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
 } from './streak';
@@ -131,6 +131,8 @@ export interface Replay {
   actions: ReplayAction[];
   /** Pasos simulados al terminar la partida. */
   steps: number;
+  /** Se usó el laboratorio: la partida no se puede reproducir ni cuenta para récords ni rankings. */
+  sandbox?: true;
 }
 
 /**
@@ -207,6 +209,10 @@ export class Game {
   /** La oferta actual es la recompensa de una maldita: rara o mejor. */
   blessedOffer = false;
   pendingLevelUps = 0;
+  /** El laboratorio se ha usado en esta partida: no puntúa en récords ni rankings (ver `lab*`). */
+  sandbox = false;
+  /** Multiplicador de velocidad de caída del laboratorio (1 = normal). */
+  labGravity = 1;
   /** Mejor nivel de partidas anteriores: decide qué rarezas pueden salir. */
   bestLevel = Infinity;
 
@@ -275,6 +281,8 @@ export class Game {
     this.cursedOffer = false;
     this.blessedOffer = false;
     this.pendingLevelUps = 0;
+    this.sandbox = false;
+    this.labGravity = 1;
     this.steps = 0;
     this.actions = [];
     this.soft = false;
@@ -509,6 +517,7 @@ export class Game {
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
+    speed *= this.labGravity;
     t /= speed;
     return Math.max(t, 1);
   }
@@ -562,7 +571,7 @@ export class Game {
   replay(): Replay {
     // Infinity no sobrevive a JSON (sale null): cualquier nivel alto desbloquea lo mismo
     const bestLevel = Math.min(this.bestLevel, 9999);
-    return { version: RULES_VERSION, mode: this.mode, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps };
+    return { version: RULES_VERSION, mode: this.mode, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps, ...(this.sandbox ? { sandbox: true as const } : {}) };
   }
 
   update(dt: number) {
@@ -1216,6 +1225,78 @@ export class Game {
         }
     const points = this.addScore(removed.length * 40 * this.level);
     this.events.emit('wipe', { removed, points });
+  }
+
+  // ─────────────────────────── Laboratorio ───────────────────────────
+  // Herramientas de pruebas (ver `ui/lab.ts`). Cualquier uso marca la partida como `sandbox`:
+  // no guarda récord, no cuenta para rankings y su repetición se rechaza.
+
+  /** Vuelve a calcular `mods` desde cero con los perks que hay (tras quitar uno). */
+  private rebuildMods() {
+    // algunos perks tocan también vidas o rerolls: esos valores los controla el laboratorio
+    const { lives, rerolls } = this;
+    this.mods = baseMods();
+    for (const id of this.perkOrder) for (let i = 0; i < this.perkStacks(id); i++) PERK_BY_ID[id].apply(this.mods, this);
+    this.lives = lives;
+    this.rerolls = rerolls;
+    this.refreshQueueSpecials();
+  }
+
+  private labOpen(): boolean {
+    return this.state !== 'ready' && this.state !== 'over';
+  }
+
+  labAddPerk(id: string) {
+    const perk = PERK_BY_ID[id];
+    if (!perk || this.perkStacks(id) >= perk.max || !this.labOpen()) return;
+    this.sandbox = true;
+    const { lives, rerolls } = this;
+    this.grantPerk(perk);
+    this.lives = lives;
+    this.rerolls = rerolls;
+  }
+
+  labRemovePerk(id: string) {
+    const n = this.perkStacks(id);
+    if (!n || !this.labOpen()) return;
+    this.sandbox = true;
+    if (n > 1) this.perks.set(id, n - 1);
+    else {
+      this.perks.delete(id);
+      this.perkOrder = this.perkOrder.filter((k) => k !== id);
+    }
+    this.rebuildMods();
+  }
+
+  labClearPerks() {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    this.perks.clear();
+    this.perkOrder = [];
+    this.rebuildMods();
+  }
+
+  /** Cambia la hiperperk de la partida (null la quita) y la deja cargada. */
+  labSetHyper(id: HyperId | null) {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    this.hyper = id ? HYPER_BY_ID[id] : null;
+    this.hyperCharge = this.hyper ? this.hyper.charge : 0;
+    this.hyperLeft = 0;
+    this.hyperPending = false;
+  }
+
+  /** Ajusta números de la partida. Los que no se pasan se dejan como están. */
+  labSet(v: { level?: number; lives?: number; rerolls?: number; gravity?: number }) {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    if (v.level !== undefined) {
+      this.level = Math.max(1, Math.min(99, Math.round(v.level)));
+      this.linesIntoLevel = 0;
+    }
+    if (v.lives !== undefined) this.lives = Math.max(0, Math.min(9, Math.round(v.lives)));
+    if (v.rerolls !== undefined) this.rerolls = Math.max(0, Math.min(99, Math.round(v.rerolls)));
+    if (v.gravity !== undefined) this.labGravity = Math.max(0.05, Math.min(10, v.gravity));
   }
 
   togglePause() {

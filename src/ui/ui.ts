@@ -11,8 +11,8 @@ import { loadBest, submitScore } from '../records';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 /** Las maldiciones llevan su propio color y etiqueta en vez de la rareza. */
-const rarityKey = (p: PerkDef) => (p.curse ? 'curse' : p.rarity);
-const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]);
+export const rarityKey = (p: PerkDef) => (p.curse ? 'curse' : p.rarity);
+export const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]);
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
@@ -34,7 +34,7 @@ export function effectsHTML(p: Pick<PerkDef, 'pros' | 'cons'>, stacks: number): 
 }
 
 /** Lo que cuesta cargar una hiperperk y cuánto dura. */
-function hyperFoot(h: HyperDef): string {
+export function hyperFoot(h: HyperDef): string {
   const dur = h.durationMs ? `dura ${h.durationMs / 1000} s` : 'al instante';
   return `${h.charge} líneas · ${dur}`;
 }
@@ -138,7 +138,8 @@ export class UI {
 
   showGameOver() {
     const g = this.game;
-    const isBest = submitScore(g.mode, this.date, g.score);
+    // el laboratorio falsea la partida: ni récord ni ranking
+    const isBest = !g.sandbox && submitScore(g.mode, this.date, g.score);
     const best = loadBest(g.mode, this.date);
     const timeUp = g.endReason === 'time';
     $('over-mode').textContent = this.modeTitle();
@@ -147,7 +148,7 @@ export class UI {
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
     const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';
-    $('over-best').textContent = isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
+    $('over-best').textContent = g.sandbox ? 'Laboratorio: no puntúa' : isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
     $('over-best').classList.toggle('record', isBest);
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
     // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
@@ -383,6 +384,9 @@ export class UI {
         this.show('perks');
       }
     }
+
+    const badge = $('lab-badge');
+    if (badge.hidden === g.sandbox) badge.hidden = !g.sandbox;
 
     const diff = g.score - this.shownScore;
     this.shownScore += diff * (1 - Math.exp(-dt / 90));

@@ -23,7 +23,8 @@ export interface Skin {
 
 export const SKINS: Record<SkinId, Skin> = {
   pixel: { bg0: 0x1d2142, bg1: 0x11132a, ink: 0xf4f0e6, paper: 0x11132a, panel: 0x14172f, dark: true, stars: true },
-  apagon: { bg0: 0x14161f, bg1: 0x0c0d13, ink: 0xd9d4c4, paper: 0x14161f, panel: 0x1b1e29, dark: true, burst: 0xffb13d },
+  // modo noche: mismo cielo de estrellas y colinas que la base, pero más oscuro
+  apagon: { bg0: 0x161a3d, bg1: 0x0a0c20, ink: 0xd9d4c4, paper: 0x0e1128, panel: 0x1b1e29, dark: true, stars: true, burst: 0xffb13d },
   terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true, burst: 0x6dff8e },
   neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true, burst: 0xff4dd2 },
   // panel muy oscuro: las piezas azules tienen que destacar sobre el plano

@@ -9,15 +9,19 @@ import { dailySeed, utcDate } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
+import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
 import { Tutorial } from './ui/tutorial';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
+import { renderCatalog } from './ui/catalog';
+import { Lab, LAB_ENABLED } from './ui/lab';
 
 const game = new Game();
 const renderer = new Renderer(game);
 const input = new Input(game);
 const ui = new UI(game);
+const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
 // sin proveedor de anuncios por ahora: el hueco queda plegado
@@ -33,6 +37,12 @@ const tutorial = new Tutorial(game, {
   },
   onDone: saveTutorialDone,
 });
+const panelLeft = document.getElementById('panel-left')!;
+const panelRight = document.getElementById('panel-right')!;
+const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
+refreshPanels();
+// la cuenta atrás y el número del diario cambian con la portada abierta
+window.setInterval(refreshPanels, 30_000);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
@@ -86,8 +96,8 @@ function wireAudioAndFeel() {
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
-    // el tutorial no cuenta para desbloquear rarezas
-    if (game.mode !== 'tutorial') recordBestLevel(level);
+    // el tutorial y el laboratorio no cuentan para desbloquear rarezas
+    if (game.mode !== 'tutorial' && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
@@ -95,6 +105,7 @@ function wireAudioAndFeel() {
     audio.gameOver();
     if (game.mode !== 'tutorial') ui.showGameOver();
     modeSelect.refresh();
+    refreshPanels();
   });
 }
 
@@ -125,6 +136,14 @@ function wireTouch() {
 
 const home = document.getElementById('home')!;
 const TUTORIAL_SEED = 0x7a11;
+const catalog = document.getElementById('catalog')!;
+
+function showCatalog(on: boolean) {
+  catalog.classList.toggle('hidden', !on);
+  home.classList.toggle('hidden', on);
+  (on ? catalog : home).scrollTop = 0;
+  (on ? catalog : home).focus({ preventScroll: true });
+}
 
 function showHome(show: boolean) {
   home.classList.toggle('hidden', !show);
@@ -140,12 +159,14 @@ function showHome(show: boolean) {
     document.body.dataset.skin = 'pixel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
+    refreshPanels();
     home.scrollTop = 0;
     home.focus({ preventScroll: true });
   } else renderer.app.ticker.start();
 }
 
 function startRun(forced?: 'tutorial') {
+  lab.close();
   tutorial.stop();
   showHome(false);
   audio.init();
@@ -180,6 +201,9 @@ function setEffects(on: boolean, save = true) {
 function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
 
+  // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
+  if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
+
   // globales
   if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }
   if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); return; }
@@ -189,6 +213,11 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if (st === 'ready' || st === 'over') {
+    // en el catálogo no se arranca partida: Esc vuelve a la portada
+    if (!catalog.classList.contains('hidden')) {
+      if (e.code === 'Escape') showCatalog(false);
+      return;
+    }
     // con la portada visible, Espacio desplaza la página: solo Enter arranca
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
@@ -200,6 +229,7 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) {
+    if (lab.isOpen) { lab.close(); return; }
     if (st === 'playing' || st === 'paused') {
       game.togglePause();
       input.releaseAll();
@@ -249,8 +279,17 @@ async function boot() {
       ui.setPaused(true);
     }
   });
+  renderCatalog(catalog);
+  document.getElementById('catalog-open')!.addEventListener('click', () => showCatalog(true));
+  document.getElementById('catalog-back')!.addEventListener('click', () => showCatalog(false));
+  const labBtn = document.getElementById('lab-open')!;
+  labBtn.hidden = !LAB_ENABLED;
+  labBtn.addEventListener('click', () => lab.open());
   document.getElementById('home-play')!.addEventListener('click', () => startRun());
   document.getElementById('home-tutorial')!.addEventListener('click', () => startRun('tutorial'));
+  document.getElementById('home-more-link')!.addEventListener('click', () => {
+    document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', () => startRun());
 
