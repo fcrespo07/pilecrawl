@@ -30,6 +30,7 @@ src/records.ts          récords por modo y último modo elegido (localStorage)
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
 src/fx/renderer.ts      PixiJS: tablero, ghost, partículas, filtros, shake, textos
+src/fx/postfx.ts        shader de pantalla (rejilla, aberración, pixelado, tinte)
 src/fx/particles.ts     sistema de partículas con pool
 src/fx/audio.ts         efectos y música procedural
 src/fx/layout.ts        coordenadas lógicas (960×720) y paleta de acentos
@@ -56,9 +57,9 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - Los perks cambian reglas, no solo suman números. Cada mejora buena tiene su contrapartida.
 - Sin emojis en la interfaz. Los iconos son SVG propios.
 - Estilo visual «Píxel» (elegido por el usuario entre seis propuestas, 2026-10-09): consola de 16 bits, cielo nocturno con colinas, bloques de 8×8, bordes de 4 px con esquinas de píxel. Fuentes Press Start 2P (títulos, números y lienzo) y VT323 (texto, con `font-size-adjust`). Los estilos están en `style.css`: base y, al final, la capa «Estilo píxel». Sustituye a «papel y tinta».
-- Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva y cola en una barra horizontal encima del tablero (`QUEUE_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
+- Aspecto propio frente a Tetris (caso Xio): tablero 11×18, fantasma rayado con esquinas, y reserva (izquierda) y cola (columna a la derecha, como espera el jugador) junto al tablero (`HOLD_*`, `NEXT_*` en `layout.ts`). Las formas de las siete piezas se mantienen.
 - Rareza: común, rara, épica, legendaria. Los pesos están en `RARITY_WEIGHT`. El perk Trébol sube las probabilidades de las demás.
-- Las ondas de choque (distorsión de pantalla) se pueden desactivar con F. El estado queda en la sesión, no se guarda.
+- Efectos de pantalla (ondas de choque + `postfx.ts`: rejilla, aberración, pixelado, tinte): sutiles y ligados a eventos. Se apagan con F o con «efectos» en los controles; se guarda en `blockrogue.fx`. `prefers-reduced-motion` los reduce y un equipo lento (>34 ms/fotograma durante 3 s) los apaga solo. `Renderer.ultiBurst(color)` es el gancho para las ultis.
 - Récord en `localStorage` (`blockrogue.best`). Se envuelve en try/catch.
 - Nombre: Block Rogue (antes Tetrogue y Derrumbe). `src/storage.ts` migra las claves `tetrogue.*` y `derrumbe.*` a `blockrogue.*`.
 
