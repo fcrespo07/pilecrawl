@@ -9,6 +9,7 @@ import { dailySeed, utcDate } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, saveLastMode } from './records';
 import { ModeSelect } from './ui/modeSelect';
+import { mountAd } from './ui/adSlot';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
 
@@ -18,6 +19,8 @@ const input = new Input(game);
 const ui = new UI(game);
 
 const stage = document.getElementById('stage')!;
+// sin proveedor de anuncios por ahora: el hueco queda plegado
+mountAd(document.getElementById('ad-slot')!, null);
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 

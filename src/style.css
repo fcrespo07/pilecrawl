@@ -752,9 +752,7 @@ kbd {
 }
 .home-btn kbd { color: var(--paper); background: transparent; border-color: currentColor; }
 .home-note { margin: 12px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
-.home-ranking { border-style: dashed; text-align: center; }
 .home-soon { margin: 0; font-family: var(--f-display); font-size: 20px; color: var(--accent); }
-.home-ranking .home-note { margin-top: 6px; }
 .home-foot { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
 @media (max-width: 520px) {
   .home-inner { padding: 24px 16px 40px; }
@@ -929,7 +927,6 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .home-lead { font-size: 18px; }
 .home-card, .mode-opt { background: var(--panel); border: 0; clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); }
 .home-card h2 { font-size: 13px; letter-spacing: 0; color: var(--hi); }
-.home-ranking { border-style: none; }
 .mode-opt b { font-size: 11px; font-weight: 400; line-height: 1.6; }
 .mode-opt span { font-size: 14px; }
 .mode-opt:hover { transform: none; box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); }
@@ -939,4 +936,37 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .mode-opt:has(input:checked) span, .mode-opt:has(input:checked) small { color: var(--muted); }
 .home kbd { border-radius: 0; background: var(--raise); color: var(--ink); border: 2px solid var(--ink); font-family: var(--f-ui); }
 .home-btn kbd { background: transparent; color: var(--on-hi); border-color: var(--on-hi); }
-.home-soon { font-size: 14px; color: var(--hot); }
+.home-soon { font-size: 14px; color: var(--hi2); }
+
+/* ═════════════ Portada: menú principal (Arcade, Historia, Rankings) ═════════════ */
+.home-inner { width: min(100%, 760px); }
+.home-title { margin-bottom: 18px; }
+.home-lead { margin-bottom: 22px; }
+.home-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.home-entry { background: var(--panel); clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); padding: 22px 22px 26px; display: grid; align-content: start; gap: 8px; }
+.home-entry h2 { margin: 0; font-family: var(--f-display); font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--hi); display: flex; align-items: center; gap: 10px; }
+.home-entry-desc { margin: 0; font-size: 17px; color: var(--muted); }
+.home-arcade { grid-column: 1 / -1; box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); justify-items: center; text-align: center; }
+.home-arcade h2 { font-size: 20px; }
+.home-arcade .mode-select { margin: 10px 0 14px; text-align: left; }
+.home-entry.is-locked { opacity: 0.7; box-shadow: inset 0 0 0 4px var(--ink), inset 0 -8px 0 var(--shade); }
+.home-entry.is-locked h2 { color: var(--muted); }
+.home-entry .home-soon { margin-top: 6px; }
+.lock-ico { width: 20px; height: 20px; flex: none; shape-rendering: crispEdges; }
+.ad-slot { display: grid; place-items: center; margin: 0 auto 14px; max-width: 100%; overflow: hidden; }
+.ad-slot[data-state="empty"] { display: none; }
+@media (max-width: 560px) {
+  .home-menu { grid-template-columns: 1fr; }
+  .home-entry { padding: 18px 16px 22px; }
+  /* móvil: Jugar debe verse sin desplazar; solo el modo elegido enseña su descripción */
+  .home-hero { padding-top: 0; }
+  .home-title { margin: 8px 0 12px; }
+  .home-lead { display: none; }
+  .home-arcade .home-entry-desc { display: none; }
+  .home-arcade .mode-select { margin: 6px 0 10px; gap: 8px; }
+  .mode-opt:not(:has(input:checked)) span { display: none; }
+}
+@media (max-height: 500px) {
+  .home-entry-desc { display: none; }
+  .home-entry { padding: 12px 16px 16px; }
+}
