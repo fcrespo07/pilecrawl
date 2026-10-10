@@ -985,3 +985,36 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
   .home-entry-desc { display: none; }
   .home-entry { padding: 12px 16px 16px; }
 }
+
+/* ═════════════ Portada v2: la primera pantalla solo sirve para jugar ═════════════ */
+.home-inner { padding-top: 0; gap: 0; }
+.home-first { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px 0 16px; text-align: center; }
+.home-first .home-hero { padding: 0; }
+.home-first .home-title { margin: 14px 0 18px; }
+.home-mode-label { margin: 0; font-family: var(--f-display); font-size: 12px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.home-first .mode-select { margin: 0 0 14px; text-align: left; }
+.home-first .home-btn { min-width: 280px; padding: 18px 28px; font-size: 18px; }
+.home-more-hint { margin-top: 18px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; padding: 6px 10px; }
+.home-more-hint span { font-size: 10px; animation: hint-bob 1.2s steps(2) infinite; }
+.home-more-hint:hover, .home-more-hint:focus-visible { color: var(--hi); outline: none; }
+@keyframes hint-bob { 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .home-more-hint span { animation: none; } }
+.home-more { display: grid; gap: 14px; padding: 8px 0 56px; }
+.home-more .home-lead { margin: 0 auto 8px; text-align: center; }
+.home-more .home-menu { margin-bottom: 0; }
+.home-more .ad-slot { margin-bottom: 0; }
+.home-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.home-links:empty { display: none; }
+@media (max-width: 560px) {
+  .home-inner { padding-left: 16px; padding-right: 16px; }
+  .home-first { gap: 8px; padding-top: 16px; }
+  .home-first .home-btn { width: 100%; min-width: 0; }
+  .home-first .home-title { margin: 8px 0 12px; }
+  .home-more-hint { margin-top: 10px; }
+}
+@media (max-height: 500px) {
+  .home-first { min-height: 0; padding: 12px 0; }
+  .home-first .home-title { margin: 2px 0 8px; }
+  .home-first .home-btn { padding: 10px 24px; }
+  .home-more-hint { display: none; }
+}

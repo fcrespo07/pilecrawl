@@ -226,6 +226,9 @@ async function boot() {
     }
   });
   document.getElementById('home-play')!.addEventListener('click', startRun);
+  document.getElementById('home-more-link')!.addEventListener('click', () => {
+    document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', startRun);
 
