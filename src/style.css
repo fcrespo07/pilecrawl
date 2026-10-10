@@ -961,6 +961,13 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 @media (max-width: 560px) {
   .home-menu { grid-template-columns: 1fr; }
   .home-entry { padding: 18px 16px 22px; }
+  /* móvil: Jugar debe verse sin desplazar; solo el modo elegido enseña su descripción */
+  .home-hero { padding-top: 0; }
+  .home-title { margin: 8px 0 12px; }
+  .home-lead { display: none; }
+  .home-arcade .home-entry-desc { display: none; }
+  .home-arcade .mode-select { margin: 6px 0 10px; gap: 8px; }
+  .mode-opt:not(:has(input:checked)) span { display: none; }
 }
 @media (max-height: 500px) {
   .home-entry-desc { display: none; }
