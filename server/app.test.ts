@@ -188,6 +188,17 @@ describe('moderación', () => {
   });
 });
 
+describe('modos sin ranking', () => {
+  it('rechaza modos que no son de arcade', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    expect((await call('POST', '/api/runs/start', { mode: 'tutorial' }, token)).status).toBe(400);
+    expect((await call('GET', '/api/leaderboard?mode=tutorial')).status).toBe(400);
+    const g = playHuman(777, 400_000, 'normal', 0);
+    expect((await call('POST', '/api/runs', { runId: 'x', replay: { ...g.replay(), mode: 'tutorial' } }, token)).status).toBe(422);
+  });
+});
+
 describe('utilidades', () => {
   it('la semana empieza el lunes', () => {
     expect(weekStart('2026-10-14')).toBe('2026-10-12');

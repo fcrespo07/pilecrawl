@@ -3,10 +3,10 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { RULES_VERSION } from '../src/core/game';
-import { dailyNumber, dailySeed, isModeId, MODES, utcDate, type ModeId } from '../src/core/modes';
+import { dailyNumber, dailySeed, MODES, utcDate, type ModeId } from '../src/core/modes';
 import type { Config } from './config';
 import { RateLimiter } from './ratelimit';
-import { verifyReplay } from './validate';
+import { isRankedMode, RANKED_MODES, verifyReplay } from './validate';
 
 const DAY = 86_400_000;
 /** Una partida iniciada vale 6 horas. */
@@ -175,7 +175,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     }
 
     if (method === 'GET' && path === '/api/config') {
-      return json({ rulesVersion: RULES_VERSION, today, dailyNumber: dailyNumber(today), modes: Object.keys(MODES) });
+      return json({ rulesVersion: RULES_VERSION, today, dailyNumber: dailyNumber(today), modes: RANKED_MODES });
     }
 
     if (method === 'POST' && path === '/api/players') {
@@ -206,7 +206,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       if (!startLimit.allow(`s:${me.id}`, now)) throw new ApiError(429, 'demasiadas partidas seguidas');
       const body = await readJson(req);
       const mode = body.mode;
-      if (!isModeId(mode)) throw new ApiError(400, 'modo no válido');
+      if (!isRankedMode(mode)) throw new ApiError(400, 'modo no válido');
       if (mode === 'daily') throw new ApiError(400, 'el desafío diario usa la semilla del día');
       q.oldStarts.run(now - START_TTL);
       const id = randomBytes(12).toString('hex');
@@ -274,7 +274,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
 
     if (method === 'GET' && path === '/api/leaderboard') {
       const mode = url.searchParams.get('mode') ?? 'normal';
-      if (!isModeId(mode)) throw new ApiError(400, 'modo no válido');
+      if (!isRankedMode(mode)) throw new ApiError(400, 'modo no válido');
       const kind = url.searchParams.get('scope') ?? (mode === 'daily' ? 'daily' : 'weekly');
       const dateParam = url.searchParams.get('date') ?? today;
       if (!isDate(dateParam)) throw new ApiError(400, 'fecha no válida');
