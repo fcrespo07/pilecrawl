@@ -238,10 +238,6 @@ kbd {
 .keys { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .keys li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
 .keys li span { min-width: 56px; }
-.p-controls { pointer-events: auto; }
-.fx-toggle { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; }
-.fx-toggle:hover { color: var(--text); }
-.fx-toggle[aria-pressed='false'] { text-decoration: line-through; opacity: 0.6; }
 .keys.toggles { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
 
 /* hiperperk: nombre, barra de carga (o de tiempo, activa) y estado */

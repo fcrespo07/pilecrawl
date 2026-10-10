@@ -146,6 +146,7 @@ function setEffects(on: boolean, save = true) {
   renderer.highQuality = on;
   renderer.applyQuality();
   fxToggle.setAttribute('aria-pressed', String(on));
+  fxToggle.querySelector('span')!.textContent = on ? 'Efectos: sí' : 'Efectos: no';
   if (!save) return;
   try { localStorage.setItem('blockrogue.fx', on ? '1' : '0'); } catch { /* sin almacenamiento */ }
 }

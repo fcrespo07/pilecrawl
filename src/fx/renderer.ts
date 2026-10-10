@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
@@ -237,6 +237,8 @@ export class Renderer {
 
   private stars: { s: Sprite; speed: number }[] = [];
   private blobs: { s: Sprite; ph: number; sp: number }[] = [];
+  private scanlines = new Graphics();
+  private filterSig = -1;
   private vignette!: Sprite;
   private screenFlash!: Sprite;
 
@@ -320,7 +322,10 @@ export class Renderer {
     this.screenFlash.height = H;
     this.screenFlash.alpha = 0;
     this.screenFlash.blendMode = 'normal';
-    this.overlay.addChild(this.vignette, this.screenFlash);
+    // rejilla de monitor: líneas estáticas (un Graphics, sin filtro) cada 3 px lógicos
+    for (let y = 2; y < H; y += 3) this.scanlines.rect(0, y, W, 1);
+    this.scanlines.fill({ color: 0x000000, alpha: 0.07 });
+    this.overlay.addChild(this.scanlines, this.vignette, this.screenFlash);
 
     this.drawBoardBg();
     this.setupFilters();
@@ -397,8 +402,22 @@ export class Renderer {
 
   applyQuality() {
     // Todo lo que pasa por filtros de pantalla cuelga de esta opción.
-    this.root.filters = this.highQuality ? [...this.shocks.map((s) => s.f), this.post.filter] : [];
     if (!this.highQuality) this.post.clear();
+    this.scanlines.visible = this.highQuality;
+    this.syncFilters(true);
+  }
+
+  /** Los filtros de pantalla solo están en la cadena mientras hay un efecto vivo: en reposo, coste cero. */
+  private syncFilters(force = false) {
+    const on = this.highQuality;
+    const post = on && this.post.active;
+    const sig = (post ? 1 : 0) + this.shocks.reduce((n, s, i) => n + (on && s.f.enabled ? 2 << i : 0), 0);
+    if (!force && sig === this.filterSig) return;
+    this.filterSig = sig;
+    const chain: Filter[] = [];
+    if (on) for (const s of this.shocks) if (s.f.enabled) chain.push(s.f);
+    if (post) chain.push(this.post.filter);
+    this.root.filters = chain;
   }
 
   // ───────────── coordenadas ─────────────
@@ -750,6 +769,7 @@ export class Renderer {
     this.updateFx(sec);
     this.updateFilters(sec);
     this.updatePost(sec, dt);
+    this.syncFilters();
     this.particles.update(dt);
     this.updateTexts(sec);
     this.updateCamera(sec);
@@ -824,7 +844,7 @@ export class Renderer {
     p.poly([ax + 8, ay - 6, ax, ay, ax + 8, ay + 6]).fill({ color: this.accent, alpha: 1 });
 
     if (!this.labels.length) {
-      for (const txt of ['RESERVA', 'SIGUIENTE']) {
+      for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
           style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 9, fill: 0xffffff, letterSpacing: 0 },
@@ -1040,6 +1060,7 @@ export class Renderer {
       this.slowT = 0;
       this.highQuality = false;
       this.applyQuality();
+      this.floatText('EFECTOS APAGADOS: EL EQUIPO VA LENTO', BOARD_X + BOARD_W / 2, BOARD_Y + 60, { size: 16, life: 3 });
       this.onAutoOff?.();
     }
   }

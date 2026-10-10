@@ -1,5 +1,5 @@
 // Pasada final de pantalla: un solo shader que sirve a varios efectos, para no apilar filtros.
-//  - rejilla de monitor (líneas finas y un punto de sangrado de color), fija y muy suave
+//  - (la rejilla de monitor fija ya no va aquí: es un Graphics estático del renderer, para que en reposo no haya pasada de pantalla)
 //  - aberración cromática: se abre con las sacudidas y los golpes grandes
 //  - pixelado: un estallido que se cierra solo (subida de nivel, ulti)
 //  - tinte: un pulso de color de pantalla completa (hiperperk activa, ultis)
@@ -55,8 +55,8 @@ export class PostFx {
   private u: { uParams: Float32Array; uTint: Float32Array };
   private group: UniformGroup;
 
-  /** Intensidad de la rejilla fija (0 = apagada). */
-  scan = 0.07;
+  /** True mientras algún efecto de evento sigue vivo: solo entonces el filtro entra en la cadena. */
+  active = false;
 
   private ab = 0;
   private pix = 0;
@@ -97,7 +97,7 @@ export class PostFx {
     this.tint = Math.min(1, Math.max(this.tint, k));
   }
 
-  clear() { this.ab = this.pix = this.tint = 0; }
+  clear() { this.ab = this.pix = this.tint = 0; this.active = false; }
 
   update(sec: number, motion: boolean, hyperGlow: number, hyperColor: number) {
     this.ab *= Math.exp(-sec * 5);
@@ -113,10 +113,11 @@ export class PostFx {
       col = [((hyperColor >> 16) & 255) / 255, ((hyperColor >> 8) & 255) / 255, (hyperColor & 255) / 255];
     }
     const p = this.u.uParams;
-    p[0] = this.scan;
+    p[0] = 0;
     p[1] = motion ? this.ab * 0.006 : 0;
     p[2] = motion ? Math.round(this.pix) : 0;
     p[3] = tint * (motion ? 1 : 0.5);
+    this.active = this.ab > 0.01 || this.pix > 0 || tint > 0.01;
     this.u.uTint.set(col);
     this.group.update();
   }
