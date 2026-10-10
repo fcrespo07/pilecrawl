@@ -96,8 +96,8 @@ describe('bot de equilibrio', () => {
   // perdidas antes del tope. Con 30 partidas el ruido de las cartas al azar llenaba la banda entera
   // (una tanda de 150 daba 69 y 38 perdidas donde las 30 primeras daban 10 y 10), así que se juegan 60.
   // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13; con las hiperperks (el bot las suelta en
-  // cuanto se cargan), 15 y 12. Con la racha (mejores cartas y la hiperperk por suerte, no fija en el nivel 4),
-  // 17 y 11: la racha da más cartas raras, y Segunda vida es rara. La banda baja a 17-47% para ese cambio buscado.
+  // cuanto se cargan), 15 y 12. Con la racha (mejores cartas y la hiperperk por suerte desde el nivel 3,
+  // con la segura en el nivel 8), 17 y 11: la racha da más cartas raras, y Segunda vida es rara. La banda baja a 17-47% para ese cambio buscado.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));

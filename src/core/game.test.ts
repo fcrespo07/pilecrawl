@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
-import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
+import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { PERK_BY_ID } from './perks';
 import type { PieceSpec } from './game';
@@ -458,6 +458,16 @@ describe('hiperperks', () => {
     expect(g.hyperOfferChance()).toBeCloseTo(HYPER_CHANCE_BASE);
     g.streak = STREAK_MAX;
     expect(g.hyperOfferChance()).toBeCloseTo(HYPER_CHANCE_FULL);
+  });
+
+  it('si no ha salido, al nivel seguro sale aunque la tirada falle', () => {
+    const g = playing();
+    g['hyperRng'] = () => 0.999;
+    g.level = HYPER_SURE_LEVEL - 1;
+    expect(g.hyperOfferChance()).toBe(1);
+    g.linesIntoLevel = g.linesNeeded() - 1;
+    clearBottomLineWithI(g);
+    expect(g.choosingHyper).toBe(true);
   });
 
   it('solo se ofrece una vez por partida', () => {

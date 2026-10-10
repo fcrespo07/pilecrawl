@@ -992,7 +992,7 @@ export class Game {
       this.level++;
       this.pendingLevelUps++;
       // la hiperperk no está garantizada: cada subida tiene una probabilidad que sube con la racha
-      if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak)) {
+      if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak, this.level)) {
         this.hyperPending = true;
       }
       if (this.mods.interest > 0) {
@@ -1063,7 +1063,7 @@ export class Game {
   /** Probabilidad de que la próxima subida traiga hiperperk (0 si ya la tienes o aún no toca). */
   hyperOfferChance(): number {
     if (this.hyper || this.hyperPending || this.level + 1 < HYPER_FROM_LEVEL) return 0;
-    return hyperChance(this.streak);
+    return hyperChance(this.streak, this.level + 1);
   }
 
   private addStreak(n: number) {
