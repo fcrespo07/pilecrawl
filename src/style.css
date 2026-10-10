@@ -985,3 +985,67 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
   .home-entry-desc { display: none; }
   .home-entry { padding: 12px 16px 16px; }
 }
+
+/* ───────────── catálogo y laboratorio ───────────── */
+
+.home-catalog { margin-top: 0; }
+.cat-head { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.cat-head .home-title { margin: 0; font-size: clamp(22px, 5vw, 36px); text-shadow: 4px 4px 0 var(--hot); }
+.cat-body-all { display: grid; gap: 18px; }
+.cat-section h2 small { font-family: var(--f-ui); font-size: 16px; color: var(--muted); margin-left: 6px; }
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 12px; }
+.cat-item { --c: var(--common); display: flex; gap: 10px; padding: 10px; background: var(--raise); border-left: 4px solid var(--c); align-items: flex-start; }
+.cat-item.r-rare { --c: var(--rare); }
+.cat-item.r-epic { --c: var(--epic); }
+.cat-item.r-legendary { --c: var(--legendary); }
+.cat-item.r-curse { --c: var(--curse); }
+.cat-item.r-hyper { --c: var(--hyper); }
+.cat-item .b-ico { width: 32px; height: 32px; flex: none; color: var(--c); }
+.cat-item .b-ico svg { width: 100%; height: 100%; }
+.cat-item .b-name { font-family: var(--f-display); font-size: 11px; color: var(--ink); margin-bottom: 6px; line-height: 1.4; }
+.cat-item .b-name small { display: block; font-family: var(--f-ui); font-size: 14px; color: var(--c); margin-top: 2px; }
+.cat-item .fx li { font-size: 15px; }
+.cat-lock { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+.lab-badge {
+  position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 20;
+  font-family: var(--f-display); font-size: 9px; padding: 5px 10px 4px;
+  background: var(--danger); color: #05060f; pointer-events: none;
+}
+.lab-badge[hidden] { display: none; }
+#lab { z-index: 12; gap: 10px; }
+.lab-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 14px; width: 860px; max-height: 590px; text-align: left; }
+.lab-col { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.lab-col input[type="search"], .lab-col select {
+  font: inherit; font-size: 16px; padding: 7px 10px; background: var(--panel); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 0;
+}
+.lab-list { overflow-y: auto; max-height: 540px; padding-right: 4px; display: grid; gap: 4px; align-content: start; scrollbar-width: thin; }
+.lab-list h3 { margin: 8px 0 2px; font-family: var(--f-display); font-size: 10px; color: var(--muted); font-weight: 400; }
+.lab-list .empty { color: var(--muted); }
+.lab-row { --c: var(--common); display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: var(--panel); border-left: 4px solid var(--c); }
+.lab-row.r-rare { --c: var(--rare); }
+.lab-row.r-epic { --c: var(--epic); }
+.lab-row.r-legendary { --c: var(--legendary); }
+.lab-row.r-curse { --c: var(--curse); }
+.lab-row.on { background: var(--raise); }
+.lab-row .b-ico { width: 24px; height: 24px; flex: none; color: var(--c); }
+.lab-row .b-ico svg { width: 100%; height: 100%; }
+.lab-name { flex: 1; font-size: 17px; color: var(--ink); }
+.lab-name small { margin-left: 8px; font-size: 14px; color: var(--c); }
+.lab-row b, .lab-ctl b { min-width: 38px; text-align: center; font-family: var(--f-display); font-size: 10px; color: var(--ink); }
+.lab-row button, .lab-ctl button {
+  font: inherit; font-size: 18px; width: 30px; height: 28px; padding: 0; cursor: pointer;
+  background: var(--raise); color: var(--ink); border: 2px solid var(--ink); border-radius: 0;
+}
+.lab-row button:disabled, .lab-ctl button:disabled { opacity: 0.3; cursor: default; }
+.lab-row button:not(:disabled):hover, .lab-ctl button:not(:disabled):hover { background: var(--hi); color: var(--on-hi); }
+.lab-controls { gap: 10px; }
+.lab-ctl { display: flex; align-items: center; gap: 8px; }
+.lab-ctl > span { width: 64px; font-size: 18px; color: var(--muted); }
+.lab-ctl input[type="range"] { flex: 1; min-width: 0; }
+.lab-ctl select { flex: 1; min-width: 0; }
+.lab-ctl button#lab-charge { width: auto; padding: 0 10px; font-size: 16px; }
+@media (max-width: 700px) {
+  .cat-grid { grid-template-columns: 1fr; }
+}
