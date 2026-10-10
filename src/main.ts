@@ -70,7 +70,9 @@ const coarse = window.matchMedia('(pointer: coarse)');
  */
 function layout() {
   const portrait = coarse.matches && window.innerHeight > window.innerWidth;
-  const wantH = portrait ? portraitHeight(window.innerHeight / window.innerWidth) : 720;
+  let wantH = portrait ? portraitHeight(window.innerHeight / window.innerWidth) : 720;
+  // la barra de direcciones del móvil sube y baja: pequeñas variaciones de alto no recomponen el escenario
+  if (portrait && PORTRAIT && Math.abs(wantH - H) < 120) wantH = H;
   const changed = portrait !== PORTRAIT || (portrait && wantH !== H);
   if (changed) {
     setLayout(portrait, wantH);
@@ -131,14 +133,18 @@ function wireAudioAndFeel() {
 }
 
 /** Pausa y hiperperk táctiles: reutilizan la misma lógica que su tecla. El resto va por gestos sobre el tablero. */
+let gestures: Gestures | null = null;
+
 function wireTouch() {
   const togglePause = () => {
     if (game.state === 'playing' || game.state === 'paused') {
       game.togglePause();
       input.releaseAll();
+      gestures?.reset();
       ui.setPaused(game.state === 'paused');
     }
   };
+  document.getElementById('resume-btn')!.addEventListener('click', togglePause);
   document.querySelector<HTMLButtonElement>('[data-touch="pause"]')!.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     togglePause();
@@ -150,7 +156,7 @@ function wireTouch() {
     e.preventDefault();
     input.touchDown('hyper');
   });
-  new Gestures(canvas, game, input, {
+  gestures = new Gestures(canvas, game, input, {
     rect: () => canvas.getBoundingClientRect(),
     logicalW: () => W,
     cell: () => CELL,
@@ -230,6 +236,7 @@ async function startRun(forced?: 'tutorial') {
   audio.setIntensity(1);
   audio.startMusic();
   input.releaseAll();
+  gestures?.reset();
   hitstop = 0;
   stepAcc = 0;
   renderer.reset();
@@ -321,6 +328,8 @@ async function boot() {
   await renderer.init(canvas, renderResolution(scale));
 
   window.addEventListener('resize', () => {
+    // con el teclado del apodo abierto el alto se encoge: no se recompone hasta que se cierre
+    if (document.activeElement?.matches('input, textarea')) return;
     const { s, changed } = layout();
     if (changed) renderer.relayout(renderResolution(s));
     else renderer.setResolution(renderResolution(s));
@@ -376,6 +385,7 @@ async function boot() {
     const dt = Math.min(t.deltaMS, 50);
     if (game.state === 'choosing' && !ui.isChoosing) {
       input.releaseAll();
+      gestures?.reset();
       ui.openPerks();
     }
     input.update(dt);

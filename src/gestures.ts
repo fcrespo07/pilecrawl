@@ -30,6 +30,10 @@ const AXIS_PX = 12;
 /** Velocidad mínima (px/ms) al soltar para que un gesto hacia abajo sea un golpe y no una bajada lenta. */
 const FLICK_SPEED = 0.9;
 const SAMPLE_MS = 90;
+/** Guardar: o un deslizamiento largo, o uno corto pero rápido (un reajuste lento del dedo no debe gastar la reserva). */
+const HOLD_LONG_CELLS = 2.5;
+const HOLD_SHORT_CELLS = 1.5;
+const HOLD_SPEED = 0.5;
 
 /**
  * Controles táctiles por gestos, como los de los Tetris de móvil: arrastrar a los lados mueve la pieza una
@@ -92,7 +96,10 @@ export class Gestures {
       for (let i = 0; i < Math.abs(steps); i++) this.input.touchStep(Math.sign(steps));
       m.anchorX += steps * cell;
     } else {
-      const soft = dy > cell * 0.6;
+      // la bajada suave solo con el dedo despacio: un tirón rápido va directo a soltar, sin registrar bajadas
+      const first = m.samples[0];
+      const vy = (e.clientY - first.y) / Math.max(1, now - first.t);
+      const soft = dy > cell * 0.6 && vy < FLICK_SPEED * 0.6;
       if (soft !== m.soft) {
         m.soft = soft;
         this.input.softDrop(soft);
@@ -121,12 +128,12 @@ export class Gestures {
       return;
     }
     if (m.axis !== 'v') return;
-    if (dy < -cell * 1.5) {
+    const first = m.samples[0];
+    const vy = (e.clientY - first.y) / Math.max(1, now - first.t);
+    if (dy < -cell * HOLD_LONG_CELLS || (dy < -cell * HOLD_SHORT_CELLS && -vy >= HOLD_SPEED)) {
       this.input.touchDown('hold');
       return;
     }
-    const first = m.samples[0];
-    const vy = (e.clientY - first.y) / Math.max(1, now - first.t);
     if (dy > cell * 2 && vy >= FLICK_SPEED) this.input.touchDown('hard');
   }
 

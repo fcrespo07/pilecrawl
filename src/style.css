@@ -1250,3 +1250,5 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   .coach-m { right: 62px; padding: 8px 12px 8px; }
   .coach-m .coach-text { font-size: 16px; margin: 2px 0 4px; }
 }
+.touch-only { display: none; }
+@media (pointer: coarse) { .touch-only { display: inline-flex; } }
