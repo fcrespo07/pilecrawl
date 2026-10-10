@@ -708,7 +708,8 @@ export class Renderer {
 
     ev.on('hyper', ({ hyper }) => {
       this.flash(HYPER_COLOR, 0.5);
-      this.ultiBurst(HYPER_COLOR);
+      // el estallido lleva el color de la piel que pone la hiperperk
+      this.ultiBurst((hyper.skin && SKINS[hyper.skin].burst) || HYPER_COLOR);
       this.shake(0.5);
       this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 170, speed: 650 });
       this.floatText(`¡${hyper.name.toUpperCase()}!`, mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });

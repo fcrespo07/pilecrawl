@@ -1,4 +1,4 @@
-// Pieles de la interfaz. Son solo aspecto: las ponen algunos perks (`mods.skin`) y no tocan las reglas.
+// Pieles de la interfaz. Son solo aspecto: las ponen las hiperperks mientras están activas y no tocan las reglas.
 // La de base es Píxel; las de los perks cambian sus colores y mantienen los bloques de píxeles.
 
 export type SkinId = 'pixel' | 'apagon' | 'terminal' | 'neon' | 'plano';
@@ -17,15 +17,17 @@ export interface Skin {
   dark: boolean;
   /** Cielo de estrellas y colinas de píxeles al fondo (solo la piel de base). */
   stars?: boolean;
+  /** Color del estallido de pantalla al soltar la hiperperk que pone esta piel. */
+  burst?: number;
 }
 
 export const SKINS: Record<SkinId, Skin> = {
   pixel: { bg0: 0x1d2142, bg1: 0x11132a, ink: 0xf4f0e6, paper: 0x11132a, panel: 0x14172f, dark: true, stars: true },
-  apagon: { bg0: 0x14161f, bg1: 0x0c0d13, ink: 0xd9d4c4, paper: 0x14161f, panel: 0x1b1e29, dark: true },
-  terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true },
-  neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true },
+  apagon: { bg0: 0x14161f, bg1: 0x0c0d13, ink: 0xd9d4c4, paper: 0x14161f, panel: 0x1b1e29, dark: true, burst: 0xffb13d },
+  terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true, burst: 0x6dff8e },
+  neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true, burst: 0xff4dd2 },
   // panel muy oscuro: las piezas azules tienen que destacar sobre el plano
-  plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true },
+  plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true, burst: 0x6fb6ff },
 };
 
 export const skinOf = (id: SkinId | null | undefined): Skin => SKINS[id ?? 'pixel'];
