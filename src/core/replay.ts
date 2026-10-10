@@ -1,5 +1,5 @@
 import { Game, RULES_VERSION, type Replay, type ReplayAction } from './game';
-import { isModeId } from './modes';
+import { isModeId, MODES } from './modes';
 
 export interface ReplayResult {
   game: Game;
@@ -36,12 +36,15 @@ function validAction(a: unknown): a is ReplayAction {
  */
 export function runReplay(r: Replay): ReplayResult {
   const game = new Game();
+  if (r.sandbox) return { game, ok: false, reason: 'partida de laboratorio' };
   if (r.version !== RULES_VERSION) return { game, ok: false, reason: `versión ${r.version} ≠ ${RULES_VERSION}` };
   if (!Number.isInteger(r.seed) || r.seed < 0 || r.seed > 0xffffffff) return { game, ok: false, reason: 'semilla no válida' };
   if (typeof r.bestLevel !== 'number' || Number.isNaN(r.bestLevel)) return { game, ok: false, reason: 'bestLevel no válido' };
   if (!isStep(r.steps) || !Array.isArray(r.actions)) return { game, ok: false, reason: 'formato no válido' };
   const mode = r.mode ?? 'normal';
   if (!isModeId(mode)) return { game, ok: false, reason: 'modo no válido' };
+  // el tutorial (tablero precargado) no puntúa: que no se cuele en un ranking
+  if (MODES[mode].tutorial) return { game, ok: false, reason: 'modo no puntuable' };
   game.bestLevel = r.bestLevel;
   game.start(r.seed, mode);
 

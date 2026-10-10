@@ -1,7 +1,7 @@
 import { Emitter } from './emitter';
 import { baseMods, offerOdds, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef, type Rarity } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
-import { rollHypers, type HyperDef, type HyperId } from './hypers';
+import { HYPER_BY_ID, rollHypers, type HyperDef, type HyperId } from './hypers';
 import {
   HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
 } from './streak';
@@ -104,6 +104,11 @@ export const CURSE_FROM_LEVEL = 5;
 /** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
 export const GARBAGE_MIN_INTERVAL = 3;
 export const CURSE_CHANCE = 0.12;
+/** Tutorial: columna donde empieza el hueco de 2 de ancho, primeras piezas, líneas por nivel y líneas que carga la hiperperk. */
+export const TUTORIAL_HOLE = 7;
+export const TUTORIAL_PIECES = ['O', 'T', 'J', 'I'];
+export const TUTORIAL_LINES = 3;
+export const TUTORIAL_HYPER_CHARGE = 3;
 
 /** Acción del jugador grabada con el paso de simulación en que ocurrió. */
 export type ReplayAction =
@@ -126,6 +131,8 @@ export interface Replay {
   actions: ReplayAction[];
   /** Pasos simulados al terminar la partida. */
   steps: number;
+  /** Se usó el laboratorio: la partida no se puede reproducir ni cuenta para récords ni rankings. */
+  sandbox?: true;
 }
 
 /**
@@ -202,6 +209,10 @@ export class Game {
   /** La oferta actual es la recompensa de una maldita: rara o mejor. */
   blessedOffer = false;
   pendingLevelUps = 0;
+  /** El laboratorio se ha usado en esta partida: no puntúa en récords ni rankings (ver `lab*`). */
+  sandbox = false;
+  /** Multiplicador de velocidad de caída del laboratorio (1 = normal). */
+  labGravity = 1;
   /** Mejor nivel de partidas anteriores: decide qué rarezas pueden salir. */
   bestLevel = Infinity;
 
@@ -270,6 +281,8 @@ export class Game {
     this.cursedOffer = false;
     this.blessedOffer = false;
     this.pendingLevelUps = 0;
+    this.sandbox = false;
+    this.labGravity = 1;
     this.steps = 0;
     this.actions = [];
     this.soft = false;
@@ -296,7 +309,18 @@ export class Game {
     }
     this.state = 'playing';
     this.fillQueue();
+    if (def.tutorial) this.setupTutorial();
     this.spawn();
+  }
+
+  /**
+   * Tutorial: dos filas casi llenas con el hueco a la derecha y las primeras piezas fijas, para que
+   * la primera limpieza sea fácil. Las cartas y la hiperperk salen en los niveles 2 y 3 (ver `addLevelProgress`).
+   */
+  private setupTutorial() {
+    for (let y = ROWS - 2; y < ROWS; y++)
+      for (let x = 0; x < COLS; x++) if (x !== TUTORIAL_HOLE && x !== TUTORIAL_HOLE + 1) this.board[y][x] = ((x + y) % 7) + 1;
+    this.queue.splice(0, TUTORIAL_PIECES.length, ...TUTORIAL_PIECES.map((k) => this.makeSpec(PIECES[k])));
   }
 
   // ─────────────────────────── Cola y bolsa ───────────────────────────
@@ -493,6 +517,7 @@ export class Game {
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
+    speed *= this.labGravity;
     t /= speed;
     return Math.max(t, 1);
   }
@@ -546,7 +571,7 @@ export class Game {
   replay(): Replay {
     // Infinity no sobrevive a JSON (sale null): cualquier nivel alto desbloquea lo mismo
     const bestLevel = Math.min(this.bestLevel, 9999);
-    return { version: RULES_VERSION, mode: this.mode, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps };
+    return { version: RULES_VERSION, mode: this.mode, seed: this.seed, bestLevel, actions: [...this.actions], steps: this.steps, ...(this.sandbox ? { sandbox: true as const } : {}) };
   }
 
   update(dt: number) {
@@ -875,7 +900,7 @@ export class Game {
 
     // Ancla: con un combo de dos o más piezas seguidas, la basura no avanza
     const anchored = (m.anchor && this.combo >= 1) || this.hyperActive('slowmo');
-    if (this.level >= 4 && !anchored) {
+    if (this.level >= 4 && !anchored && !MODES[this.mode].tutorial) {
       this.garbageCounter++;
       const interval = this.garbageInterval();
       this.events.emit('garbageWarn', { progress: this.garbageCounter / interval });
@@ -980,6 +1005,7 @@ export class Game {
   // ─────────────────────────── Niveles y perks ───────────────────────────
 
   linesNeeded(): number {
+    if (MODES[this.mode].tutorial) return TUTORIAL_LINES;
     // 8 líneas al principio, +1 cada 2 niveles (tope 16)
     const base = Math.min(16, 8 + Math.floor((this.level - 1) / 2));
     return Math.max(4, base - this.mods.linesReduction);
@@ -995,6 +1021,8 @@ export class Game {
       if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak, this.level)) {
         this.hyperPending = true;
       }
+      // en el tutorial la hiperperk sale seguro en la segunda subida
+      if (MODES[this.mode].tutorial && this.level === 3 && !this.hyper) this.hyperPending = true;
       if (this.mods.interest > 0) {
         const amount = Math.round(this.score * this.mods.interest);
         this.score += amount;
@@ -1089,10 +1117,11 @@ export class Game {
       const hyper = this.hyperChoices[index];
       if (!hyper) return;
       this.record([this.steps, 'pick', index]);
-      this.hyper = hyper;
+      // en el tutorial se carga con pocas líneas para poder soltarla enseguida
+      this.hyper = MODES[this.mode].tutorial ? { ...hyper, charge: TUTORIAL_HYPER_CHARGE } : hyper;
       this.hyperPending = false;
       this.hyperCharge = 0;
-      this.events.emit('hyperPick', { hyper });
+      this.events.emit('hyperPick', { hyper: this.hyper });
       // la hiperperk no gasta la subida de nivel: después viene la carta normal
       this.newOffer();
       return;
@@ -1196,6 +1225,78 @@ export class Game {
         }
     const points = this.addScore(removed.length * 40 * this.level);
     this.events.emit('wipe', { removed, points });
+  }
+
+  // ─────────────────────────── Laboratorio ───────────────────────────
+  // Herramientas de pruebas (ver `ui/lab.ts`). Cualquier uso marca la partida como `sandbox`:
+  // no guarda récord, no cuenta para rankings y su repetición se rechaza.
+
+  /** Vuelve a calcular `mods` desde cero con los perks que hay (tras quitar uno). */
+  private rebuildMods() {
+    // algunos perks tocan también vidas o rerolls: esos valores los controla el laboratorio
+    const { lives, rerolls } = this;
+    this.mods = baseMods();
+    for (const id of this.perkOrder) for (let i = 0; i < this.perkStacks(id); i++) PERK_BY_ID[id].apply(this.mods, this);
+    this.lives = lives;
+    this.rerolls = rerolls;
+    this.refreshQueueSpecials();
+  }
+
+  private labOpen(): boolean {
+    return this.state !== 'ready' && this.state !== 'over';
+  }
+
+  labAddPerk(id: string) {
+    const perk = PERK_BY_ID[id];
+    if (!perk || this.perkStacks(id) >= perk.max || !this.labOpen()) return;
+    this.sandbox = true;
+    const { lives, rerolls } = this;
+    this.grantPerk(perk);
+    this.lives = lives;
+    this.rerolls = rerolls;
+  }
+
+  labRemovePerk(id: string) {
+    const n = this.perkStacks(id);
+    if (!n || !this.labOpen()) return;
+    this.sandbox = true;
+    if (n > 1) this.perks.set(id, n - 1);
+    else {
+      this.perks.delete(id);
+      this.perkOrder = this.perkOrder.filter((k) => k !== id);
+    }
+    this.rebuildMods();
+  }
+
+  labClearPerks() {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    this.perks.clear();
+    this.perkOrder = [];
+    this.rebuildMods();
+  }
+
+  /** Cambia la hiperperk de la partida (null la quita) y la deja cargada. */
+  labSetHyper(id: HyperId | null) {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    this.hyper = id ? HYPER_BY_ID[id] : null;
+    this.hyperCharge = this.hyper ? this.hyper.charge : 0;
+    this.hyperLeft = 0;
+    this.hyperPending = false;
+  }
+
+  /** Ajusta números de la partida. Los que no se pasan se dejan como están. */
+  labSet(v: { level?: number; lives?: number; rerolls?: number; gravity?: number }) {
+    if (!this.labOpen()) return;
+    this.sandbox = true;
+    if (v.level !== undefined) {
+      this.level = Math.max(1, Math.min(99, Math.round(v.level)));
+      this.linesIntoLevel = 0;
+    }
+    if (v.lives !== undefined) this.lives = Math.max(0, Math.min(9, Math.round(v.lives)));
+    if (v.rerolls !== undefined) this.rerolls = Math.max(0, Math.min(99, Math.round(v.rerolls)));
+    if (v.gravity !== undefined) this.labGravity = Math.max(0.05, Math.min(10, v.gravity));
   }
 
   togglePause() {

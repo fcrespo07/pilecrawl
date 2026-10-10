@@ -28,36 +28,52 @@
     <!-- ═════════════ Home: portada antes de la partida ═════════════ -->
     <main id="home" class="home" tabindex="-1" aria-label="Inicio de Pilecrawl">
       <div class="home-inner">
-        <header class="home-hero">
-          <p class="home-kicker">Roguelite de bloques</p>
-          <h1 class="home-title">Pilecrawl</h1>
+        <!-- Primera pantalla: solo jugar. Todo lo demás queda debajo, al desplazar -->
+        <section class="home-first" aria-labelledby="h-arcade">
+          <div class="home-stage">
+            <aside id="panel-left" class="home-panel panel-left" aria-label="Tus mejores puntuaciones"></aside>
+
+            <div class="home-center">
+              <header class="home-hero">
+                <p class="home-kicker">Roguelite de bloques</p>
+                <h1 class="home-title">Pilecrawl</h1>
+              </header>
+              <h2 id="h-arcade" class="home-mode-label">Arcade</h2>
+              <div id="mode-select" class="mode-select"></div>
+              <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
+              <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
+                   Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
+              <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
+            </div>
+
+            <aside id="panel-right" class="home-panel panel-right" aria-label="Desafío diario"></aside>
+          </div>
+          <button class="home-more-hint" id="home-more-link" type="button">Cómo se juega y más<span aria-hidden="true">&#9660;</span></button>
+        </section>
+
+        <div id="home-more" class="home-more">
           <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
-        </header>
 
-        <!-- Menú principal: Arcade es el juego de hoy; Historia y Rankings reservan su sitio -->
-        <div class="home-menu">
-          <section class="home-entry home-arcade" aria-labelledby="h-arcade">
-            <h2 id="h-arcade">Arcade</h2>
-            <p class="home-entry-desc">Partidas sueltas para batir tu récord.</p>
-            <div id="mode-select" class="mode-select"></div>
-            <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
-          </section>
+          <!-- Historia y Rankings reservan su sitio -->
+          <div class="home-menu">
+            <section class="home-entry is-locked" aria-labelledby="h-story">
+              <h2 id="h-story"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Historia</h2>
+              <p class="home-entry-desc">Una aventura con jefes y escenarios.</p>
+              <p class="home-soon">Próximamente</p>
+            </section>
 
-          <section class="home-entry is-locked" aria-labelledby="h-story">
-            <h2 id="h-story"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Historia</h2>
-            <p class="home-entry-desc">Una aventura con jefes y escenarios.</p>
-            <p class="home-soon">Próximamente</p>
-          </section>
+            <section class="home-entry is-locked" aria-labelledby="h-rank">
+              <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
+              <p class="home-entry-desc">Las mejores puntuaciones de Arcade.</p>
+              <p class="home-soon">Próximamente</p>
+            </section>
+          </div>
 
-          <section class="home-entry is-locked" aria-labelledby="h-rank">
-            <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
-            <p class="home-entry-desc">Las mejores puntuaciones de Arcade.</p>
-            <p class="home-soon">Próximamente</p>
-          </section>
-        </div>
-
-        <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts) -->
-        <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
+          <!-- Accesos secundarios (catálogo, tutorial): van en esta fila, no en la primera pantalla -->
+          <div class="home-links" id="home-links">
+            <button id="catalog-open" class="home-btn home-link" type="button">Catálogo de mejoras</button>
+            <button id="home-tutorial" class="home-btn home-link ghost" type="button">Tutorial<i class="new-tag" hidden>Nuevo</i></button>
+          </div>
 
         <section class="home-card" aria-labelledby="h-how">
           <h2 id="h-how">Cómo se juega</h2>
@@ -86,6 +102,18 @@
         </section>
 
         <footer class="home-foot">Pilecrawl · versión <span data-version></span></footer>
+        </div>
+      </div>
+    </main>
+
+    <!-- ═════════════ Catálogo: página aparte, se abre desde la portada ═════════════ -->
+    <main id="catalog" class="home hidden" tabindex="-1" aria-label="Catálogo de mejoras">
+      <div class="home-inner">
+        <header class="cat-head">
+          <button id="catalog-back" class="home-btn" type="button">Volver</button>
+          <h1 class="home-title cat-title">Catálogo</h1>
+        </header>
+        <div id="catalog-body" class="cat-body-all"></div>
       </div>
     </main>
 
@@ -157,6 +185,10 @@
         </section>
       </div>
       <div id="tooltip"></div>
+      <div id="lab-badge" class="lab-badge" hidden>Laboratorio · no puntúa</div>
+
+      <!-- Entrenador del tutorial (src/ui/tutorial.ts): aquí en pantallas con ratón -->
+      <aside class="coach coach-d" aria-live="polite" hidden></aside>
 
       <!-- ═════════════ Elección de mejoras ═════════════ -->
       <div id="perks" class="overlay">
@@ -180,7 +212,28 @@
           <div id="build-list"></div>
         </div>
         <button id="fx-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Efectos: sí</span><kbd>F</kbd></button>
+        <button id="lab-open" class="btn ghost small" type="button" hidden><span>Laboratorio</span></button>
         <p class="hint">Pulsa <kbd>Esc</kbd> para continuar</p>
+      </div>
+
+      <!-- ═════════════ Laboratorio (solo desarrollo o ?lab) ═════════════ -->
+      <div id="lab" class="overlay">
+        <div class="stripe-title"><span>Laboratorio · esta partida no puntúa</span></div>
+        <div class="lab-wrap">
+          <div class="lab-col">
+            <input id="lab-search" type="search" placeholder="Buscar mejora o maldición" autocomplete="off" />
+            <div id="lab-list" class="lab-list"></div>
+          </div>
+          <div class="lab-col lab-controls">
+            <div class="lab-ctl"><span>Caída</span><input id="lab-gravity" type="range" min="0.1" max="5" step="0.1" value="1" /><b id="lab-gravity-n">×1</b></div>
+            <div class="lab-ctl"><span>Nivel</span><button type="button" data-act="level" data-d="-1">−</button><b id="lab-level">1</b><button type="button" data-act="level" data-d="1">+</button></div>
+            <div class="lab-ctl"><span>Vidas</span><button type="button" data-act="lives" data-d="-1">−</button><b id="lab-lives">0</b><button type="button" data-act="lives" data-d="1">+</button></div>
+            <div class="lab-ctl"><span>Rerolls</span><button type="button" data-act="rerolls" data-d="-1">−</button><b id="lab-rerolls">1</b><button type="button" data-act="rerolls" data-d="1">+</button></div>
+            <div class="lab-ctl"><span>Hiper</span><select id="lab-hyper"></select><button id="lab-charge" type="button" data-act="charge">Cargar</button></div>
+            <button type="button" class="btn ghost small" data-act="clear"><span>Quitar todas las mejoras</span></button>
+            <button type="button" class="btn small" data-act="close"><span>Volver a la pausa</span><kbd>Esc</kbd></button>
+          </div>
+        </div>
       </div>
 
       <!-- ═════════════ Fin ═════════════ -->
@@ -198,6 +251,8 @@
         <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
       </div>
     </div>
+    <!-- Igual, fuera del escenario, para pantallas táctiles: allí el escenario se encoge y no cabría -->
+    <aside class="coach coach-m" aria-live="polite" hidden></aside>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

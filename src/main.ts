@@ -7,21 +7,42 @@ import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
 import { dailySeed, utcDate } from './core/modes';
 import { randomSeed } from './core/rng';
-import { loadLastMode, saveLastMode } from './records';
+import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
+import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
+import { Tutorial } from './ui/tutorial';
 import { Input, type TouchAction } from './input';
 import { UI } from './ui/ui';
+import { renderCatalog } from './ui/catalog';
+import { Lab, LAB_ENABLED } from './ui/lab';
 
 const game = new Game();
 const renderer = new Renderer(game);
 const input = new Input(game);
 const ui = new UI(game);
+const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
 // sin proveedor de anuncios por ahora: el hueco queda plegado
 mountAd(document.getElementById('ad-slot')!, null);
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
+const tutorial = new Tutorial(game, {
+  onPlay: () => startRun(),
+  onRetry: () => startRun('tutorial'),
+  onHome: () => {
+    // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
+    game.reset();
+    showHome(true);
+  },
+  onDone: saveTutorialDone,
+});
+const panelLeft = document.getElementById('panel-left')!;
+const panelRight = document.getElementById('panel-right')!;
+const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
+refreshPanels();
+// la cuenta atrás y el número del diario cambian con la portada abierta
+window.setInterval(refreshPanels, 30_000);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
@@ -39,6 +60,8 @@ function layout() {
   const avail = window.innerHeight - reserve;
   const s = Math.min(window.innerWidth / W, avail / H);
   stage.style.top = `${avail / 2}px`;
+  // el cuadro del tutorial en pantallas táctiles se coloca fuera del escenario y necesita su escala
+  document.documentElement.style.setProperty('--s', String(s));
   stage.style.transform = `translate(-50%, -50%) scale(${s})`;
   return s;
 }
@@ -73,14 +96,16 @@ function wireAudioAndFeel() {
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
-    recordBestLevel(level);
+    // el tutorial y el laboratorio no cuentan para desbloquear rarezas
+    if (game.mode !== 'tutorial' && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
     audio.stopMusic();
     audio.gameOver();
-    ui.showGameOver();
+    if (game.mode !== 'tutorial') ui.showGameOver();
     modeSelect.refresh();
+    refreshPanels();
   });
 }
 
@@ -110,9 +135,23 @@ function wireTouch() {
 }
 
 const home = document.getElementById('home')!;
+const TUTORIAL_SEED = 0x7a11;
+const catalog = document.getElementById('catalog')!;
+
+function showCatalog(on: boolean) {
+  catalog.classList.toggle('hidden', !on);
+  home.classList.toggle('hidden', on);
+  (on ? catalog : home).scrollTop = 0;
+  (on ? catalog : home).focus({ preventScroll: true });
+}
 
 function showHome(show: boolean) {
   home.classList.toggle('hidden', !show);
+  if (show) {
+    tutorial.stop();
+    audio.stopMusic();
+    document.querySelector<HTMLElement>('#home-tutorial .new-tag')!.hidden = loadTutorialDone();
+  }
   // detrás de la portada nada debe recibir foco ni dibujarse
   stage.inert = show;
   if (show) {
@@ -120,12 +159,15 @@ function showHome(show: boolean) {
     document.body.dataset.skin = 'pixel';
     renderer.app.ticker.stop();
     modeSelect.refresh();
+    refreshPanels();
     home.scrollTop = 0;
     home.focus({ preventScroll: true });
   } else renderer.app.ticker.start();
 }
 
-function startRun() {
+function startRun(forced?: 'tutorial') {
+  lab.close();
+  tutorial.stop();
   showHome(false);
   audio.init();
   audio.setIntensity(1);
@@ -136,10 +178,12 @@ function startRun() {
   renderer.reset();
   game.bestLevel = loadMeta().bestLevel;
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
-  const mode = modeSelect.mode;
+  const mode = forced ?? modeSelect.mode;
   const date = utcDate();
-  game.start(mode === 'daily' ? dailySeed(date) : randomSeed(), mode);
+  // el tutorial siempre reparte igual: mismas piezas y mismas cartas
+  game.start(mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : randomSeed(), mode);
   ui.startGame(date);
+  if (mode === 'tutorial') tutorial.start();
 }
 
 const fxToggle = document.getElementById('fx-toggle')!;
@@ -157,6 +201,9 @@ function setEffects(on: boolean, save = true) {
 function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
 
+  // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
+  if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
+
   // globales
   if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }
   if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); return; }
@@ -166,16 +213,23 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   if (st === 'ready' || st === 'over') {
+    // en el catálogo no se arranca partida: Esc vuelve a la portada
+    if (!catalog.classList.contains('hidden')) {
+      if (e.code === 'Escape') showCatalog(false);
+      return;
+    }
     // con la portada visible, Espacio desplaza la página: solo Enter arranca
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
-      startRun();
+      // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
+      startRun(st === 'over' && game.mode === 'tutorial' ? 'tutorial' : undefined);
     }
     return;
   }
 
   if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) {
+    if (lab.isOpen) { lab.close(); return; }
     if (st === 'playing' || st === 'paused') {
       game.togglePause();
       input.releaseAll();
@@ -225,9 +279,19 @@ async function boot() {
       ui.setPaused(true);
     }
   });
-  document.getElementById('home-play')!.addEventListener('click', startRun);
+  renderCatalog(catalog);
+  document.getElementById('catalog-open')!.addEventListener('click', () => showCatalog(true));
+  document.getElementById('catalog-back')!.addEventListener('click', () => showCatalog(false));
+  const labBtn = document.getElementById('lab-open')!;
+  labBtn.hidden = !LAB_ENABLED;
+  labBtn.addEventListener('click', () => lab.open());
+  document.getElementById('home-play')!.addEventListener('click', () => startRun());
+  document.getElementById('home-tutorial')!.addEventListener('click', () => startRun('tutorial'));
+  document.getElementById('home-more-link')!.addEventListener('click', () => {
+    document.getElementById('home-more')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
-  document.getElementById('retry-btn')!.addEventListener('click', startRun);
+  document.getElementById('retry-btn')!.addEventListener('click', () => startRun());
 
   wireAudioAndFeel();
   wireTouch();
@@ -251,6 +315,7 @@ async function boot() {
     }
     renderer.render(dt);
     ui.update(dt);
+    tutorial.update();
   });
 
   document.body.classList.add('ready');

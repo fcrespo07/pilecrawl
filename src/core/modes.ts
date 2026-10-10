@@ -1,7 +1,7 @@
 // Modos de juego. Todos usan las mismas reglas de `game.ts`; cada modo solo cambia
 // la semilla, los desbloqueos o cuándo termina la partida.
 
-export type ModeId = 'normal' | 'daily' | 'timed';
+export type ModeId = 'normal' | 'daily' | 'timed' | 'tutorial';
 
 export interface ModeDef {
   id: ModeId;
@@ -17,6 +17,8 @@ export interface ModeDef {
   fixedBestLevel?: number;
   /** Empieza con una mejora común o rara sacada de la semilla. */
   starterPerk: boolean;
+  /** Tutorial guiado: sin récord ni ranking, y no sale en el selector de la portada. */
+  tutorial?: boolean;
 }
 
 export const MODES: Record<ModeId, ModeDef> = {
@@ -42,9 +44,21 @@ export const MODES: Record<ModeId, ModeDef> = {
     timeLimitMs: 3 * 60 * 1000,
     starterPerk: false,
   },
+  tutorial: {
+    id: 'tutorial',
+    name: 'Tutorial',
+    desc: 'Aprende los controles, las mejoras y la hiperperk en una partida corta.',
+    timeLimitMs: 0,
+    // solo salen comunes y raras: lo que se enseña no depende de lo que hayas desbloqueado
+    fixedBestLevel: 0,
+    starterPerk: false,
+    tutorial: true,
+  },
 };
 
 export const MODE_IDS = Object.keys(MODES) as ModeId[];
+/** Los modos que se eligen en la portada (el tutorial tiene su propio botón). */
+export const PLAY_MODE_IDS = MODE_IDS.filter((id) => !MODES[id].tutorial);
 
 export const isModeId = (v: unknown): v is ModeId => typeof v === 'string' && Object.hasOwn(MODES, v);
 
