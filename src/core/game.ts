@@ -1,7 +1,11 @@
 import { Emitter } from './emitter';
-import { baseMods, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef } from './perks';
+import { baseMods, offerOdds, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef, type Rarity } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
-import { HYPER_LEVEL, rollHypers, type HyperDef, type HyperId } from './hypers';
+import { rollHypers, type HyperDef, type HyperId } from './hypers';
+import {
+  HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
+} from './streak';
+import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
 
@@ -92,7 +96,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 5;
+export const RULES_VERSION = 6;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -179,10 +183,12 @@ export class Game {
   hyperCharge = 0;
   /** Pasos de simulación que le quedan activa. 0 = inactiva. */
   hyperLeft = 0;
-  /** Al subir al nivel de las hiperperks, su elección va antes que la carta normal. */
+  /** Una subida de nivel ha traído hiperperk: su elección va antes que la carta normal. */
   hyperPending = false;
   /** Hiperperks que se ofrecen ahora. Si no está vacía, la elección es de hiperperk. */
   hyperChoices: HyperDef[] = [];
+  /** Racha (0..STREAK_MAX): sube jugando bien y baja con cada pieza. Ver `streak.ts`. */
+  streak = 0;
   private harvestLines = 0;
   private lifelineReadyAt = 0;
   private pieceStart = 0;
@@ -253,6 +259,7 @@ export class Game {
     this.hyperLeft = 0;
     this.hyperPending = false;
     this.hyperChoices = [];
+    this.streak = 0;
     this.harvestLines = 0;
     this.lifelineReadyAt = 0;
     this.pieceStart = 0;
@@ -629,6 +636,8 @@ export class Game {
     const spin = this.detectSpin();
     this.active = null;
     this.piecesLocked++;
+    // la racha baja con cada pieza; las líneas que haga la suben después
+    this.addStreak(-STREAK_DECAY);
 
     if (a.bomb || a.hyperBomb) {
       this.explode(cells);
@@ -732,6 +741,10 @@ export class Game {
     if (perfect) total += 3500 * lvl;
 
     const points = this.addScore(total, true, mult);
+    if (cascade === 0 && !blast) {
+      const fast = this.time - this.pieceStart < STREAK_FAST_MS;
+      this.addStreak(streakGain(lines, spin !== null, this.combo, perfect, fast));
+    }
     this.addLines(lines);
     let counted = lines + garbageRows * this.mods.recycle;
     if (lines >= 4 || spin) counted += this.mods.expBonus;
@@ -978,7 +991,10 @@ export class Game {
       this.linesIntoLevel -= this.linesNeeded();
       this.level++;
       this.pendingLevelUps++;
-      if (this.level === HYPER_LEVEL && !this.hyper) this.hyperPending = true;
+      // la hiperperk no está garantizada: cada subida tiene una probabilidad que sube con la racha
+      if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak)) {
+        this.hyperPending = true;
+      }
       if (this.mods.interest > 0) {
         const amount = Math.round(this.score * this.mods.interest);
         this.score += amount;
@@ -1029,7 +1045,29 @@ export class Game {
       if (this.choices.length > 0) return;
       this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
     }
-    this.choices = rollOffer(this.perks, this.mods.luck, n, this.bestLevel, this.perkRng, this.blessedOffer);
+    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer);
+  }
+
+  /** Suerte de las ofertas: la de los perks (Trébol) más la de la racha. */
+  offerLuck(): number {
+    return this.mods.luck + streakLuck(this.streak);
+  }
+
+  /** Probabilidad de cada rareza en la oferta normal, con la suerte de ahora. */
+  offerOdds(): Record<Rarity, number> {
+    // jugando, la próxima oferta es «bendita» si la última fue maldita
+    const blessed = this.state === 'choosing' ? this.blessedOffer : this.cursedOffer;
+    return offerOdds(this.perks, this.offerLuck(), this.bestLevel, blessed);
+  }
+
+  /** Probabilidad de que la próxima subida traiga hiperperk (0 si ya la tienes o aún no toca). */
+  hyperOfferChance(): number {
+    if (this.hyper || this.hyperPending || this.level + 1 < HYPER_FROM_LEVEL) return 0;
+    return hyperChance(this.streak);
+  }
+
+  private addStreak(n: number) {
+    this.streak = Math.max(0, Math.min(STREAK_MAX, this.streak + n));
   }
 
   /** La elección en curso es de hiperperk, no de mejora normal. */
@@ -1083,6 +1121,11 @@ export class Game {
   }
 
   // ─────────────────────────── Hiperperks ───────────────────────────
+
+  /** Piel de la interfaz ahora: la de la hiperperk mientras está activa; null = la de base. */
+  skinNow(): SkinId | null {
+    return this.hyperLeft > 0 ? (this.hyper?.skin ?? null) : null;
+  }
 
   /** La hiperperk `id` es la de la partida y está activa ahora. */
   hyperActive(id: HyperId): boolean {

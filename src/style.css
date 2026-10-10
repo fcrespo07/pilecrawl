@@ -263,6 +263,21 @@ kbd {
 }
 #perks.hyper .perk-title span { color: var(--hyper); }
 
+/* racha: barra, y lo que da ahora (cartas raras o mejores e hiperperk) */
+.p-streak { left: 798px; top: 528px; width: 146px; --c: var(--hi); }
+.p-streak > header span { color: var(--hi); }
+.st-odds { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; color: var(--muted); }
+.st-odds b { color: var(--text); font-weight: 400; }
+.st-odds .hy b { color: var(--hyper); }
+
+/* probabilidades de la oferta, bajo el subtítulo */
+.perk-odds { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; min-height: 18px; margin: -4px 0 10px; font-size: 15px; color: var(--muted); }
+.perk-odds:empty { display: none; }
+.odd { display: inline-flex; align-items: center; gap: 6px; }
+.odd i { width: 8px; height: 8px; background: var(--c); }
+.odd b { color: var(--c); font-weight: 400; }
+.odd-streak b { color: var(--hi); }
+
 /* ───────────── chips de mejoras ───────────── */
 
 .chip {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
-import { HYPER_BY_ID, HYPER_LEVEL, type HyperId } from './hypers';
+import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
+import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { PERK_BY_ID } from './perks';
 import type { PieceSpec } from './game';
@@ -330,29 +331,73 @@ describe('perks nuevos', () => {
   });
 });
 
-describe('perks con piel', () => {
-  it('cada perk con piel la pone y una partida nueva la quita', () => {
+describe('pieles de las hiperperks', () => {
+  it('ningún perk cambia la piel: solo las hiperperks, mientras están activas', () => {
     const g = playing();
-    for (const [id, skin] of [['blueprint', 'plano'], ['blackout', 'apagon'], ['terminal', 'terminal'], ['neon', 'neon']] as const) {
-      PERK_BY_ID[id].apply(g.mods, g);
-      expect(g.mods.skin).toBe(skin);
-    }
-    g.start(1);
-    expect(g.mods.skin).toBeNull();
+    expect(g.skinNow()).toBeNull();
+    g.hyper = HYPER_BY_ID.frenzy;
+    g.hyperCharge = g.hyper.charge;
+    g.activateHyper();
+    expect(g.skinNow()).toBe('neon');
+    g.hyperLeft = 1;
+    g.step();
+    expect(g.skinNow()).toBeNull();
   });
 
-  it('la piel no cambia la partida: misma semilla y acciones, mismo resultado', () => {
-    const play = (skin: boolean) => {
-      const g = new Game();
-      g.start(7);
-      if (skin) Object.assign(g.mods, { skin: 'neon', noGhost: true, monochrome: true });
-      for (let i = 0; i < 30 && g.state === 'playing'; i++) {
-        g.move(i % 3 - 1);
-        g.hardDrop();
-      }
-      return [g.score, g.lines, g.board.map((r) => r.join('')).join('|')];
-    };
-    expect(play(true)).toEqual(play(false));
+  it('todas las hiperperks con duración tienen piel propia y distinta', () => {
+    const timed = HYPERS.filter((h) => h.durationMs > 0);
+    expect(timed.every((h) => h.skin !== null)).toBe(true);
+    expect(new Set(timed.map((h) => h.skin)).size).toBe(timed.length);
+  });
+});
+
+describe('racha', () => {
+  it('baja con cada pieza fijada y no baja de 0', () => {
+    const g = playing();
+    g.streak = 50;
+    g.hardDrop();
+    expect(g.streak).toBe(50 - STREAK_DECAY);
+    g.streak = 0;
+    g.hardDrop();
+    expect(g.streak).toBe(0);
+  });
+
+  it('limpiar rápido suma más que limpiar despacio', () => {
+    const fast = playing();
+    clearBottomLineWithI(fast);
+    const slow = playing();
+    slow.time += 5000;
+    clearBottomLineWithI(slow);
+    expect(fast.streak).toBeGreaterThan(slow.streak);
+  });
+
+  it('sube más con varias líneas a la vez y con combo, con tope', () => {
+    const single = playing();
+    clearBottomLineWithI(single);
+    const quad = playing();
+    for (let y = ROWS - 4; y < ROWS; y++) for (let x = 1; x < COLS; x++) quad.board[y][x] = PIECES.T.id;
+    // la I de pie ocupa la tercera columna de su caja
+    setActive(quad, PIECES.I, -2, 0, 1);
+    quad.hardDrop();
+    expect(quad.lines).toBe(4);
+    expect(quad.streak).toBeGreaterThan(single.streak);
+    const combo = playing();
+    combo.combo = 3;
+    clearBottomLineWithI(combo);
+    expect(combo.streak).toBeGreaterThan(single.streak);
+    combo.streak = STREAK_MAX;
+    combo.combo = 3;
+    clearBottomLineWithI(combo);
+    expect(combo.streak).toBe(STREAK_MAX);
+  });
+
+  it('mejora las probabilidades de la oferta', () => {
+    const g = playing();
+    const cold = g.offerOdds();
+    g.streak = STREAK_MAX;
+    const hot = g.offerOdds();
+    expect(hot.common).toBeLessThan(cold.common);
+    expect(hot.legendary).toBeGreaterThan(cold.legendary);
   });
 });
 
@@ -376,9 +421,10 @@ describe('hiperperks', () => {
     return g;
   }
 
-  it('al subir al nivel 4 se elige hiperperk y después la mejora normal', () => {
+  it('si la racha la trae, se elige hiperperk y después la mejora normal', () => {
     const g = playing();
-    g.level = HYPER_LEVEL - 1;
+    g['hyperRng'] = () => 0;
+    g.level = HYPER_FROM_LEVEL - 1;
     g.linesIntoLevel = g.linesNeeded() - 1;
     clearBottomLineWithI(g);
     expect(g.state).toBe('choosing');
@@ -395,13 +441,34 @@ describe('hiperperks', () => {
     expect(g.perkOrder).toHaveLength(1);
   });
 
+  it('no está garantizada: sin suerte en la tirada no sale', () => {
+    const g = playing();
+    g['hyperRng'] = () => 0.99;
+    g.level = HYPER_FROM_LEVEL - 1;
+    g.linesIntoLevel = g.linesNeeded() - 1;
+    clearBottomLineWithI(g);
+    expect(g.state).toBe('choosing');
+    expect(g.choosingHyper).toBe(false);
+  });
+
+  it('no sale antes de su nivel y la racha sube su probabilidad', () => {
+    const g = playing();
+    expect(g.hyperOfferChance()).toBe(0);
+    g.level = HYPER_FROM_LEVEL - 1;
+    expect(g.hyperOfferChance()).toBeCloseTo(HYPER_CHANCE_BASE);
+    g.streak = STREAK_MAX;
+    expect(g.hyperOfferChance()).toBeCloseTo(HYPER_CHANCE_FULL);
+  });
+
   it('solo se ofrece una vez por partida', () => {
     const g = playing();
+    g['hyperRng'] = () => 0;
     g.hyper = HYPER_BY_ID.frenzy;
-    g.level = HYPER_LEVEL - 1;
+    g.level = HYPER_FROM_LEVEL - 1;
     g.linesIntoLevel = g.linesNeeded() - 1;
     clearBottomLineWithI(g);
     expect(g.choosingHyper).toBe(false);
+    expect(g.hyperOfferChance()).toBe(0);
   });
 
   it('se carga con líneas y no se puede soltar a medias', () => {

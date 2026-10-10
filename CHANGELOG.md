@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- **Racha**: un medidor nuevo en el HUD que sube con varias líneas a la vez, combos, giros y jugando rápido, y baja con cada pieza. Mejora las cartas que salen (la pantalla de cartas enseña la probabilidad de cada rareza) y hace salir las hiperperks, que ya no se eligen siempre en el nivel 4. Las pieles dejan de ser perks: cada hiperperk pone la suya mientras está activa. Reglas versión 6 (#PR).
 
 ## 0.10.0 — 2026-10-09
 - Nuevo estilo visual «Píxel» en toda la interfaz: consola de 16 bits con cielo nocturno, bloques de 8×8 píxeles, bordes de 4 px y letra de recreativa. Sustituye a «papel y tinta». Las pieles de los perks (Plano, Apagón, Terminal, Neón) recolorean el estilo píxel (#17).

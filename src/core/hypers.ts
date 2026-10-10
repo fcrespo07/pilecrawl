@@ -1,6 +1,10 @@
 // Hiperperks: habilidades activas, una por partida. Se cargan limpiando líneas y el jugador
 // decide cuándo soltarlas. Van aparte de los perks normales y a propósito están más rotas.
 // La lógica de cada una vive en `game.ts` (leyendo `hyperActive`), aquí solo los datos.
+// No hay una garantizada: salen al subir de nivel con una probabilidad que sube con la racha
+// (`streak.ts`). Mientras están activas, la interfaz cambia de piel; al terminar vuelve la de base.
+
+import type { SkinId } from '../fx/skins';
 
 export type HyperId = 'slowmo' | 'frenzy' | 'sand' | 'barrage' | 'wipe';
 
@@ -11,32 +15,31 @@ export interface HyperDef {
   charge: number;
   /** Cuánto dura activa, en ms de juego. 0 = efecto instantáneo. */
   durationMs: number;
+  /** Piel de la interfaz mientras está activa (solo aspecto). Las instantáneas no tienen. */
+  skin: SkinId | null;
   pros: () => string[];
   cons?: () => string[];
 }
 
-/** Nivel en cuya subida se ofrecen las hiperperks (una vez por partida). */
-export const HYPER_LEVEL = 4;
-
 export const HYPERS: HyperDef[] = [
   {
-    id: 'slowmo', name: 'Cámara lenta', charge: 10, durationMs: 12_000,
-    pros: () => ['Durante <b>12 s</b> las piezas casi <b>no caen</b>', 'La basura <b>no avanza</b> mientras dura'],
+    id: 'slowmo', name: 'Cámara lenta', charge: 10, durationMs: 12_000, skin: 'plano',
+    pros: () => ['Durante <b>12 s</b> las piezas casi <b>no caen</b>', 'La basura <b>no avanza</b> mientras dura', 'La pantalla pasa a <b>papel de plano</b>'],
   },
   {
-    id: 'frenzy', name: 'Frenesí', charge: 12, durationMs: 15_000,
-    pros: () => ['Durante <b>15 s</b>, <b>×3</b> a toda la puntuación', 'El combo <b>no se rompe</b> mientras dura'],
+    id: 'frenzy', name: 'Frenesí', charge: 12, durationMs: 15_000, skin: 'neon',
+    pros: () => ['Durante <b>15 s</b>, <b>×3</b> a toda la puntuación', 'El combo <b>no se rompe</b> mientras dura', 'La pantalla pasa a <b>neón</b>'],
   },
   {
-    id: 'sand', name: 'Arena', charge: 14, durationMs: 5_000,
-    pros: () => ['Durante <b>5 s</b>, cada bloque que fijas se escurre hasta el <b>hueco libre más bajo</b> de su columna', 'Tapa <b>agujeros</b> aunque estén cubiertos'],
+    id: 'sand', name: 'Arena', charge: 14, durationMs: 5_000, skin: 'terminal',
+    pros: () => ['Durante <b>5 s</b>, cada bloque que fijas se escurre hasta el <b>hueco libre más bajo</b> de su columna', 'Tapa <b>agujeros</b> aunque estén cubiertos', 'La pantalla pasa a <b>fósforo verde</b>'],
   },
   {
-    id: 'barrage', name: 'Bombardeo', charge: 12, durationMs: 8_000,
-    pros: () => ['Durante <b>8 s</b>, <b>todas las piezas</b> son bombas', 'Cada una revienta un área de <b>5×5</b>'],
+    id: 'barrage', name: 'Bombardeo', charge: 12, durationMs: 8_000, skin: 'apagon',
+    pros: () => ['Durante <b>8 s</b>, <b>todas las piezas</b> son bombas', 'Cada una revienta un área de <b>5×5</b>', 'La pantalla pasa a <b>modo noche</b>'],
   },
   {
-    id: 'wipe', name: 'Tabla rasa', charge: 20, durationMs: 0,
+    id: 'wipe', name: 'Tabla rasa', charge: 20, durationMs: 0, skin: null,
     pros: () => ['Al activarla <b>vacía el tablero</b> entero', 'Cada bloque borrado da <b>40 × nivel</b> puntos'],
     cons: () => ['Es la que más tarda en <b>cargarse</b>'],
   },
