@@ -1,12 +1,13 @@
-import { Application, Container, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
 import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
-  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HYPER_COLOR, QUEUE_H, QUEUE_W, QUEUE_X, QUEUE_Y, W, hex,
+  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, HYPER_COLOR, NEXT_W, NEXT_X, NEXT_Y, W, hex,
 } from './layout';
 import { Particles } from './particles';
+import { PostFx } from './postfx';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
 
 // estilo píxel: fuente de recreativa y oro claro para los textos flotantes sobre fondo oscuro
@@ -236,11 +237,18 @@ export class Renderer {
 
   private stars: { s: Sprite; speed: number }[] = [];
   private blobs: { s: Sprite; ph: number; sp: number }[] = [];
+  private scanlines = new Graphics();
+  private filterSig = -1;
   private vignette!: Sprite;
   private screenFlash!: Sprite;
 
   private shocks: Shock[] = [];
+  private post = new PostFx();
+  /** Efectos de pantalla (ondas, rejilla, aberración, pixelado). Los apaga F, el botón o un equipo lento. */
   highQuality = true;
+  private slowT = 0;
+  /** Se llama cuando el renderer apaga solo los efectos por ir lento. */
+  onAutoOff?: () => void;
 
   private trailList: Trail[] = [];
   private flashList: Flash[] = [];
@@ -314,7 +322,10 @@ export class Renderer {
     this.screenFlash.height = H;
     this.screenFlash.alpha = 0;
     this.screenFlash.blendMode = 'normal';
-    this.overlay.addChild(this.vignette, this.screenFlash);
+    // rejilla de monitor: líneas estáticas (un Graphics, sin filtro) cada 3 px lógicos
+    for (let y = 2; y < H; y += 3) this.scanlines.rect(0, y, W, 1);
+    this.scanlines.fill({ color: 0x000000, alpha: 0.07 });
+    this.overlay.addChild(this.scanlines, this.vignette, this.screenFlash);
 
     this.drawBoardBg();
     this.setupFilters();
@@ -385,8 +396,23 @@ export class Renderer {
   }
 
   applyQuality() {
-    // F apaga las ondas de choque, el único efecto de pantalla que queda.
-    this.root.filters = this.highQuality ? this.shocks.map((s) => s.f) : [];
+    // Todo lo que pasa por filtros de pantalla cuelga de esta opción.
+    if (!this.highQuality) this.post.clear();
+    this.scanlines.visible = this.highQuality;
+    this.syncFilters(true);
+  }
+
+  /** Los filtros de pantalla solo están en la cadena mientras hay un efecto vivo: en reposo, coste cero. */
+  private syncFilters(force = false) {
+    const on = this.highQuality;
+    const post = on && this.post.active;
+    const sig = (post ? 1 : 0) + this.shocks.reduce((n, s, i) => n + (on && s.f.enabled ? 2 << i : 0), 0);
+    if (!force && sig === this.filterSig) return;
+    this.filterSig = sig;
+    const chain: Filter[] = [];
+    if (on) for (const s of this.shocks) if (s.f.enabled) chain.push(s.f);
+    if (post) chain.push(this.post.filter);
+    this.root.filters = chain;
   }
 
   // ───────────── coordenadas ─────────────
@@ -405,6 +431,7 @@ export class Renderer {
     this.trailList = [];
     this.flashList = [];
     for (const s of this.shocks) s.f.enabled = false;
+    this.post.clear();
     this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
     this.accentTarget = accentFor(1);
@@ -412,6 +439,14 @@ export class Renderer {
   }
 
   shake(amount: number) { this.trauma = Math.min(1, this.trauma + amount * (REDUCED_MOTION ? 0.25 : 1)); }
+
+  /** Gancho para las ultis: estallido de pantalla (pixelado, aberración y pulso de color). */
+  ultiBurst(color: number = HYPER_COLOR) {
+    if (REDUCED_MOTION) { this.post.pulse(color, 0.5); return; }
+    this.post.pixelate(10, 0.35);
+    this.post.aberrate(0.9);
+    this.post.pulse(color, 0.8);
+  }
 
   shockwave(x: number, y: number, opts: { amplitude?: number; wavelength?: number; speed?: number; dur?: number } = {}) {
     if (REDUCED_MOTION) return;
@@ -541,6 +576,7 @@ export class Renderer {
       if (c.perfect) {
         this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: this.skin.ink, size: 46, life: 2.2, vy: -10 });
         this.flash(this.skin.ink, 0.3);
+        if (!REDUCED_MOTION) this.post.pixelate(10, 0.4);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
       }
 
@@ -548,6 +584,7 @@ export class Renderer {
       this.punch = big ? 0.035 : 0.012 * c.lines;
       if (big) {
         this.shockwave(cxMid, cyRows, { amplitude: c.lines >= 4 ? 18 : 12 });
+        this.post.aberrate(c.lines >= 4 ? 0.8 : 0.45);
         this.flash(c.lines >= 4 ? 0x1f5fa8 : 0x7a3fa0, 0.12);
       }
     });
@@ -569,6 +606,7 @@ export class Renderer {
       this.flashList.push({ x: this.px(cx - 2), y: this.py(cy - 2), w: CELL * 5, h: CELL * 5, color: 0xff8030, life: 0.35, max: 0.35 });
       this.shockwave(x, y, { amplitude: 22, wavelength: 130, speed: 700 });
       this.shake(0.7);
+      this.post.aberrate(0.6);
       this.flash(0xff6a2a, 0.2);
       this.floatText('¡BOOM!', x, y - 20, { color: 0xb4541a, size: 40 });
       this.floatText(`+${points.toLocaleString('es-ES')}`, x, y + 22, { size: 16, vy: -70 });
@@ -622,6 +660,8 @@ export class Renderer {
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
       this.flash(accentFor(level), 0.15);
+      if (!REDUCED_MOTION) this.post.pixelate(14, 0.45);
+      this.post.pulse(accentFor(level), 0.35);
     });
 
     ev.on('interest', ({ amount }) => {
@@ -668,6 +708,7 @@ export class Renderer {
 
     ev.on('hyper', ({ hyper }) => {
       this.flash(HYPER_COLOR, 0.5);
+      this.ultiBurst(HYPER_COLOR);
       this.shake(0.5);
       this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 170, speed: 650 });
       this.floatText(`¡${hyper.name.toUpperCase()}!`, mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });
@@ -722,6 +763,8 @@ export class Renderer {
 
     this.updateFx(sec);
     this.updateFilters(sec);
+    this.updatePost(sec, dt);
+    this.syncFilters();
     this.particles.update(dt);
     this.updateTexts(sec);
     this.updateCamera(sec);
@@ -753,23 +796,25 @@ export class Renderer {
     }
   }
 
-  /** Posiciones de las casillas de la barra de piezas (reserva y cola), según los perks. */
+  /** Casillas de la reserva (columna izquierda) y de la cola (columna derecha), según los perks. */
   private queueSlots() {
     const g = this.game;
-    const top = QUEUE_Y + 24;
+    const top = 28; // bajo la etiqueta
+    const hs = g.mods.holdSlots > 1 ? 48 : 64;
     const hold: { x: number; y: number; s: number }[] = [];
-    let x = QUEUE_X + 14;
-    for (let i = 0; i < g.mods.holdSlots; i++, x += 72) hold.push({ x, y: top, s: 64 });
-    const sep = x + 8;
+    let y = HOLD_Y + top;
+    for (let i = 0; i < g.mods.holdSlots; i++, y += hs + 8) hold.push({ x: HOLD_X + (HOLD_W - hs) / 2, y, s: hs });
+    const holdH = y - HOLD_Y + 4;
     const next: { x: number; y: number; s: number }[] = [];
-    x = sep + 22;
+    y = NEXT_Y + top;
     for (let i = 0; i < g.mods.preview; i++) {
       const s = i === 0 ? 64 : 48;
-      if (x + s > QUEUE_X + QUEUE_W - 10) break; // con muchas piezas en la cola, las que no caben no se dibujan
-      next.push({ x, y: top + (64 - s) / 2, s });
-      x += s + 8;
+      if (y + s > BOARD_Y + BOARD_H) break; // con muchas piezas en la cola, las que no caben no se dibujan
+      next.push({ x: NEXT_X + (NEXT_W - s) / 2, y, s });
+      y += s + 8;
     }
-    return { hold, next, sep };
+    const nextH = y - NEXT_Y + 4;
+    return { hold, next, holdH, nextH };
   }
 
   private updatePanels() {
@@ -777,38 +822,36 @@ export class Renderer {
     const key = `${g.mods.holdSlots}|${g.mods.preview}|${this.accent}|${this.skinId}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
-    const { hold, next, sep } = this.queueSlots();
+    const { hold, next, holdH, nextH } = this.queueSlots();
     const p = this.panels;
     p.clear();
-    const x = QUEUE_X, y = QUEUE_Y, w = QUEUE_W, h = QUEUE_H;
-    // marco de 4 px como los paneles del HUD
-    p.rect(x, y, w, h).fill({ color: this.skin.panel, alpha: 1 });
-    p.rect(x, y, w, h).stroke({ width: 4, color: this.skin.ink, alpha: 1 });
-    // separador entre reserva y cola
-    p.moveTo(sep, y + 12).lineTo(sep, y + h - 12).stroke({ width: 1, color: this.skin.ink, alpha: 0.3 });
+    // marcos de 4 px como los paneles del HUD
+    for (const [x, y, w, h] of [[HOLD_X, HOLD_Y, HOLD_W, holdH], [NEXT_X, NEXT_Y, NEXT_W, nextH]]) {
+      p.rect(x, y, w, h).fill({ color: this.skin.panel, alpha: 1 });
+      p.rect(x, y, w, h).stroke({ width: 4, color: this.skin.ink, alpha: 1 });
+    }
     for (const sl of hold) p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: 1, color: this.skin.ink, alpha: 0.35 });
     next.forEach((sl, i) => {
       p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : this.skin.ink, alpha: i === 0 ? 1 : 0.35 });
     });
-    // flecha: la primera de la cola es la que entra
-    const ax = next[0].x - 14, ay = next[0].y + next[0].s / 2;
-    p.poly([ax, ay - 6, ax + 8, ay, ax, ay + 6]).fill({ color: this.accent, alpha: 1 });
+    // flecha hacia el tablero: la primera de la cola es la que entra
+    const ax = NEXT_X - 10, ay = next[0].y + next[0].s / 2;
+    p.poly([ax + 8, ay - 6, ax, ay, ax + 8, ay + 6]).fill({ color: this.accent, alpha: 1 });
 
     if (!this.labels.length) {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
         const t = new Text({
           text: txt,
-          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 10, fill: 0xffffff, letterSpacing: 1 },
+          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 9, fill: 0xffffff, letterSpacing: 0 },
           resolution: this.app.renderer.resolution,
         });
-        t.anchor.set(0, 0.5);
-        t.y = QUEUE_Y + 13;
+        t.anchor.set(0.5, 0.5);
         this.world.addChild(t);
         this.labels.push(t);
       }
     }
-    this.labels[0].x = hold[0].x;
-    this.labels[1].x = next[0].x;
+    this.labels[0].position.set(HOLD_X + HOLD_W / 2, HOLD_Y + 16);
+    this.labels[1].position.set(NEXT_X + NEXT_W / 2, NEXT_Y + 16);
     for (const t of this.labels) t.tint = this.accent;
   }
 
@@ -999,6 +1042,22 @@ export class Renderer {
     }
     this.flashes.end();
     this.glows.end();
+  }
+
+  private updatePost(sec: number, dtMs: number) {
+    if (!this.highQuality) return;
+    this.post.aberrate(this.trauma * this.trauma * 0.5);
+    const hy = this.game.hyperLeft > 0 ? 0.35 + (REDUCED_MOTION ? 0 : 0.08 * Math.sin(this.time * 9)) : 0;
+    this.post.update(sec, !REDUCED_MOTION, hy, HYPER_COLOR);
+    // si el equipo no da la talla (ratos de más de 34 ms por fotograma durante 3 s), los efectos se apagan solos
+    this.slowT = dtMs > 34 && this.game.state === 'playing' ? this.slowT + sec : Math.max(0, this.slowT - sec);
+    if (this.slowT > 3) {
+      this.slowT = 0;
+      this.highQuality = false;
+      this.applyQuality();
+      this.floatText('EFECTOS APAGADOS: EL EQUIPO VA LENTO', BOARD_X + BOARD_W / 2, BOARD_Y + 60, { size: 16, life: 3 });
+      this.onAutoOff?.();
+    }
   }
 
   private updateFilters(sec: number) {

@@ -5,6 +5,12 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 - **Racha**: un medidor nuevo en el HUD que sube con varias líneas a la vez, combos, giros y jugando rápido, y baja con cada pieza. Mejora las cartas que salen (la pantalla de cartas enseña la probabilidad de cada rareza) y hace salir las hiperperks, que ya no se eligen siempre en el nivel 4. Las pieles dejan de ser perks: cada hiperperk pone la suya mientras está activa. Reglas versión 6 (#20).
 
+## 0.11.0 — 2026-10-10
+- La cola de siguientes vuelve a una columna a la derecha del tablero y la reserva a otra a la izquierda (más cómodo y lo que el jugador espera). Efectos de pantalla con un shader propio: rejilla de monitor suave, aberración cromática con los golpes, pixelado al subir de nivel y pulso de color con la hiperperk. F o el botón «Efectos» del menú de pausa los apaga (se guarda); un equipo lento los apaga solo y avisa. En reposo no hay filtro de pantalla (la rejilla es estática). `Renderer.ultiBurst(color)` queda como gancho para las ultis (#19).
+
+## 0.10.1 — 2026-10-10
+- Portada rediseñada como menú principal: Arcade (con sus tres modos y récords) y, bloqueadas con «Próximamente», Historia y Rankings. Hueco de anuncio plegado y aislado en `src/ui/adSlot.ts`, sin ninguna red de anuncios (#18).
+
 ## 0.10.0 — 2026-10-09
 - Nuevo estilo visual «Píxel» en toda la interfaz: consola de 16 bits con cielo nocturno, bloques de 8×8 píxeles, bordes de 4 px y letra de recreativa. Sustituye a «papel y tinta». Las pieles de los perks (Plano, Apagón, Terminal, Neón) recolorean el estilo píxel (#17).
 
