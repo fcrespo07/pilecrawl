@@ -30,6 +30,8 @@ const panelLeft = document.getElementById('panel-left')!;
 const panelRight = document.getElementById('panel-right')!;
 const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
 refreshPanels();
+// la cuenta atrás y el número del diario cambian con la portada abierta
+window.setInterval(refreshPanels, 30_000);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 /** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
