@@ -65,6 +65,8 @@ export class PostFx {
   private tint = 0;
   private tintCol: [number, number, number] = [1, 1, 1];
 
+  private size = new Float32Array([W, H]);
+
   constructor() {
     this.u = { uParams: new Float32Array([0, 0, 0, 0]), uTint: new Float32Array([1, 1, 1]) };
     this.filter = new Filter({
@@ -73,12 +75,19 @@ export class PostFx {
         postUniforms: {
           uParams: { value: this.u.uParams, type: 'vec4<f32>' },
           uTint: { value: this.u.uTint, type: 'vec3<f32>' },
-          uSize: { value: new Float32Array([W, H]), type: 'vec2<f32>' },
+          uSize: { value: this.size, type: 'vec2<f32>' },
         },
       },
     });
     this.filter.resolution = 'inherit';
     this.group = this.filter.resources.postUniforms as UniformGroup;
+  }
+
+  /** Cambia el tamaño lógico del escenario (cambio de disposición). */
+  resize(w: number, h: number) {
+    this.size[0] = w;
+    this.size[1] = h;
+    this.group.update();
   }
 
   /** Abre la aberración: 1 es un golpe fuerte. */

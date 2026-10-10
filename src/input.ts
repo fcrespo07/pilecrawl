@@ -59,6 +59,16 @@ export class Input {
     this.release(TOUCH_CODE[action]);
   }
 
+  /** Arrastre lateral: un paso suelto, sin autorepetición (el dedo ya marca el ritmo). */
+  touchStep(dir: number) {
+    if (this.game.state === 'playing') this.game.move(dir);
+  }
+
+  /** Bajada suave mientras el dedo arrastra hacia abajo. */
+  softDrop(on: boolean) {
+    this.game.softDropping = on && this.game.state === 'playing';
+  }
+
   /** Al pausar o abrir menús: olvida lo que estaba pulsado. */
   releaseAll() {
     this.leftHeld = this.rightHeld = false;

@@ -6,24 +6,9 @@
     <title>Pilecrawl</title>
   </head>
   <body>
-  <!-- Controles táctiles: solo se muestran en pantallas sin ratón (ver style.css) -->
+  <!-- Pausa táctil: solo se muestra en pantallas sin ratón (ver style.css). El resto va por gestos sobre el tablero -->
   <nav id="touch" class="touch-pad" aria-label="Controles táctiles">
-    <div class="tp-group">
-      <button type="button" data-touch="left" aria-label="Izquierda">←</button>
-      <button type="button" data-touch="right" aria-label="Derecha">→</button>
-    </div>
-    <div class="tp-group">
-      <button type="button" data-touch="down" aria-label="Bajar">↓</button>
-      <button type="button" data-touch="hard" aria-label="Soltar">⤓</button>
-    </div>
-    <div class="tp-group">
-      <button type="button" data-touch="ccw" aria-label="Girar izquierda">↺</button>
-      <button type="button" data-touch="cw" aria-label="Girar derecha">↻</button>
-      <button type="button" data-touch="r180" aria-label="Girar 180">A</button>
-      <button type="button" data-touch="hold" aria-label="Guardar pieza">C</button>
-      <button type="button" data-touch="hyper" aria-label="Hiperperk">D</button>
-      <button type="button" data-touch="pause" aria-label="Pausa">II</button>
-    </div>
+    <button type="button" data-touch="pause" aria-label="Pausa">II</button>
   </nav>
     <!-- ═════════════ Home: portada antes de la partida ═════════════ -->
     <main id="home" class="home" tabindex="-1" aria-label="Inicio de Pilecrawl">
@@ -99,7 +84,7 @@
             <li><span><kbd>D</kbd></span>hiperperk</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
-          <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil hay botones táctiles.</p>
+          <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
         <footer class="home-foot">Pilecrawl · versión <span data-version></span> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>

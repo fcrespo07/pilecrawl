@@ -4,7 +4,7 @@ import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, ty
 
 import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
 import {
-  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, HYPER_COLOR, NEXT_W, NEXT_X, NEXT_Y, W, hex,
+  accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, HYPER_COLOR, NEXT_W, NEXT_X, NEXT_Y, PORTRAIT, W, hex,
 } from './layout';
 import { Particles } from './particles';
 import { PostFx } from './postfx';
@@ -323,13 +323,46 @@ export class Renderer {
     this.screenFlash.alpha = 0;
     this.screenFlash.blendMode = 'normal';
     // rejilla de monitor: líneas estáticas (un Graphics, sin filtro) cada 3 px lógicos
-    for (let y = 2; y < H; y += 3) this.scanlines.rect(0, y, W, 1);
-    this.scanlines.fill({ color: 0x000000, alpha: 0.07 });
+    this.buildScanlines();
     this.overlay.addChild(this.scanlines, this.vignette, this.screenFlash);
 
     this.drawBoardBg();
     this.setupFilters();
     this.bindEvents();
+  }
+
+  /** El escenario cambió de disposición (vertical/horizontal) o de alto: rehace todo lo que depende de W, H y del tablero. */
+  relayout(res: number) {
+    this.app.renderer.resize(W, H, res);
+    this.root.filterArea = new Rectangle(0, 0, W, H);
+    this.world.pivot.set(W / 2, H / 2);
+    this.world.position.set(W / 2, H / 2);
+    const oldBg = this.bgSprite.texture;
+    this.bgSprite.texture = makeBackground(this.skin);
+    oldBg.destroy(true);
+    this.bgSprite.width = W;
+    this.bgSprite.height = H;
+    this.vignette.width = W;
+    this.vignette.height = H;
+    this.screenFlash.width = W;
+    this.screenFlash.height = H;
+    this.buildScanlines();
+    for (const sh of this.shocks) sh.f.center = { x: W / 2, y: H / 2 };
+    this.post.resize(W, H);
+    const old = this.tex.cell;
+    this.tex.cell = makeCellTexture(cellPx(res));
+    this.cells.setTexture(this.tex.cell);
+    old.destroy(true);
+    for (const t of this.labels) t.resolution = res;
+    this.drawBoardBg();
+    this.panelKey = '';
+    this.stars.forEach((st) => { st.s.x = Math.random() * W; st.s.y = Math.random() * H; });
+  }
+
+  private buildScanlines() {
+    this.scanlines.clear();
+    for (let y = 2; y < H; y += 3) this.scanlines.rect(0, y, W, 1);
+    this.scanlines.fill({ color: 0x000000, alpha: 0.07 });
   }
 
   setResolution(res: number) {
@@ -801,6 +834,24 @@ export class Renderer {
   private queueSlots() {
     const g = this.game;
     const top = 28; // bajo la etiqueta
+    if (PORTRAIT) {
+      // fila sobre el tablero: las casillas se reparten en horizontal
+      const hs = g.mods.holdSlots > 1 ? 40 : 56;
+      const hold: { x: number; y: number; s: number }[] = [];
+      const hw = g.mods.holdSlots * hs + (g.mods.holdSlots - 1) * 8;
+      let x = HOLD_X + (HOLD_W - hw) / 2;
+      for (let i = 0; i < g.mods.holdSlots; i++, x += hs + 8) hold.push({ x, y: HOLD_Y + top, s: hs });
+      const next: { x: number; y: number; s: number }[] = [];
+      x = NEXT_X + 12;
+      for (let i = 0; i < g.mods.preview; i++) {
+        const s = i === 0 ? 56 : 40;
+        if (x + s > NEXT_X + NEXT_W - 8) break;
+        next.push({ x, y: NEXT_Y + top + (56 - s) / 2, s });
+        x += s + 8;
+      }
+      const h = top + 56 + 8;
+      return { hold, next, holdH: h, nextH: h };
+    }
     const hs = g.mods.holdSlots > 1 ? 48 : 64;
     const hold: { x: number; y: number; s: number }[] = [];
     let y = HOLD_Y + top;
@@ -836,8 +887,10 @@ export class Renderer {
       p.rect(sl.x, sl.y, sl.s, sl.s).stroke({ width: i === 0 ? 2 : 1, color: i === 0 ? this.accent : this.skin.ink, alpha: i === 0 ? 1 : 0.35 });
     });
     // flecha hacia el tablero: la primera de la cola es la que entra
-    const ax = NEXT_X - 10, ay = next[0].y + next[0].s / 2;
-    p.poly([ax + 8, ay - 6, ax, ay, ax + 8, ay + 6]).fill({ color: this.accent, alpha: 1 });
+    if (!PORTRAIT) {
+      const ax = NEXT_X - 10, ay = next[0].y + next[0].s / 2;
+      p.poly([ax + 8, ay - 6, ax, ay, ax + 8, ay + 6]).fill({ color: this.accent, alpha: 1 });
+    }
 
     if (!this.labels.length) {
       for (const txt of ['RESERVA', 'SIGUIENTES']) {
@@ -989,7 +1042,7 @@ export class Renderer {
     const holdLocked = g.holdUsed && !g.mods.infiniteHold;
     g.hold.forEach((spec, i) => {
       const sl = hold[i];
-      if (sl) this.drawMini(spec, sl.x + sl.s / 2, sl.y + sl.s / 2, 14, holdLocked ? 0.3 : 1);
+      if (sl) this.drawMini(spec, sl.x + sl.s / 2, sl.y + sl.s / 2, PORTRAIT && sl.s < 56 ? 10 : 14, holdLocked ? 0.3 : 1);
     });
     const n = Math.min(next.length, g.queue.length);
     for (let i = 0; i < n; i++) {
