@@ -8,3 +8,5 @@ a { color: #8fd1ff; }
 nav { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; font-size: 16px; }
 kbd { background: #1c2240; border: 1px solid #3a4375; border-radius: 4px; padding: 0 6px; font-size: 15px; }
 .note { color: #9aa3c7; font-size: 15px; }
+
+h1 .logo { width: 40px; height: 40px; vertical-align: middle; margin-right: 10px; image-rendering: pixelated; }
