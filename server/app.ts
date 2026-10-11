@@ -4,9 +4,10 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { RULES_VERSION } from '../src/core/game';
-import { dailyNumber, dailySeed, MODES, utcDate, type ModeId } from '../src/core/modes';
+import { dailyNumber, dailySeed, isModeId, MODES, utcDate, type ModeId } from '../src/core/modes';
 import type { Config } from './config';
 import { RateLimiter } from './ratelimit';
+import { parseStats, summarize, type StatsRow } from './stats';
 import { isRankedMode, RANKED_MODES, verifyReplay } from './validate';
 
 const DAY = 86_400_000;
@@ -15,6 +16,8 @@ const START_TTL = 6 * 3_600_000;
 /** Primer día del desafío diario. */
 const DAILY_FIRST = '2026-10-09';
 const TOP = 50;
+/** Filas máximas de estadísticas: al pasar, se borran las más antiguas. */
+const STATS_MAX_ROWS = 200_000;
 /** Puestos que se enseñan por encima y por debajo del jugador. */
 const NEAR = 2;
 
@@ -66,8 +69,18 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const adminFails = new RateLimiter(10, 600_000);
   const renameLimit = new RateLimiter(3, 86_400_000);
   const recoverLimit = new RateLimiter(10, 600_000);
+  // estadísticas anónimas: tope por IP y tope global (la IP no se guarda, solo cuenta en memoria)
+  const statsLimit = new RateLimiter(40, 3_600_000);
+  const statsGlobal = new RateLimiter(60, 60_000);
+  /** Las estadísticas se conservan un año y poco; se limpia una vez al día. */
+  let statsPrunedOn = '';
 
   const q = {
+    insertStats: db.prepare(
+      'INSERT INTO stats (day, mode, rules, build, "end", level, score, lines, secs, revives, hyper, picks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    ),
+    capStats: db.prepare('DELETE FROM stats WHERE id <= ?'),
+    deleteStatsBefore: db.prepare('DELETE FROM stats WHERE day < ?'),
     player: db.prepare('SELECT id, nickname, best_level, hidden FROM players WHERE id = ?'),
     playerSecret: db.prepare('SELECT secret_hash FROM players WHERE id = ?'),
     insertPlayer: db.prepare('INSERT INTO players (id, nickname, nick_key, secret_hash, created_at) VALUES (?, ?, ?, ?, ?)'),
@@ -202,6 +215,49 @@ export function createApp(cfg: Config, db: DatabaseSync) {
 
     if (method === 'GET' && path === '/api/config') {
       return json({ rulesVersion: RULES_VERSION, now: cfg.now().getTime(), today, dailyNumber: dailyNumber(today), modes: RANKED_MODES });
+    }
+
+    // Estadísticas anónimas de una partida (sin sesión): ver server/stats.ts y privacidad.html
+    if (method === 'POST' && path === '/api/stats') {
+      if (!statsLimit.allow(`s:${ip}`, now) || !statsGlobal.allow('s', now)) throw new ApiError(429, 'demasiadas peticiones');
+      const run = parseStats(await readJson(req));
+      if (!run) throw new ApiError(400, 'datos no válidos');
+      const ins = q.insertStats.run(today, run.mode, run.rules, run.build, run.end, run.level, run.score, run.lines, run.secs, run.revives, run.hyper, JSON.stringify(run.picks));
+      // tope de filas: la tarjeta de la Pi no se puede llenar a base de envíos
+      q.capStats.run(Number(ins.lastInsertRowid) - STATS_MAX_ROWS);
+      if (statsPrunedOn !== today) {
+        statsPrunedOn = today;
+        q.deleteStatsBefore.run(utcDate(new Date(now - 400 * DAY)));
+      }
+      return json({ ok: true }, 201);
+    }
+
+    if (method === 'GET' && path === '/api/admin/stats') {
+      needAdmin(req, ip, now);
+      const days = Math.max(1, Math.min(400, Number(url.searchParams.get('days') ?? 30) || 30));
+      const since = utcDate(new Date(now - days * DAY));
+      const rules = url.searchParams.get('rules');
+      const mode = url.searchParams.get('mode') ?? 'normal';
+      if (mode !== 'all' && !isModeId(mode)) throw new ApiError(400, 'modo no válido');
+      let sql = 'SELECT day, mode, rules, build, "end", level, score, lines, secs, revives, hyper, picks FROM stats WHERE day >= ?';
+      const args: (string | number)[] = [since];
+      if (rules !== null && /^\d+$/.test(rules)) {
+        sql += ' AND rules = ?';
+        args.push(Number(rules));
+      }
+      const rows = (db.prepare(`${sql} ORDER BY id DESC LIMIT 100000`).all(...args) as unknown as (Omit<StatsRow, 'picks'> & { picks: string })[]).map((r) => ({
+        ...r,
+        picks: JSON.parse(r.picks),
+      }));
+      return json({ since, days, rules: rules === null ? null : Number(rules), ...summarize(rows, mode === 'all' ? null : (mode as ModeId)) });
+    }
+
+    // para vaciar datos de prueba antes de la beta: ?before=AAAA-MM-DD (excluido)
+    if (method === 'DELETE' && path === '/api/admin/stats') {
+      needAdmin(req, ip, now);
+      const before = url.searchParams.get('before');
+      if (!isDate(before)) throw new ApiError(400, 'falta ?before=AAAA-MM-DD');
+      return json({ deleted: Number(q.deleteStatsBefore.run(before).changes) });
     }
 
     if (method === 'POST' && path === '/api/players') {

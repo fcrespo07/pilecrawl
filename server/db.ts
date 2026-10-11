@@ -62,6 +62,24 @@ export function openDb(path: string): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS bests_rank ON bests (mode, scope, score DESC);
 
+    -- Estadísticas anónimas de partidas (sin jugador, sin IP, solo el día). Ver server/stats.ts.
+    CREATE TABLE IF NOT EXISTS stats (
+      id      INTEGER PRIMARY KEY AUTOINCREMENT,
+      day     TEXT NOT NULL,
+      mode    TEXT NOT NULL,
+      rules   INTEGER NOT NULL,
+      build   TEXT NOT NULL,
+      "end"   TEXT NOT NULL,
+      level   INTEGER NOT NULL,
+      score   INTEGER NOT NULL,
+      lines   INTEGER NOT NULL,
+      secs    INTEGER NOT NULL,
+      revives INTEGER NOT NULL,
+      hyper   TEXT,
+      picks   TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS stats_day ON stats (day);
+
     CREATE TABLE IF NOT EXISTS replays (
       run_id INTEGER PRIMARY KEY REFERENCES runs(id) ON DELETE CASCADE,
       data   BLOB NOT NULL

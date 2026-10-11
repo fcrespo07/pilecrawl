@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => ({
         main: resolve(__dirname, 'index.html'),
         privacidad: resolve(__dirname, 'privacidad.html'),
         acerca: resolve(__dirname, 'acerca.html'),
+        stats: resolve(__dirname, 'stats.html'),
       },
     },
   },

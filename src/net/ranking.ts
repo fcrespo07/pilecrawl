@@ -3,7 +3,7 @@ import type { Replay } from '../core/game';
 import { utcDate, type ModeId } from '../core/modes';
 
 export const RANKING_ENABLED = import.meta.env.VITE_RANKING === '1';
-const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+export const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 const PLAYER_KEY = 'blockrogue.player';
 
 export interface Player {

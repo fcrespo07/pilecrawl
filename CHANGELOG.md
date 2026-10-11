@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.19.9 — 2026-10-11
+- Estadísticas anónimas de partidas para equilibrar con datos reales: al acabar o abandonar una partida el cliente envía un resumen sin identificadores (`POST /api/stats`), con casilla para apagarlas en la página de privacidad; el responsable las lee en `/stats.html` o en `/api/admin/stats` con `ADMIN_TOKEN`. El juego emite un evento `offer` nuevo (solo informa, sin cambio de reglas) (#45).
+
 ## 0.19.8 — 2026-10-11
 - Cada PR despliega una vista previa del cliente en Cloudflare Pages (sin ranking ni anuncios) y comenta la URL; la guía incluye el aviso de caídas con `/api/health` (#44).
 
