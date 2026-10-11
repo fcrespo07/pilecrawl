@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.19.1 — 2026-10-11
+- La Expedición se marca como **beta** (etiqueta en el botón de la portada, en su tarjeta y en su pantalla): costes, fragmentos y retos están sin equilibrar (#33).
+
 ## 0.19.0 — 2026-10-11
 - **Expedición: retos y perks bloqueados**: 8 perks (Cruz, Maestro del giro, Combo eterno, Interés compuesto, Bomba, Prisma, Terremoto y Fénix) no salen en las ofertas de la Expedición hasta cumplir su reto en una sola partida (3 cuádruples, 5 giros, combo 6, nivel 6, 30 y 60 líneas, nivel 9, 10 minutos). El progreso se ve en la pantalla de la Expedición y el catálogo indica el reto de cada perk. El arcade no cambia (#32).
 
