@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.21.0 — 2026-10-11
+- Las hiperperks con duración se pueden cortar: volver a pulsar D (o tocar la tarjeta Hiper) las termina al momento, sin devolver la carga (los primeros 0,3 s no cuentan, para evitar dobles toques). Tres hiperperks nuevas, cada una con su piel: **Diluvio** (todas las piezas son barras I, 10 s), **Gravedad** (el tablero se compacta al fijar cada pieza, 6 s) y **Escudo** (no puedes perder: si te desbordas se vacía el tablero salvo 5 filas, 10 s). `RULES_VERSION` sube a 8 (#42).
+
 ## 0.20.0 — 2026-10-11
 - Arcade más loco y con legendarias de verdad. Las legendarias salían en menos de 1 de cada 200 ofertas (el peso iba por carta y había 24 comunes por 3 legendarias, además de pedir el nivel 7); ahora el peso va por rareza (común 52, rara 30, épica 13, legendaria 5) y epicas/legendarias se desbloquean en los niveles 3 y 5. Los combos influyen mucho más: un calor por rareza que suben jugadas distintas (dobles, triples y combos → rara; cuádruples y giros → épica; back-to-back, combos largos y tablero limpio → legendaria), visible en el panel de racha. Segunda vida pasa a legendaria (máx. 2) pero sigue disponible desde la primera partida. Tres legendarias nuevas: Furia, Eco y Casino. Abanico ahora suma +1 carta en vez de fijar 4; Casino no recorta las ofertas de hiperperk. Sube `RULES_VERSION` a 8 (#43).
 

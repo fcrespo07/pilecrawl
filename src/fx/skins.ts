@@ -1,7 +1,7 @@
 // Pieles de la interfaz. Son solo aspecto: las ponen las hiperperks mientras están activas y no tocan las reglas.
 // La de base es Píxel; las de los perks cambian sus colores y mantienen los bloques de píxeles.
 
-export type SkinId = 'pixel' | 'apagon' | 'terminal' | 'neon' | 'plano';
+export type SkinId = 'pixel' | 'apagon' | 'terminal' | 'neon' | 'plano' | 'hielo' | 'magma' | 'oro';
 
 export interface Skin {
   /** Degradado del fondo del lienzo, de arriba abajo. */
@@ -29,6 +29,9 @@ export const SKINS: Record<SkinId, Skin> = {
   neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true, burst: 0xff4dd2 },
   // panel muy oscuro: las piezas azules tienen que destacar sobre el plano
   plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true, burst: 0x6fb6ff },
+  hielo: { bg0: 0x0d3550, bg1: 0x08202f, ink: 0xe6faff, paper: 0x082436, panel: 0x0b2c42, dark: true, burst: 0x8fe8ff },
+  magma: { bg0: 0x3a0f08, bg1: 0x1c0704, ink: 0xffd9b0, paper: 0x1c0704, panel: 0x2a0c06, dark: true, burst: 0xff6a2b },
+  oro: { bg0: 0x3a2a08, bg1: 0x1f1604, ink: 0xfff0b8, paper: 0x1f1604, panel: 0x2b1f06, dark: true, burst: 0xffd23f },
 };
 
 export const skinOf = (id: SkinId | null | undefined): Skin => SKINS[id ?? 'pixel'];

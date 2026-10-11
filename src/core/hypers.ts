@@ -6,7 +6,7 @@
 
 import type { SkinId } from '../fx/skins';
 
-export type HyperId = 'slowmo' | 'frenzy' | 'sand' | 'barrage' | 'wipe';
+export type HyperId = 'slowmo' | 'frenzy' | 'sand' | 'barrage' | 'wipe' | 'flood' | 'shield' | 'gravity';
 
 export interface HyperDef {
   id: HyperId;
@@ -37,6 +37,18 @@ export const HYPERS: HyperDef[] = [
   {
     id: 'barrage', name: 'Bombardeo', charge: 12, durationMs: 8_000, skin: 'apagon',
     pros: () => ['Durante <b>8 s</b>, <b>todas las piezas</b> son bombas', 'Cada una revienta un área de <b>5×5</b>', 'La pantalla pasa a <b>modo noche</b>'],
+  },
+  {
+    id: 'flood', name: 'Diluvio', charge: 12, durationMs: 10_000, skin: 'hielo',
+    pros: () => ['Durante <b>10 s</b>, <b>todas las piezas</b> son <b>barras I</b>', 'Ideal para cuádruples: apila y suelta', 'La pantalla pasa a <b>hielo</b>'],
+  },
+  {
+    id: 'gravity', name: 'Gravedad', charge: 16, durationMs: 6_000, skin: 'magma',
+    pros: () => ['Durante <b>6 s</b>, al fijar cada pieza <b>todo el tablero se compacta</b>', 'Se tapan <b>todos los agujeros</b> y salen líneas solas', 'La pantalla pasa a <b>magma</b>'],
+  },
+  {
+    id: 'shield', name: 'Escudo', charge: 14, durationMs: 10_000, skin: 'oro',
+    pros: () => ['Durante <b>10 s</b> no puedes <b>perder</b>: si te desbordas, se vacía el tablero salvo <b>5 filas</b>', 'No gasta vidas extra', 'La pantalla pasa a <b>oro</b>'],
   },
   {
     id: 'wipe', name: 'Tabla rasa', charge: 20, durationMs: 0, skin: null,
