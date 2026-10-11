@@ -1,6 +1,6 @@
 // Partida guardada de la Expedición en localStorage: fragmentos y mejoras compradas.
 // Es del jugador y no cuenta para ningún ranking, así que no hace falta validarla en el servidor.
-import { buy, shardsFor, UPGRADE_BY_ID, UPGRADES, type ExpeditionSave, type Owned, type UpgradeId } from './core/expedition';
+import { buy, CHALLENGE_PERKS, newUnlocks, shardsFor, UPGRADE_BY_ID, UPGRADES, type ExpeditionSave, type Owned, type RunStats, type UpgradeId } from './core/expedition';
 
 const KEY = 'blockrogue.exp';
 
@@ -10,7 +10,7 @@ const clean = (v: unknown): number => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-const EMPTY = (): ExpeditionSave => ({ shards: 0, owned: {}, runs: 0 });
+const EMPTY = (): ExpeditionSave => ({ shards: 0, owned: {}, unlocked: [], runs: 0 });
 
 export function loadExpedition(): ExpeditionSave {
   try {
@@ -21,7 +21,8 @@ export function loadExpedition(): ExpeditionSave {
       const n = clean((p.owned as Owned | undefined)?.[u.id]);
       if (n > 0) owned[u.id] = Math.min(n, u.costs.length);
     }
-    return { shards: clean(p.shards), owned, runs: clean(p.runs) };
+    const unlocked = Array.isArray(p.unlocked) ? CHALLENGE_PERKS.filter((id) => (p.unlocked as unknown[]).includes(id)) : [];
+    return { shards: clean(p.shards), owned, unlocked, runs: clean(p.runs) };
   } catch {
     /* sin almacenamiento o JSON roto: se empieza de cero */
     return EMPTY();
@@ -36,12 +37,13 @@ function save(s: ExpeditionSave) {
   }
 }
 
-/** Suma los fragmentos de una partida terminada y devuelve cuántos han sido. */
-export function awardRun(level: number, lines: number): number {
+/** Suma los fragmentos de una partida terminada y abre los perks de los retos cumplidos. */
+export function awardRun(stats: RunStats): { shards: number; unlocked: string[] } {
   const s = loadExpedition();
-  const gained = shardsFor(level, lines);
-  save({ ...s, shards: s.shards + gained, runs: s.runs + 1 });
-  return gained;
+  const shards = shardsFor(stats.level, stats.lines);
+  const unlocked = newUnlocks(s.unlocked, stats);
+  save({ ...s, shards: s.shards + shards, unlocked: [...s.unlocked, ...unlocked], runs: s.runs + 1 });
+  return { shards, unlocked };
 }
 
 /** Compra un nivel de la mejora. Devuelve si se pudo. */

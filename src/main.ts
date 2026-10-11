@@ -129,8 +129,11 @@ function wireAudioAndFeel() {
     audio.stopMusic();
     audio.gameOver();
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
-    const shards = game.mode === 'expedition' && !game.sandbox ? awardRun(game.level, game.lines) : null;
-    if (game.mode !== 'tutorial') ui.showGameOver(shards);
+    const prize =
+      game.mode === 'expedition' && !game.sandbox
+        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time })
+        : null;
+    if (game.mode !== 'tutorial') ui.showGameOver(prize);
     modeSelect.refresh();
     offerPublish();
     refreshPanels();
@@ -259,7 +262,8 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
-  game.start(seed, mode, mode === 'expedition' ? loadExpedition().owned : {});
+  const exp = mode === 'expedition' ? loadExpedition() : null;
+  game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? []);
   currentRun = { mode, date, runId: ranked?.runId };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();

@@ -1,5 +1,5 @@
 // Pantalla de la Expedición: fragmentos, mejoras permanentes y el botón de jugar.
-import { level, nextCost, UPGRADES } from '../core/expedition';
+import { CHALLENGES, level, nextCost, perkName, UPGRADES } from '../core/expedition';
 import { buyUpgrade, loadExpedition } from '../expedition';
 
 const fmt = (n: number) => n.toLocaleString('es-ES');
@@ -22,9 +22,20 @@ export function renderExpedition(root: HTMLElement) {
       </div>
     </article>`;
   }).join('');
+  const retos = CHALLENGES.map((c) => {
+    const done = save.unlocked.includes(c.perk);
+    return `<article class="cat-item exp-item${done ? ' exp-done' : ''}">
+      <div class="cat-body">
+        <div class="b-name">${perkName(c.perk)}<small>${done ? 'Abierto' : 'Bloqueado'}</small></div>
+        <p class="home-note">${c.text}</p>
+      </div>
+    </article>`;
+  }).join('');
   root.querySelector('#exp-shards')!.textContent = fmt(save.shards);
   root.querySelector('#exp-runs')!.textContent = fmt(save.runs);
-  root.querySelector('#exp-body')!.innerHTML = `<div class="cat-grid">${items}</div>`;
+  root.querySelector('#exp-body')!.innerHTML =
+    `<section class="home-card"><h2>Mejoras permanentes</h2><div class="cat-grid">${items}</div></section>` +
+    `<section class="home-card"><h2>Retos <small>${save.unlocked.length}/${CHALLENGES.length}</small></h2><p class="home-note">Cada reto abre un perk para las ofertas de la Expedición. Se cumplen dentro de una sola partida. En el arcade no hacen falta.</p><div class="cat-grid">${retos}</div></section>`;
 }
 
 /** Un solo escuchador para las compras; vuelve a pintar tras cada una. */

@@ -1259,6 +1259,7 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 .exp-pip.on { background: var(--hi); opacity: 1; }
 .exp-item .home-btn { margin-top: 10px; }
 .exp-item .home-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.exp-done .b-name small { color: var(--hi); }
 .exp-max { display: inline-block; margin-top: 10px; font-size: 14px; color: var(--hi); }
 #expedition .home-card { margin: 18px 0; }
 #expedition .home-card .home-btn { margin-top: 16px; }

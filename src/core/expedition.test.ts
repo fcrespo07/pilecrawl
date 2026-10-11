@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buy, level, nextCost, shardsFor, UPGRADES, type ExpeditionSave } from './expedition';
+import { buy, CHALLENGES, level, lockedPerks, newUnlocks, nextCost, shardsFor, UPGRADES, type ExpeditionSave, type RunStats } from './expedition';
+import { PERK_BY_ID } from './perks';
 import { Game } from './game';
 import { runReplay } from './replay';
 import { isRankedMode } from '../../server/validate';
 
-const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, runs: 0 });
+const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0 });
+const stats = (o: Partial<RunStats> = {}): RunStats => ({ quads: 0, spins: 0, maxCombo: 0, level: 1, lines: 0, timeMs: 0, ...o });
 
 describe('expedición', () => {
   it('comprar gasta fragmentos y sube un nivel; sin fragmentos no se puede', () => {
@@ -59,5 +61,36 @@ describe('expedición', () => {
 
   it('todas las mejoras tienen coste', () => {
     for (const u of UPGRADES) expect(u.costs.length).toBeGreaterThan(0);
+  });
+
+  it('cada reto abre un perk que existe', () => {
+    for (const c of CHALLENGES) expect(PERK_BY_ID[c.perk]).toBeDefined();
+  });
+
+  it('un reto se cumple y no se repite', () => {
+    expect(newUnlocks([], stats({ quads: 3 }))).toEqual(['cross']);
+    expect(newUnlocks(['cross'], stats({ quads: 3 }))).toEqual([]);
+    expect(newUnlocks([], stats())).toEqual([]);
+  });
+
+  it('los perks bloqueados no salen en las ofertas de la Expedición y sí en el arcade', () => {
+    const locked = lockedPerks([]);
+    expect(locked.has('cross')).toBe(true);
+    expect(lockedPerks(['cross']).has('cross')).toBe(false);
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = new Game();
+      g.start(seed, 'expedition', {}, []);
+      g.bestLevel = 9999;
+      g.pendingLevelUps = 1;
+      g.rerolls = 999;
+      (g as unknown as { beginChoice(): void }).beginChoice();
+      for (let i = 0; i < 20; i++) {
+        g.reroll();
+        for (const c of g.choices) expect(locked.has(c.id)).toBe(false);
+      }
+    }
+    const arcade = new Game();
+    arcade.start(3, 'normal');
+    expect(arcade.lockedPerks.size).toBe(0);
   });
 });
