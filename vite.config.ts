@@ -16,6 +16,9 @@ function publishing(env: Record<string, string>): Plugin {
   const client = ADSENSE_CLIENT.test(env.VITE_AD_CLIENT ?? '') ? env.VITE_AD_CLIENT : '';
   const owner = env.VITE_SITE_OWNER || 'el responsable del sitio';
   const email = env.VITE_CONTACT_EMAIL || '';
+  if (env.VITE_AD_PROVIDER === 'adsense' && (!email || !env.VITE_SITE_OWNER)) {
+    console.warn('[pilecrawl] Con anuncios activos faltan VITE_CONTACT_EMAIL o VITE_SITE_OWNER: las páginas legales saldrían incompletas.');
+  }
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
   return {
     name: 'pilecrawl-publishing',
