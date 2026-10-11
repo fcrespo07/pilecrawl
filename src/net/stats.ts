@@ -94,7 +94,8 @@ export function postStats(base: string, s: RunStats) {
   try {
     void fetch(`${base}/api/stats`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      // text/plain: petición «simple», sin comprobación previa que se pierda al cerrar la pestaña (el servidor lee JSON igual)
+      headers: { 'content-type': 'text/plain' },
       body: JSON.stringify(s),
       keepalive: true,
     }).catch(() => {});

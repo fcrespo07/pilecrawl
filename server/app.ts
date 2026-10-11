@@ -4,7 +4,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { RULES_VERSION } from '../src/core/game';
-import { dailyNumber, dailySeed, MODES, utcDate, type ModeId } from '../src/core/modes';
+import { dailyNumber, dailySeed, isModeId, MODES, utcDate, type ModeId } from '../src/core/modes';
 import type { Config } from './config';
 import { RateLimiter } from './ratelimit';
 import { parseStats, summarize, type StatsRow } from './stats';
@@ -16,6 +16,8 @@ const START_TTL = 6 * 3_600_000;
 /** Primer día del desafío diario. */
 const DAILY_FIRST = '2026-10-09';
 const TOP = 50;
+/** Filas máximas de estadísticas: al pasar, se borran las más antiguas. */
+const STATS_MAX_ROWS = 200_000;
 /** Puestos que se enseñan por encima y por debajo del jugador. */
 const NEAR = 2;
 
@@ -69,7 +71,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const recoverLimit = new RateLimiter(10, 600_000);
   // estadísticas anónimas: tope por IP y tope global (la IP no se guarda, solo cuenta en memoria)
   const statsLimit = new RateLimiter(40, 3_600_000);
-  const statsGlobal = new RateLimiter(1200, 60_000);
+  const statsGlobal = new RateLimiter(60, 60_000);
   /** Las estadísticas se conservan un año y poco; se limpia una vez al día. */
   let statsPrunedOn = '';
 
@@ -77,7 +79,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     insertStats: db.prepare(
       'INSERT INTO stats (day, mode, rules, build, "end", level, score, lines, secs, revives, hyper, picks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     ),
-    pruneStats: db.prepare('DELETE FROM stats WHERE day < ?'),
+    capStats: db.prepare('DELETE FROM stats WHERE id <= ?'),
     deleteStatsBefore: db.prepare('DELETE FROM stats WHERE day < ?'),
     player: db.prepare('SELECT id, nickname, best_level, hidden FROM players WHERE id = ?'),
     playerSecret: db.prepare('SELECT secret_hash FROM players WHERE id = ?'),
@@ -220,10 +222,12 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       if (!statsLimit.allow(`s:${ip}`, now) || !statsGlobal.allow('s', now)) throw new ApiError(429, 'demasiadas peticiones');
       const run = parseStats(await readJson(req));
       if (!run) throw new ApiError(400, 'datos no válidos');
-      q.insertStats.run(today, run.mode, run.rules, run.build, run.end, run.level, run.score, run.lines, run.secs, run.revives, run.hyper, JSON.stringify(run.picks));
+      const ins = q.insertStats.run(today, run.mode, run.rules, run.build, run.end, run.level, run.score, run.lines, run.secs, run.revives, run.hyper, JSON.stringify(run.picks));
+      // tope de filas: la tarjeta de la Pi no se puede llenar a base de envíos
+      q.capStats.run(Number(ins.lastInsertRowid) - STATS_MAX_ROWS);
       if (statsPrunedOn !== today) {
         statsPrunedOn = today;
-        q.pruneStats.run(utcDate(new Date(now - 400 * DAY)));
+        q.deleteStatsBefore.run(utcDate(new Date(now - 400 * DAY)));
       }
       return json({ ok: true }, 201);
     }
@@ -234,7 +238,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       const since = utcDate(new Date(now - days * DAY));
       const rules = url.searchParams.get('rules');
       const mode = url.searchParams.get('mode') ?? 'normal';
-      if (mode !== 'all' && !(mode in MODES)) throw new ApiError(400, 'modo no válido');
+      if (mode !== 'all' && !isModeId(mode)) throw new ApiError(400, 'modo no válido');
       let sql = 'SELECT day, mode, rules, build, "end", level, score, lines, secs, revives, hyper, picks FROM stats WHERE day >= ?';
       const args: (string | number)[] = [since];
       if (rules !== null && /^\d+$/.test(rules)) {

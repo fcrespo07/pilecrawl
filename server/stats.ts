@@ -38,15 +38,17 @@ export function parseStats(b: Record<string, unknown>): StatsRun | null {
   if (!int(b.rules, 0, 1000) || typeof b.build !== 'string' || !/^\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(b.build)) return null;
   if (!int(b.level, 1, 9999) || !int(b.score, 0, 2_000_000_000) || !int(b.lines, 0, 100_000)) return null;
   if (!int(b.secs, 0, 86_400) || !int(b.revives, 0, 99)) return null;
-  if (b.hyper !== null && !(typeof b.hyper === 'string' && ID.test(b.hyper))) return null;
+  if (b.hyper !== null && !(typeof b.hyper === 'string' && Object.hasOwn(HYPER_BY_ID, b.hyper))) return null;
   if (!Array.isArray(b.picks) || b.picks.length > 80) return null;
   const picks: StatsPick[] = [];
   for (const raw of b.picks as unknown[]) {
     if (typeof raw !== 'object' || raw === null) return null;
     const x = raw as Record<string, unknown>;
     if (!KINDS.includes(x.k as Kind) || !Array.isArray(x.s) || x.s.length > 8) return null;
-    if (!x.s.every((i) => typeof i === 'string' && ID.test(i))) return null;
-    if (x.p !== null && !(typeof x.p === 'string' && ID.test(x.p))) return null;
+    // lista blanca: solo cartas e hiperperks que existen (corta los datos inventados y acota el resumen)
+    const known = (i: unknown) => typeof i === 'string' && ID.test(i) && (x.k === 'h' ? Object.hasOwn(HYPER_BY_ID, i) : Object.hasOwn(PERK_BY_ID, i));
+    if (!x.s.every(known)) return null;
+    if (x.p !== null && !known(x.p)) return null;
     picks.push({ k: x.k as Kind, s: x.s as string[], p: x.p as string | null });
   }
   return {
