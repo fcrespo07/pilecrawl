@@ -1,9 +1,9 @@
 import { Emitter } from './emitter';
-import { baseMods, offerOdds, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Mods, type PerkDef, type Rarity } from './perks';
+import { baseMods, HEAT_MAX, NO_HEAT, offerOdds, PERK_BY_ID, rollCurses, rollOffer, rollPerks, type Heat, type Mods, type PerkDef, type Rarity } from './perks';
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
 import { HYPER_BY_ID, rollHypers, type HyperDef, type HyperId } from './hypers';
 import {
-  HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
+  HEAT_DECAY, heatGain, HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
 } from './streak';
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
@@ -99,7 +99,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 7;
+export const RULES_VERSION = 8;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -206,6 +206,8 @@ export class Game {
   hyperChoices: HyperDef[] = [];
   /** Racha (0..STREAK_MAX): sube jugando bien y baja con cada pieza. Ver `streak.ts`. */
   streak = 0;
+  /** Calor por rareza: lo suben distintas jugadas y hace más probable esa rareza en la oferta. Ver `streak.ts`. */
+  heat: Heat = { ...NO_HEAT };
   private harvestLines = 0;
   private lifelineReadyAt = 0;
   private pieceStart = 0;
@@ -283,6 +285,7 @@ export class Game {
     this.hyperPending = false;
     this.hyperChoices = [];
     this.streak = 0;
+    this.heat = { ...NO_HEAT };
     this.harvestLines = 0;
     this.lifelineReadyAt = 0;
     this.pieceStart = 0;
@@ -663,6 +666,7 @@ export class Game {
     if (m.vertigo > 0 && this.inDanger(0.5)) mult *= 1 + m.vertigo;
     if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.filter((id) => !PERK_BY_ID[id].curse).length;
     if (this.phoenixBonus > 0) mult *= 1 + this.phoenixBonus;
+    if (m.fury > 0) mult *= 1 + (m.fury * this.streak) / STREAK_MAX;
     if (this.hyperActive('frenzy')) mult *= 3;
     return mult;
   }
@@ -681,7 +685,8 @@ export class Game {
     this.active = null;
     this.piecesLocked++;
     // la racha baja con cada pieza; las líneas que haga la suben después
-    this.addStreak(-STREAK_DECAY);
+    this.addStreak(-STREAK_DECAY * this.mods.streakDecayMult);
+    for (const k of Object.keys(HEAT_DECAY) as (keyof Heat)[]) this.heat[k] = Math.max(0, this.heat[k] - HEAT_DECAY[k]);
 
     if (a.bomb || a.hyperBomb) {
       this.explode(cells);
@@ -789,10 +794,13 @@ export class Game {
     if (cascade === 0 && !blast) {
       const fast = this.time - this.pieceStart < STREAK_FAST_MS;
       this.addStreak(streakGain(lines, spin !== null, this.combo, perfect, fast));
+      const gain = heatGain(lines, spin !== null, this.combo, b2bApplied, perfect);
+      for (const k of Object.keys(gain) as (keyof Heat)[]) this.heat[k] = Math.min(HEAT_MAX, this.heat[k] + gain[k]);
     }
     this.addLines(lines);
     let counted = lines + garbageRows * this.mods.recycle;
     if (lines >= 4 || spin) counted += this.mods.expBonus;
+    counted += Math.floor(lines * this.mods.echo);
     this.addLevelProgress(counted);
 
     this.events.emit('clear', {
@@ -1037,6 +1045,7 @@ export class Game {
       this.linesIntoLevel -= this.linesNeeded();
       this.level++;
       this.pendingLevelUps++;
+      if (this.mods.rerollPerLevel > 0) this.rerolls += this.mods.rerollPerLevel;
       // la hiperperk no está garantizada: cada subida tiene una probabilidad que sube con la racha
       if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak, this.level)) {
         this.hyperPending = true;
@@ -1098,7 +1107,7 @@ export class Game {
 
   /** Saca las cartas del tipo de oferta actual (el reroll mantiene el tipo). */
   private rollChoices() {
-    const n = this.mods.choices;
+    const n = Math.max(2, this.mods.choices);
     if (this.hyperPending) {
       this.choices = [];
       this.hyperChoices = rollHypers(n, this.hyperRng);
@@ -1110,7 +1119,7 @@ export class Game {
       if (this.choices.length > 0) return;
       this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
     }
-    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer, this.lockedPerks);
+    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer, this.lockedPerks, this.heat);
   }
 
   /** Suerte de las ofertas: la de los perks (Trébol) más la de la racha. */
@@ -1122,7 +1131,7 @@ export class Game {
   offerOdds(): Record<Rarity, number> {
     // jugando, la próxima oferta es «bendita» si la última fue maldita
     const blessed = this.state === 'choosing' ? this.blessedOffer : this.cursedOffer;
-    return offerOdds(this.perks, this.offerLuck(), this.bestLevel, blessed, this.lockedPerks);
+    return offerOdds(this.perks, this.offerLuck(), this.bestLevel, blessed, this.lockedPerks, this.heat);
   }
 
   /** Probabilidad de que la próxima subida traiga hiperperk (0 si ya la tienes o aún no toca). */

@@ -98,6 +98,8 @@ describe('bot de equilibrio', () => {
   // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13; con las hiperperks (el bot las suelta en
   // cuanto se cargan), 15 y 12. Con la racha (mejores cartas y la hiperperk por suerte desde el nivel 3,
   // con la segura en el nivel 8), 17 y 11: la racha da más cartas raras, y Segunda vida es rara. La banda baja a 17-47% para ese cambio buscado.
+  // Con las legendarias de verdad en juego (peso por rareza y no por carta, calor por combos y desbloqueos en 3 y 5, v8) el bot, que elige
+  // las cartas al azar, se come también las que más duelen (Cruz, Terremoto, Eco) y pierde 38 y 19: techo a 42 (70%).
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
@@ -105,7 +107,7 @@ describe('bot de equilibrio', () => {
     const lost = (rs: GameResult[]) => rs.filter((r) => r.overByTopOut).length;
     for (const n of [lost(unlocked), lost(firstRun)]) {
       expect(n).toBeGreaterThanOrEqual(10);
-      expect(n).toBeLessThanOrEqual(28);
+      expect(n).toBeLessThanOrEqual(42);
     }
   }, 120_000);
 });

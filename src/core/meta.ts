@@ -5,8 +5,8 @@ import type { Rarity } from './perks';
 export const UNLOCK_LEVEL: Record<Rarity, number> = {
   common: 0,
   rare: 0,
-  epic: 4,
-  legendary: 7,
+  epic: 3,
+  legendary: 5,
 };
 
 export interface Meta {
