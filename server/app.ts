@@ -15,6 +15,8 @@ const START_TTL = 6 * 3_600_000;
 /** Primer día del desafío diario. */
 const DAILY_FIRST = '2026-10-09';
 const TOP = 50;
+/** Puestos que se enseñan por encima y por debajo del jugador. */
+const NEAR = 2;
 
 interface PlayerRow {
   id: string;
@@ -101,6 +103,12 @@ export function createApp(cfg: Config, db: DatabaseSync) {
        FROM bests b JOIN players p ON p.id = b.player_id
        WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0
        ORDER BY b.score DESC, b.run_id ASC LIMIT ?`,
+    ),
+    slice: db.prepare(
+      `SELECT p.nickname, b.score, b.level, b.lines, b.run_id, p.id AS player_id
+       FROM bests b JOIN players p ON p.id = b.player_id
+       WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0
+       ORDER BY b.score DESC, b.run_id ASC LIMIT ? OFFSET ?`,
     ),
     mine: db.prepare('SELECT score, level, lines, run_id FROM bests WHERE player_id = ? AND mode = ? AND scope = ?'),
     above: db.prepare(
@@ -193,7 +201,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     }
 
     if (method === 'GET' && path === '/api/config') {
-      return json({ rulesVersion: RULES_VERSION, today, dailyNumber: dailyNumber(today), modes: RANKED_MODES });
+      return json({ rulesVersion: RULES_VERSION, now: cfg.now().getTime(), today, dailyNumber: dailyNumber(today), modes: RANKED_MODES });
     }
 
     if (method === 'POST' && path === '/api/players') {
@@ -339,13 +347,22 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       const me = auth(req);
       const rows = q.top.all(mode, scope, TOP) as unknown as { nickname: string; score: number; level: number; lines: number; run_id: number; player_id: string }[];
       const total = (q.total.get(mode, scope) as { n: number }).n;
+      const mine = me ? rankOf(me.id, mode, scope) : null;
+      const toEntry = (r: (typeof rows)[number], rank: number) => ({ rank, nickname: r.nickname, score: r.score, level: r.level, lines: r.lines, runId: r.run_id, me: me?.id === r.player_id });
+      // ventana alrededor del jugador (2 por encima y 2 por debajo) para la portada
+      let near: ReturnType<typeof toEntry>[] = [];
+      if (mine?.rank) {
+        const from = Math.max(1, mine.rank - NEAR);
+        near = (q.slice.all(mode, scope, NEAR * 2 + 1, from - 1) as unknown as typeof rows).map((r, i) => toEntry(r, from + i));
+      }
       return json(
         {
           mode,
           scope,
           total,
-          entries: rows.map((r, i) => ({ rank: i + 1, nickname: r.nickname, score: r.score, level: r.level, lines: r.lines, runId: r.run_id, me: me?.id === r.player_id })),
-          me: me ? { nickname: me.nickname, ...rankOf(me.id, mode, scope) } : null,
+          entries: rows.map((r, i) => toEntry(r, i + 1)),
+          near,
+          me: me && mine ? { nickname: me.nickname, ...mine } : null,
         },
         200,
         { 'cache-control': me ? 'private, no-store' : 'public, max-age=10' },

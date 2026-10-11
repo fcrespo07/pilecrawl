@@ -1,7 +1,7 @@
 // Interfaz del ranking: la tabla de la portada y el botón de publicar al acabar la partida.
 // No sabe de Pixi ni de las reglas: solo habla con `net/ranking.ts`.
 import type { Replay } from '../core/game';
-import { MODES, utcDate, type ModeId } from '../core/modes';
+import { MODES, type ModeId } from '../core/modes';
 import * as net from '../net/ranking';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
@@ -27,7 +27,10 @@ export class RankingUI {
   private finished: FinishedRun | null = null;
   private publishing = false;
 
-  constructor(private onClose: () => void) {
+  constructor(
+    private onClose: () => void,
+    private onPublished: () => void = () => {},
+  ) {
     const modal = $('ranking');
     $('ranking-close').addEventListener('click', () => this.close());
     modal.addEventListener('keydown', (e) => {
@@ -130,7 +133,7 @@ export class RankingUI {
     if (player) $('ranking-me-name').textContent = player.nickname;
     list.innerHTML = '<li class="rank-empty">Cargando…</li>';
     try {
-      const b = await net.leaderboard(this.mode, this.scope, this.scope === 'daily' ? utcDate() : undefined);
+      const b = await net.leaderboard(this.mode, this.scope, this.scope === 'daily' ? net.dailyDate() : undefined);
       if (!b.entries.length) {
         list.innerHTML = '<li class="rank-empty">Todavía no hay puntuaciones. Sé el primero.</li>';
         return;
@@ -223,6 +226,7 @@ export class RankingUI {
       $('publish-msg').textContent = r.improved ? `${where}.` : `${where}. No mejora tu mejor marca.`;
       btn.hidden = true;
       this.finished = null;
+      this.onPublished();
     } catch (e) {
       $('publish-msg').textContent = (e as Error).message;
       btn.disabled = false;

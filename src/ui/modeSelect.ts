@@ -1,12 +1,13 @@
 // Selector de modo de la portada: una opción por modo con su récord.
-import { dailyNumber, PLAY_MODE_IDS, MODES, msToNextDaily, utcDate, type ModeId } from '../core/modes';
+import { dailyNumber, PLAY_MODE_IDS, MODES, msToNextDaily, type ModeId } from '../core/modes';
+import * as net from '../net/ranking';
 import { loadBest } from '../records';
 
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 
 /** «Nuevo en 3 h 12 min»: cuándo empieza el próximo desafío diario. */
 function nextDailyLabel(): string {
-  const min = Math.ceil(msToNextDaily() / 60_000);
+  const min = Math.ceil(msToNextDaily(net.now()) / 60_000);
   const h = Math.floor(min / 60);
   return `Nuevo en ${h ? `${h} h ` : ''}${min % 60} min`;
 }
@@ -28,7 +29,7 @@ export class ModeSelect {
     this.refresh();
     // la cuenta atrás del diario se actualiza sola; al cambiar de día se repinta entero
     window.setInterval(() => {
-      if (utcDate() !== this.date) this.refresh();
+      if (net.dailyDate() !== this.date) this.refresh();
       else this.root.querySelectorAll('[data-next]').forEach((el) => (el.textContent = nextDailyLabel()));
     }, 30_000);
   }
@@ -39,7 +40,7 @@ export class ModeSelect {
 
   /** Vuelve a pintar las opciones: los récords y el número del diario cambian entre partidas. */
   refresh() {
-    const date = (this.date = utcDate());
+    const date = (this.date = net.dailyDate());
     this.root.innerHTML = PLAY_MODE_IDS.map((id) => {
       const m = MODES[id];
       const name = id === 'daily' ? `${m.name} <i>#${dailyNumber(date)}</i>` : m.name;
