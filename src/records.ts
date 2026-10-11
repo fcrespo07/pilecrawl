@@ -5,6 +5,7 @@ import { isModeId, MODES, type ModeId } from './core/modes';
 const BEST_KEY: Record<Exclude<ModeId, 'daily' | 'tutorial'>, string> = {
   normal: 'blockrogue.best',
   timed: 'blockrogue.best.timed',
+  expedition: 'blockrogue.best.exp',
 };
 const DAILY_KEY = 'blockrogue.daily';
 const MODE_KEY = 'blockrogue.mode';
@@ -62,7 +63,7 @@ export function submitScore(mode: ModeId, date: string, score: number): boolean 
 export function loadLastMode(): ModeId {
   const m = read(MODE_KEY);
   // el tutorial no se elige en la portada: no puede quedar como último modo
-  return isModeId(m) && !MODES[m].tutorial ? m : 'normal';
+  return isModeId(m) && !MODES[m].tutorial && !MODES[m].expedition ? m : 'normal';
 }
 
 export function saveLastMode(mode: ModeId) {

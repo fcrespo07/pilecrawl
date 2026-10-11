@@ -1252,3 +1252,14 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 }
 .touch-only { display: none; }
 @media (pointer: coarse) { .touch-only { display: inline-flex; } }
+
+/* Expedición: pantalla de mejoras permanentes */
+.exp-item .b-name small { display: inline-flex; gap: 4px; margin-left: 10px; vertical-align: middle; }
+.exp-pip { display: inline-block; width: 10px; height: 10px; background: var(--raise-hi, var(--muted)); opacity: 0.45; }
+.exp-pip.on { background: var(--hi); opacity: 1; }
+.exp-item .home-btn { margin-top: 10px; }
+.exp-item .home-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.exp-max { display: inline-block; margin-top: 10px; font-size: 14px; color: var(--hi); }
+#expedition .home-card { margin: 18px 0; }
+#expedition .home-card .home-btn { margin-top: 16px; }
+#expedition .home-lead { text-align: left; }

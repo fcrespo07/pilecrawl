@@ -45,6 +45,8 @@ export function runReplay(r: Replay): ReplayResult {
   if (!isModeId(mode)) return { game, ok: false, reason: 'modo no válido' };
   // el tutorial (tablero precargado) no puntúa: que no se cuele en un ranking
   if (MODES[mode].tutorial) return { game, ok: false, reason: 'modo no puntuable' };
+  // la Expedición depende de mejoras guardadas en el navegador, que la repetición no lleva: no se puede reproducir
+  if (MODES[mode].expedition) return { game, ok: false, reason: 'modo no puntuable' };
   game.bestLevel = r.bestLevel;
   game.start(r.seed, mode);
 
