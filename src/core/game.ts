@@ -74,6 +74,8 @@ export interface GameEvents {
   garbageWarn: { progress: number };
   levelup: { level: number };
   interest: { amount: number };
+  /** Subida sin cartas que ofrecer: se resuelve sola con estos puntos. */
+  emptyOffer: { points: number };
   breather: { rows: number[][] };
   lifeline: void;
   harvest: { rerolls: number };
@@ -96,10 +98,13 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 6;
+export const RULES_VERSION = 7;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
+
+/** Puntos por subida de nivel cuando ya no queda ninguna carta que ofrecer (se multiplican por el nivel). */
+export const EMPTY_OFFER_POINTS = 1000;
 
 /** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
 export const GARBAGE_MIN_INTERVAL = 3;
@@ -1050,6 +1055,7 @@ export class Game {
   private newOffer() {
     if (this.hyperPending) {
       this.rollChoices();
+      this.skipEmptyOffer();
       return;
     }
     this.blessedOffer = this.cursedOffer;
@@ -1057,6 +1063,22 @@ export class Game {
       this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE;
     this.cursedOffer = cursed;
     this.rollChoices();
+    this.skipEmptyOffer();
+  }
+
+  /**
+   * Sin cartas que ofrecer (todas al máximo), la subida no se puede elegir: se resuelve sola,
+   * dando puntos, y la partida sigue. Así nunca queda parada esperando una elección vacía.
+   */
+  private skipEmptyOffer() {
+    if (this.state !== 'choosing' || this.choosingHyper || this.choices.length > 0) return;
+    const levels = this.pendingLevelUps;
+    this.pendingLevelUps = 0;
+    const points = this.addScore(EMPTY_OFFER_POINTS * this.level * levels, false);
+    this.events.emit('emptyOffer', { points });
+    this.choices = [];
+    this.state = 'playing';
+    this.spawn();
   }
 
   /** Saca las cartas del tipo de oferta actual (el reroll mantiene el tipo). */

@@ -3,7 +3,7 @@ import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
 import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
-import { PERK_BY_ID } from './perks';
+import { CURSES, PERK_BY_ID, PERKS } from './perks';
 import type { PieceSpec } from './game';
 
 /** Partida lista para jugar, sin azar en la cola inicial que moleste a los tests. */
@@ -579,5 +579,51 @@ describe('hiperperks', () => {
     g.events.on('hyperEnd', () => (ended = true));
     g.activateHyper();
     expect(ended).toBe(true);
+  });
+});
+
+describe('ofertas sin cartas', () => {
+  /** Sube de nivel `n` veces como al fijar una pieza: acumula las subidas y abre la oferta. */
+  const levelUp = (g: Game, n = 1) => {
+    const internal = g as unknown as { addLevelProgress(lines: number): void; beginChoice(): void };
+    for (let i = 0; i < n; i++) internal.addLevelProgress(g.linesNeeded());
+    internal.beginChoice();
+    // desde el nivel 3 puede salir una hiperperk al azar: va antes que la carta normal
+    while (g.choosingHyper) g.choosePerk(0);
+  };
+
+  it('con todas las cartas al máximo, la subida no deja la partida parada', () => {
+    const g = playing();
+    for (const p of [...PERKS, ...CURSES]) g.perks.set(p.id, p.max);
+    levelUp(g);
+    expect(g.state).toBe('playing');
+    expect(g.choices).toEqual([]);
+    expect(g.pendingLevelUps).toBe(0);
+    expect(g.active).not.toBeNull();
+  });
+
+  it('con la hiperperk de por medio y todas las cartas al máximo, la partida también sigue', () => {
+    const g = playing();
+    for (const p of [...PERKS, ...CURSES]) g.perks.set(p.id, p.max);
+    g.hyperPending = true;
+    levelUp(g);
+    expect(g.hyper).not.toBeNull();
+    expect(g.state).toBe('playing');
+    expect(g.choices).toEqual([]);
+    expect(g.pendingLevelUps).toBe(0);
+  });
+
+  it('si solo queda una carta, se ofrece y al elegirla la partida sigue, aunque haya subidas pendientes', () => {
+    const g = playing();
+    const last = PERKS.find((p) => p.rarity === 'common')!;
+    for (const p of [...PERKS, ...CURSES]) g.perks.set(p.id, p.max);
+    g.perks.set(last.id, last.max - 1);
+    levelUp(g, 3);
+    expect(g.state).toBe('choosing');
+    expect(g.choices.map((p) => p.id)).toEqual([last.id]);
+    g.choosePerk(0);
+    expect(g.state).toBe('playing');
+    expect(g.pendingLevelUps).toBe(0);
+    expect(g.perks.get(last.id)).toBe(last.max);
   });
 });

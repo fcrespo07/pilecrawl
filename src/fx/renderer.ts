@@ -473,7 +473,7 @@ export class Renderer {
 
   shake(amount: number) { this.trauma = Math.min(1, this.trauma + amount * (REDUCED_MOTION ? 0.25 : 1)); }
 
-  /** Gancho para las ultis: estallido de pantalla (pixelado, aberración y pulso de color). */
+  /** Gancho para las hiperperks: estallido de pantalla (pixelado, aberración y pulso de color). */
   ultiBurst(color: number = HYPER_COLOR) {
     if (REDUCED_MOTION) { this.post.pulse(color, 0.5); return; }
     this.post.pixelate(10, 0.35);
@@ -699,6 +699,10 @@ export class Renderer {
 
     ev.on('interest', ({ amount }) => {
       this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
+    });
+
+    ev.on('emptyOffer', ({ points }) => {
+      this.floatText(`SIN CARTAS +${points.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 16, delay: 0.3 });
     });
 
     ev.on('breather', ({ rows }) => {

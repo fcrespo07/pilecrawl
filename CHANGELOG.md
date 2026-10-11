@@ -2,7 +2,9 @@
 
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
-## Sin publicar
+## 0.17.1 — 2026-10-11
+- **Arreglo del cuelgue sin cartas**: si todas las cartas están al máximo, la subida de nivel ya no deja la partida parada: se resuelve sola con puntos (1000 × nivel) y un aviso en pantalla. Las partidas anteriores dejan de aceptarse en el ranking (reglas v7): hay que redesplegar el servidor (#30).
+- Texto interno: «ulti» pasa a «hiperperk» en los comentarios (no había texto visible con «ulti»).
 
 ## 0.17.0 — 2026-10-11
 - **Apodos en el ranking**: se puede cambiar el apodo (3 veces al día), recuperarlo en otro navegador con un código de recuperación (se ve en la ventana de Rankings) y generar un código nuevo que invalida el anterior. Los apodos son únicos también frente a parecidos («A.na», «4na», letras de otro alfabeto) y solo admiten escritura latina; el filtro de palabras prohibidas, propio y sumado a `NICK_BLOCKLIST`, entiende letras repetidas, cifras por letras y trucos de Unicode sin bloquear nombres como Ignazio o Pollack. La base de datos gana una columna `nick_key` (se migra sola al arrancar). Sin cambios en las repeticiones (#29).

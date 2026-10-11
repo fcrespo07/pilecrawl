@@ -1,8 +1,8 @@
 // Pasada final de pantalla: un solo shader que sirve a varios efectos, para no apilar filtros.
 //  - (la rejilla de monitor fija ya no va aquí: es un Graphics estático del renderer, para que en reposo no haya pasada de pantalla)
 //  - aberración cromática: se abre con las sacudidas y los golpes grandes
-//  - pixelado: un estallido que se cierra solo (subida de nivel, ulti)
-//  - tinte: un pulso de color de pantalla completa (hiperperk activa, ultis)
+//  - pixelado: un estallido que se cierra solo (subida de nivel, hiperperk)
+//  - tinte: un pulso de color de pantalla completa (hiperperk activa)
 import { Filter, GlProgram, type UniformGroup } from 'pixi.js';
 import { H, W } from './layout';
 
