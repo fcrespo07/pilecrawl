@@ -6,7 +6,7 @@ import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, 
 import { Gestures } from './gestures';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
-import { dailySeed, MODES, type ModeId } from './core/modes';
+import { dailySeed, MODES, msToNextDaily, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
@@ -61,6 +61,14 @@ const refreshPanels = (force = false) => renderHomePanels(panelLeft, panelRight,
 refreshPanels();
 // la cuenta atrás y el número del diario cambian con la portada abierta
 window.setInterval(() => refreshPanels(), 30_000);
+// y justo al cambiar de día (medianoche UTC) se repinta sin esperar al ciclo
+const atRollover = () =>
+  window.setTimeout(() => {
+    modeSelect.refresh();
+    refreshPanels();
+    atRollover();
+  }, msToNextDaily(net.now()) + 500);
+atRollover();
 // con la hora del servidor el día del desafío puede cambiar respecto al reloj local
 void net.serverDay().then((d) => {
   if (!d) return;
