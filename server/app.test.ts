@@ -11,7 +11,7 @@ const NOW = Date.parse('2026-10-14T12:00:00Z'); // miércoles
 let clock = NOW;
 let n = 0;
 // semillas cuyas partidas de prueba acaban pronto (una semilla al azar puede dar una partida de minutos)
-const SEEDS = [777, 778, 780, 781, 782, 783];
+const SEEDS = [778, 782, 783, 788, 794, 815];
 let seedAt = 0;
 
 function setup(extra: Partial<Config> = {}) {
@@ -248,7 +248,7 @@ describe('modos sin ranking', () => {
     const token = await register('Fer');
     expect((await call('POST', '/api/runs/start', { mode: 'tutorial' }, token)).status).toBe(400);
     expect((await call('GET', '/api/leaderboard?mode=tutorial')).status).toBe(400);
-    const g = playHuman(777, 400_000, 'normal', 0);
+    const g = playHuman(788, 400_000, 'normal', 0);
     expect((await call('POST', '/api/runs', { runId: 'x', replay: { ...g.replay(), mode: 'tutorial' } }, token)).status).toBe(422);
   });
 });

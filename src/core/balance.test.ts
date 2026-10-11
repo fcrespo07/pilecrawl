@@ -98,16 +98,17 @@ describe('bot de equilibrio', () => {
   // En 0.5.0 eran 28 y 16 de 60; con los once perks nuevos, 23 y 13; con las hiperperks (el bot las suelta en
   // cuanto se cargan), 15 y 12. Con la racha (mejores cartas y la hiperperk por suerte desde el nivel 3,
   // con la segura en el nivel 8), 17 y 11: la racha da más cartas raras, y Segunda vida es rara. La banda baja a 17-47% para ese cambio buscado.
-  // Con las legendarias de verdad en juego (peso por rareza y no por carta, calor por combos y desbloqueos en 3 y 5, v8) el bot, que elige
-  // las cartas al azar, se come también las que más duelen (Cruz, Terremoto, Eco) y pierde 38 y 19: techo a 42 (70%).
+  // v8 (legendarias de verdad: peso por rareza, calor por combos, desbloqueos en 3 y 5): subida de dificultad buscada, no una tolerancia.
+  // Todo desbloqueado pierde 37 de 60 (antes ~17) porque el bot, que elige al azar, también coge Cruz, Terremoto o Eco: techo 40.
+  // La primera partida (14) es la que nota un jugador nuevo y se mantiene por debajo de ~30%: techo 18. Segunda vida (legendaria) no se bloquea.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
     const firstRun = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i, 1500, 0));
     const lost = (rs: GameResult[]) => rs.filter((r) => r.overByTopOut).length;
-    for (const n of [lost(unlocked), lost(firstRun)]) {
-      expect(n).toBeGreaterThanOrEqual(10);
-      expect(n).toBeLessThanOrEqual(42);
-    }
+    expect(lost(unlocked)).toBeGreaterThanOrEqual(10);
+    expect(lost(unlocked)).toBeLessThanOrEqual(40);
+    expect(lost(firstRun)).toBeGreaterThanOrEqual(10);
+    expect(lost(firstRun)).toBeLessThanOrEqual(18);
   }, 120_000);
 });

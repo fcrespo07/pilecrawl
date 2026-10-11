@@ -1110,7 +1110,7 @@ export class Game {
     const n = Math.max(2, this.mods.choices);
     if (this.hyperPending) {
       this.choices = [];
-      this.hyperChoices = rollHypers(n, this.hyperRng);
+      this.hyperChoices = rollHypers(Math.max(3, this.mods.choices), this.hyperRng); // Casino no recorta las hiperperks
       return;
     }
     this.hyperChoices = [];

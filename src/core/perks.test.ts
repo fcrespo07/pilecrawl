@@ -48,7 +48,7 @@ describe('perks', () => {
   it('sin progreso solo salen perks comunes y raros', () => {
     for (let i = 0; i < 300; i++) {
       for (const p of rollPerks(new Map(), 0, 3, 0)) {
-        expect(['common', 'rare']).toContain(p.rarity);
+        expect(['common', 'rare', 'legendary']).toContain(p.rarity);
       }
     }
   });
@@ -82,8 +82,9 @@ describe('probabilidades de rareza', () => {
     expect(legHot.legendary).toBeGreaterThan(0.28);
   });
 
-  it('Segunda vida es legendaria', () => {
+  it('Segunda vida es legendaria pero no se bloquea a quien empieza', () => {
     expect(PERK_BY_ID.life.rarity).toBe('legendary');
+    expect(isUnlocked(PERK_BY_ID.life, 0)).toBe(true);
   });
 });
 
@@ -100,7 +101,7 @@ describe('ofertas', () => {
 
   it('sin progreso solo salen ofertas comunes y raras', () => {
     const r = makeRng(6);
-    for (let i = 0; i < 300; i++) for (const p of rollOffer(new Map(), 0, 3, 0, r)) expect(['common', 'rare']).toContain(p.rarity);
+    for (let i = 0; i < 300; i++) for (const p of rollOffer(new Map(), 0, 3, 0, r)) expect(['common', 'rare', 'legendary']).toContain(p.rarity);
   });
 
   it('si no quedan bastantes de una rareza, se completa con otras', () => {

@@ -124,6 +124,8 @@ export interface PerkDef {
   pros: (stacks: number) => string[];
   cons?: (stacks: number) => string[];
   apply: (m: Mods, g: Game) => void;
+  /** Nivel de mejor marca para que salga; por defecto el de su rareza (`UNLOCK_LEVEL`). */
+  unlock?: number;
   /** Maldición: solo sale en las ofertas malditas y no tiene ventaja (sus efectos van en `cons`). */
   curse?: boolean;
 }
@@ -377,7 +379,7 @@ export const PERKS: PerkDef[] = [
   },
   // ───────── Legendarias ─────────
   {
-    id: 'life', name: 'Segunda vida', rarity: 'legendary', max: 2,
+    id: 'life', name: 'Segunda vida', rarity: 'legendary', max: 2, unlock: 0, // la red de seguridad no se bloquea a quien empieza
     pros: () => ['<b>+1 vida</b>: al perder se vacía el tablero y sigues'],
     cons: () => ['<b>−15%</b> a toda la puntuación'],
     apply: (m, g) => { g.lives += 1; m.scoreMult *= 0.85; },
@@ -473,7 +475,7 @@ const NO_LOCKED: ReadonlySet<string> = new Set();
 
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
-  return bestLevel >= UNLOCK_LEVEL[p.rarity];
+  return bestLevel >= (p.unlock ?? UNLOCK_LEVEL[p.rarity]);
 }
 
 /** Saca `n` perks distintos ponderados por rareza (y suerte). `bestLevel` filtra por desbloqueos; `rand` permite usar una semilla. */
