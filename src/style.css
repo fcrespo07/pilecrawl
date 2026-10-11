@@ -1268,3 +1268,4 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 /* Logo de la portada */
 .home-logo { display: block; width: 64px; height: 64px; margin: 0 auto 8px; image-rendering: pixelated; }
 @media (max-height: 640px) { .home-logo { width: 44px; height: 44px; margin-bottom: 4px; } }
+@media (max-height: 480px) { .home-logo { display: none; } }
