@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
-- Arcade más loco y con legendarias de verdad. Las legendarias salían en menos de 1 de cada 200 ofertas (el peso iba por carta y había 24 comunes por 3 legendarias, además de pedir el nivel 7); ahora el peso va por rareza (común 52, rara 30, épica 13, legendaria 5) y epicas/legendarias se desbloquean en los niveles 3 y 5. Los combos influyen mucho más: un calor por rareza que suben jugadas distintas (dobles, triples y combos → rara; cuádruples y giros → épica; back-to-back, combos largos y tablero limpio → legendaria), visible en el panel de racha. Segunda vida pasa a legendaria (máx. 2). Tres legendarias nuevas: Furia, Eco y Casino. Abanico ahora suma +1 carta en vez de fijar 4. Sube `RULES_VERSION` a 8 (#42).
+- Arcade más loco y con legendarias de verdad. Las legendarias salían en menos de 1 de cada 200 ofertas (el peso iba por carta y había 24 comunes por 3 legendarias, además de pedir el nivel 7); ahora el peso va por rareza (común 52, rara 30, épica 13, legendaria 5) y epicas/legendarias se desbloquean en los niveles 3 y 5. Los combos influyen mucho más: un calor por rareza que suben jugadas distintas (dobles, triples y combos → rara; cuádruples y giros → épica; back-to-back, combos largos y tablero limpio → legendaria), visible en el panel de racha. Segunda vida pasa a legendaria (máx. 2). Tres legendarias nuevas: Furia, Eco y Casino. Abanico ahora suma +1 carta en vez de fijar 4. Sube `RULES_VERSION` a 8 (#43).
 
 ## 0.19.7 — 2026-10-11
 - La versión que sirve la página también aparece en el menú de pausa, además del pie de la portada, para saber qué build tienes delante (#41).
