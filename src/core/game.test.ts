@@ -588,6 +588,8 @@ describe('ofertas sin cartas', () => {
     const internal = g as unknown as { addLevelProgress(lines: number): void; beginChoice(): void };
     for (let i = 0; i < n; i++) internal.addLevelProgress(g.linesNeeded());
     internal.beginChoice();
+    // desde el nivel 3 puede salir una hiperperk al azar: va antes que la carta normal
+    while (g.choosingHyper) g.choosePerk(0);
   };
 
   it('con todas las cartas al máximo, la subida no deja la partida parada', () => {
