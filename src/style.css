@@ -671,31 +671,14 @@ kbd {
 .over-stats b { font-size: 21px; font-variant-numeric: tabular-nums; }
 .over-perks { display: flex; flex-wrap: wrap; gap: 7px; max-width: 600px; justify-content: center; min-height: 10px; margin-bottom: 8px; }
 
-/* Controles táctiles: solo en dispositivos sin ratón. Sin estilo visual propio (lo lleva la interfaz). */
+/* Pausa táctil: solo en dispositivos sin ratón, esquina superior derecha. El resto va por gestos (src/gestures.ts). */
 .touch-pad { display: none; }
 @media (pointer: coarse) {
-  .touch-pad {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    touch-action: none; user-select: none; -webkit-user-select: none;
-  }
-  .touch-pad .tp-group { display: flex; gap: 8px; }
-  .touch-pad button {
-    min-width: 56px; min-height: 56px; font: 600 20px var(--f-ui);
-    color: var(--text); background: var(--panel); border: 1px solid var(--line);
-    border-radius: 10px; touch-action: none;
-    box-shadow: 3px 3px 0 var(--line);
-  }
-  /* seis botones en la fila de giros: en móviles estrechos se encogen para que quepa la pausa */
-  @media (max-width: 400px) {
-    .touch-pad { gap: 6px; padding-left: 8px; padding-right: 8px; }
-    .touch-pad .tp-group { gap: 5px; }
-    .touch-pad button { min-width: 48px; min-height: 48px; }
-  }
-  .touch-pad button[data-touch='hyper'] { color: var(--muted); }
-  .touch-pad button[data-touch='hyper'].ready { color: var(--paper); background: var(--hyper); border-color: var(--hyper); }
-  .touch-pad button:active { background: var(--panel-hi); border-color: var(--accent); box-shadow: 1px 1px 0 var(--line); transform: translate(2px, 2px); }
+  .touch-pad { position: fixed; top: max(6px, env(safe-area-inset-top)); right: 6px; z-index: 50; display: block; }
+  .touch-pad button { width: 46px; height: 46px; font: 400 14px var(--f-display); touch-action: none; user-select: none; -webkit-user-select: none; }
+  #game { touch-action: none; }
+  .p-controls { display: none; }
+  .p-hyper { pointer-events: auto; }
 }
 
 /* ═════════════ Home (portada) ═════════════
@@ -927,13 +910,11 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 
 /* controles táctiles */
 @media (pointer: coarse) {
-  .touch-pad { background: var(--shade); box-shadow: 0 -4px 0 var(--raise); }
   .touch-pad button {
-    font: 400 14px var(--f-display); color: var(--ink); background: var(--raise); border: 0; border-radius: 0;
+    color: var(--ink); background: var(--raise); border: 0; border-radius: 0;
     clip-path: var(--chamfer); box-shadow: inset -4px -4px 0 var(--shade), inset 4px 4px 0 var(--raise-hi);
   }
   .touch-pad button:active { background: var(--panel-hi); transform: translateY(2px); box-shadow: inset 4px 4px 0 var(--shade); }
-  .touch-pad button[data-touch='hyper'].ready { color: var(--paper); background: var(--hyper); box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.3), inset 4px 4px 0 rgba(255, 255, 255, 0.35); }
 }
 
 /* portada */
@@ -1219,3 +1200,55 @@ body.tutorial #perk-list .empty { display: none; }
 .ad-consent { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 12px 16px; font-size: 17px; color: var(--muted); max-width: 520px; }
 .ad-consent p { margin: 0; }
 .ad-consent div { display: flex; gap: 10px; }
+
+/* ═════════════ Disposición vertical (móvil de pie) ═════════════
+   El escenario pasa a 540 de ancho (alto según la pantalla, ver fx/layout.ts): marcador arriba, reserva y
+   cola en una fila sobre el tablero (las dibuja el lienzo), y hiperperk, racha y contadores debajo. */
+body.portrait .p-score { left: 8px; top: 6px; width: 200px; }
+body.portrait .p-score .sub { display: none; }
+body.portrait .lvl { font-size: 30px; }
+body.portrait .segs { margin-top: 4px; }
+body.portrait .p-level { left: 216px; top: 6px; width: 200px; }
+body.portrait .p-controls, body.portrait .p-perks { display: none; }
+body.portrait .mini-grid {
+  left: 8px; right: 8px; top: auto; bottom: 120px; width: auto;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;
+}
+body.portrait .mini-grid > :nth-child(1),
+body.portrait .mini-grid > :nth-child(5) { display: none; }
+body.portrait .p-hyper { left: 8px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
+body.portrait .p-streak { left: 276px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
+body.portrait .p-hyper .hy-name { font-size: 14px; }
+body.portrait .hy-state { font-size: 14px; }
+body.portrait .st-odds { font-size: 15px; }
+
+/* elección de mejoras: tres cartas apiladas, cada una en una fila */
+body.portrait #cards { flex-direction: column; gap: 10px; perspective: none; }
+body.portrait #cards .card, body.portrait #cards.four .card { width: 504px; height: 152px; }
+body.portrait #cards.four .card { height: 124px; }
+body.portrait .card-front { display: grid; grid-template-columns: 96px 1fr; grid-template-rows: auto 1fr auto; align-items: start; padding: 0 0 8px; text-align: left; }
+body.portrait .card-band { grid-column: 1 / 3; }
+body.portrait .card-icon { grid-row: 2 / 4; align-self: center; justify-self: center; width: 68px; height: 68px; margin: 0; }
+body.portrait .card-icon svg { width: 38px; height: 38px; }
+body.portrait .card-name { grid-column: 2; padding: 8px 10px 0 0; font-size: 15px; }
+body.portrait .card-sep { display: none; }
+body.portrait .card-front .fx { grid-column: 2; padding: 4px 10px 0 0; font-size: 15px; transform: none; }
+body.portrait .card-foot { grid-column: 2; align-self: end; }
+body.portrait #cards.four .card-icon { display: none; }
+body.portrait #cards.four .card-front { grid-template-columns: 1fr; }
+body.portrait #cards.four .card-name, body.portrait #cards.four .card-front .fx, body.portrait #cards.four .card-foot { grid-column: 1; padding-left: 14px; }
+body.portrait .perk-actions .hint { display: none; }
+body.portrait .build { width: 504px; }
+body.portrait #build-list { grid-template-columns: 1fr; }
+body.portrait .over-stats { flex-wrap: wrap; justify-content: center; max-width: 504px; }
+body.portrait .over-perks { max-width: 504px; }
+body.portrait .card-foot { padding-bottom: 2px; }
+body.portrait .card-front .fx { padding-bottom: 14px; }
+@media (pointer: coarse) { #pause .hint { display: none; } }
+/* tutorial en vertical: el cuadro deja libre la pausa y se ciñe al texto */
+@media (pointer: coarse) and (orientation: portrait) {
+  .coach-m { right: 62px; padding: 8px 12px 8px; }
+  .coach-m .coach-text { font-size: 16px; margin: 2px 0 4px; }
+}
+.touch-only { display: none; }
+@media (pointer: coarse) { .touch-only { display: inline-flex; } }

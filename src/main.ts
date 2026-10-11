@@ -2,7 +2,8 @@ import './style.css';
 import './storage';
 import { Game, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
-import { H, W } from './fx/layout';
+import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, setLayout } from './fx/layout';
+import { Gestures } from './gestures';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
 import { dailySeed, utcDate, type ModeId } from './core/modes';
@@ -13,7 +14,7 @@ import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
 import { adConsentManaged, adProviderFromEnv, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
-import { Input, type TouchAction } from './input';
+import { Input } from './input';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
@@ -56,25 +57,35 @@ refreshPanels();
 window.setInterval(refreshPanels, 30_000);
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
-/** Alto que ocupa la barra táctil cuando está visible; el escenario se encaja por encima de ella. */
-function touchReserve(): number {
-  const bar = document.getElementById('touch');
-  return bar && getComputedStyle(bar).display !== 'none' ? bar.offsetHeight : 0;
-}
-
 function renderResolution(scale: number) {
   return Math.min(3, (window.devicePixelRatio || 1) * scale);
 }
 
+const coarse = window.matchMedia('(pointer: coarse)');
+
+/**
+ * Encaja el escenario en la ventana. En un móvil de pie la disposición es vertical (más alta que ancha,
+ * para que el tablero llene la pantalla); en el resto, la horizontal de siempre. Devuelve si cambió
+ * la disposición, para que el renderer rehaga lo que depende del tamaño.
+ */
 function layout() {
-  const reserve = touchReserve();
-  const avail = window.innerHeight - reserve;
-  const s = Math.min(window.innerWidth / W, avail / H);
-  stage.style.top = `${avail / 2}px`;
+  const portrait = coarse.matches && window.innerHeight > window.innerWidth;
+  let wantH = portrait ? portraitHeight(window.innerHeight / window.innerWidth) : 720;
+  // la barra de direcciones del móvil sube y baja: pequeñas variaciones de alto no recomponen el escenario
+  if (portrait && PORTRAIT && Math.abs(wantH - H) < 120) wantH = H;
+  const changed = portrait !== PORTRAIT || (portrait && wantH !== H);
+  if (changed) {
+    setLayout(portrait, wantH);
+    stage.style.width = `${W}px`;
+    stage.style.height = `${H}px`;
+    document.body.classList.toggle('portrait', portrait);
+  }
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  stage.style.top = `${window.innerHeight / 2}px`;
   // el cuadro del tutorial en pantallas táctiles se coloca fuera del escenario y necesita su escala
   document.documentElement.style.setProperty('--s', String(s));
   stage.style.transform = `translate(-50%, -50%) scale(${s})`;
-  return s;
+  return { s, changed };
 }
 
 let hitstop = 0;
@@ -121,28 +132,36 @@ function wireAudioAndFeel() {
   });
 }
 
-/** Botones táctiles: cada uno reutiliza la misma lógica que su tecla. */
+/** Pausa y hiperperk táctiles: reutilizan la misma lógica que su tecla. El resto va por gestos sobre el tablero. */
+let gestures: Gestures | null = null;
+
 function wireTouch() {
-  document.querySelectorAll<HTMLButtonElement>('[data-touch]').forEach((btn) => {
-    const action = btn.dataset.touch as TouchAction | 'pause';
-    btn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      btn.setPointerCapture(e.pointerId);
-      if (action === 'pause') {
-        if (game.state === 'playing' || game.state === 'paused') {
-          game.togglePause();
-          input.releaseAll();
-          ui.setPaused(game.state === 'paused');
-        }
-        return;
-      }
-      input.touchDown(action);
-    });
-    if (action === 'pause') return;
-    const up = () => input.touchUp(action);
-    btn.addEventListener('pointerup', up);
-    btn.addEventListener('pointercancel', up);
-    btn.addEventListener('lostpointercapture', up);
+  const togglePause = () => {
+    if (game.state === 'playing' || game.state === 'paused') {
+      game.togglePause();
+      input.releaseAll();
+      gestures?.reset();
+      ui.setPaused(game.state === 'paused');
+    }
+  };
+  document.getElementById('resume-btn')!.addEventListener('click', togglePause);
+  document.querySelector<HTMLButtonElement>('[data-touch="pause"]')!.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    togglePause();
+  });
+  // la tarjeta de la hiperperk es también su botón táctil
+  const hyper = document.getElementById('hyper-box')!;
+  hyper.addEventListener('pointerdown', (e) => {
+    if (!coarse.matches) return;
+    e.preventDefault();
+    input.touchDown('hyper');
+  });
+  gestures = new Gestures(canvas, game, input, {
+    rect: () => canvas.getBoundingClientRect(),
+    logicalW: () => W,
+    cell: () => CELL,
+    // la reserva y un poco de margen alrededor
+    holdBox: () => ({ x: HOLD_X - 12, y: HOLD_Y - 12, w: HOLD_W + 24, h: (PORTRAIT ? BOARD_Y - HOLD_Y : 140) + 12 }),
   });
 }
 
@@ -217,6 +236,7 @@ async function startRun(forced?: 'tutorial') {
   audio.setIntensity(1);
   audio.startMusic();
   input.releaseAll();
+  gestures?.reset();
   hitstop = 0;
   stepAcc = 0;
   renderer.reset();
@@ -304,12 +324,15 @@ async function boot() {
     document.fonts.load('16px VT323'),
   ]);
 
-  const scale = layout();
+  const { s: scale } = layout();
   await renderer.init(canvas, renderResolution(scale));
 
   window.addEventListener('resize', () => {
-    const s = layout();
-    renderer.setResolution(renderResolution(s));
+    // con el teclado del apodo abierto el alto se encoge: no se recompone hasta que se cierre
+    if (document.activeElement?.matches('input, textarea')) return;
+    const { s, changed } = layout();
+    if (changed) renderer.relayout(renderResolution(s));
+    else renderer.setResolution(renderResolution(s));
   });
   let fxOn = true;
   try { fxOn = localStorage.getItem('blockrogue.fx') !== '0'; } catch { /* sin almacenamiento */ }
@@ -362,6 +385,7 @@ async function boot() {
     const dt = Math.min(t.deltaMS, 50);
     if (game.state === 'choosing' && !ui.isChoosing) {
       input.releaseAll();
+      gestures?.reset();
       ui.openPerks();
     }
     input.update(dt);

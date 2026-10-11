@@ -33,7 +33,7 @@ interface Texts {
 
 const kbd = (s: string) => `<kbd>${s}</kbd>`;
 const DESKTOP: Texts = {
-  move: kbd('←') + kbd('→'),
+  move: 'con ' + kbd('←') + kbd('→'),
   drop: kbd('Espacio'),
   turn: kbd('↑') + ' o ' + kbd('X'),
   turnBack: kbd('Z'),
@@ -42,19 +42,19 @@ const DESKTOP: Texts = {
   hyper: kbd('D'),
 };
 const TOUCH: Texts = {
-  move: 'los botones ' + kbd('←') + kbd('→'),
-  drop: 'el botón ' + kbd('⤓'),
-  turn: 'el botón ' + kbd('↻'),
-  turnBack: kbd('↺'),
-  hold: kbd('C'),
+  move: 'arrastrando el dedo a los lados',
+  drop: 'un tirón rápido hacia abajo (arrastrar despacio la baja poco a poco)',
+  turn: 'un toque en el tablero',
+  turnBack: '',
+  hold: 'Desliza hacia arriba para guardar una pieza en la reserva (o toca la reserva).',
   reroll: 'Reroll',
-  hyper: 'el botón ' + kbd('D'),
+  hyper: 'la tarjeta Hiper (tócala)',
 };
 
 const STEPS: Step[] = [
   {
     title: 'Mover',
-    text: (t) => `Lleva la pieza al hueco de la derecha con ${t.move}.`,
+    text: (t) => `Lleva la pieza al hueco de la derecha ${t.move}.`,
     done: (p) => p.moves >= 2 || p.levelups >= 1,
   },
   {
@@ -64,13 +64,13 @@ const STEPS: Step[] = [
   },
   {
     title: 'Girar',
-    text: (t) => `Las demás piezas giran con ${t.turn} (${t.turnBack} al revés). Gira esta y suéltala.`,
+    text: (t) => `Las demás piezas giran con ${t.turn}${t.turnBack ? ` (${t.turnBack} al revés)` : ''}. Gira esta y suéltala.`,
     done: (p) => p.rotates >= 1 || p.levelups >= 1,
   },
   {
     title: 'Líneas',
     text: (t, g) =>
-      `Completa filas para subir de nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>. Varias a la vez puntúan mucho más. ${t.hold} guarda una pieza en la reserva.`,
+      `Completa filas para subir de nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>. Varias a la vez puntúan mucho más. ${t.hold === DESKTOP.hold ? `${t.hold} guarda una pieza en la reserva.` : t.hold}`,
     done: (p) => p.levelups >= 1,
   },
   {

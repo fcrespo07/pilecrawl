@@ -343,7 +343,7 @@ export class UI {
       : active
         ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s`
         : ready
-          ? 'Lista: pulsa D'
+          ? (window.matchMedia('(pointer: coarse)').matches ? 'Lista: tócala' : 'Lista: pulsa D')
           : `${g.hyperCharge}/${h.charge} líneas`;
     const key = `${h?.id ?? ''}|${state}|${text}`;
     $('hyper-fill').style.transform = `scaleX(${meter})`;
@@ -354,7 +354,6 @@ export class UI {
     $('hyper-name').textContent = h ? h.name : 'Hiperperk';
     $('hyper-ico').innerHTML = h ? perkIcon(h.id) : '';
     $('hyper-state').textContent = text;
-    document.querySelector<HTMLElement>('[data-touch="hyper"]')?.classList.toggle('ready', ready);
   }
 
   /** Medidor de racha: barra y lo que da ahora (rareza rara o mejor e hiperperk). */

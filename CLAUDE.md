@@ -33,6 +33,7 @@ server/                 servidor del ranking: Node 22 + SQLite, revalida repetic
 docs/                   despliegue en la Raspberry (k3s) y anuncios; k8s/ y Dockerfile en la raíz
 src/core/emitter.ts     eventos tipados game → efectos/UI
 src/input.ts            teclado con DAS/ARR
+src/gestures.ts         táctil por gestos sobre el tablero (arrastrar, tocar, tirón abajo, deslizar arriba)
 src/fx/renderer.ts      PixiJS: tablero, ghost, partículas, filtros, shake, textos
 src/fx/postfx.ts        shader de pantalla (rejilla, aberración, pixelado, tinte)
 src/fx/particles.ts     sistema de partículas con pool
@@ -58,6 +59,7 @@ src/ui/icons.ts         iconos SVG de perks (a mano; las de pieza se dibujan con
 - **Modos:** `MODES` en `modes.ts`. El modo va en `Game.start(seed, mode)` y en la repetición. El diario usa `dailySeed(fecha UTC)`, desbloqueos fijos y una mejora inicial con azar propio; el contrarreloj termina por pasos (`timeLimitMs`), así que la pausa y la elección de carta no gastan tiempo. Un modo nuevo que cambie reglas debe vivir en `game.ts` leyendo `MODES[this.mode]`, no en la UI.
 - **Ranking:** el servidor (`server/app.ts`) solo acepta repeticiones con exactamente las claves de `Replay` (`validate.ts`): cualquier campo nuevo en una repetición, como la marca del modo de pruebas, la hace rechazar. Un cambio de reglas sube `RULES_VERSION`. Las partidas libres usan semilla y desbloqueos del servidor.
 - **Tutorial:** modo `tutorial` (`MODES.tutorial.tutorial`), no sale en el selector (`PLAY_MODE_IDS`) y no guarda récord ni mejor nivel. Sus reglas viven en `game.ts` (`setupTutorial`, `TUTORIAL_*`): 2 filas casi llenas y piezas fijas al principio, 3 líneas por nivel, hiperperk segura al nivel 3 y cargada con 3 líneas, sin basura. El guion está en `src/ui/tutorial.ts` (pasos con `done` y textos para teclado y táctil). Entrada: botón «Tutorial» de la portada.
+- **Móvil:** con puntero táctil y pantalla de pie el escenario pasa a vertical (`setLayout` en `layout.ts`: 540 de ancho, alto según la pantalla; los valores de `layout.ts` son `let` y se leen vivos). Reserva y cola van en una fila sobre el tablero y el HUD se recoloca con `body.portrait` en `style.css`. En horizontal queda el 960×720 de siempre. Los controles son gestos (`gestures.ts`) más el botón de pausa y la tarjeta Hiper; no tocan reglas ni repeticiones.
 - **Eventos:** el juego emite eventos tipados (`game.events`). Los efectos y la UI escuchan, sin que `game.ts` sepa de Pixi ni del DOM.
 
 ## Decisiones de diseño
