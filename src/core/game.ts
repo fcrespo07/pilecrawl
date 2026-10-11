@@ -767,7 +767,7 @@ export class Game {
     } else {
       base *= 1 + cascade;
     }
-    if (lines >= 4) this.quads++;
+    if (lines >= 4 && !blast) this.quads++;
     if (spin !== null) this.spins++;
 
     let total = base;
