@@ -22,7 +22,7 @@ K() { sudo k3s kubectl "$@"; }   # si usas otro kubectl (PC), cámbialo por: K()
 | **`admin-token`** | Moderación del ranking | Puedes **generarlo tú**: `openssl rand -hex 32`. Dáselo al usuario una sola vez para que lo guarde. |
 | **Usuario de GitHub y nombre del repositorio** | Nombre de la imagen en GHCR | Por defecto `fcrespo07/tetris-roguelite`. El usuario tiene pendiente renombrar el repositorio: confírmalo con `git remote get-url origin`. |
 | **¿Activa anuncios?** sí/no | Variables de anuncios | Por defecto **no**. Si sí: necesita cuenta de AdSense aprobada (paso U3) con `ca-pub-…`, número de bloque y página de privacidad. Detalles y advertencia legal (consentimiento europeo) en `docs/anuncios.md`. |
-| **Dirección de la página de privacidad** | Enlace en Rankings (y obligatoria con anuncios) | Opcional sin anuncios. Borrador en `docs/despliegue.md`, sección 9. |
+| **Dirección de la página de privacidad** | Enlace en Rankings (y obligatoria con anuncios) | Ya no hace falta: la web trae `/privacidad.html` y `/acerca.html`. Pide solo `VITE_CONTACT_EMAIL` y `VITE_SITE_OWNER` (el correo y el nombre que saldrán en ellas). Guía de anuncios para el dueño: `docs/anuncios.md`. |
 | **Palabras prohibidas en apodos** | `nick-blocklist` | Opcional; lista separada por comas. |
 | **¿Instalas con imagen de GHCR o la construyes en la Pi?** | Paso 3 | Por defecto GHCR (A). Si el usuario no quiere hacer público el paquete, usa la construcción local (B). |
 
@@ -79,7 +79,7 @@ sudo docker save blockrogue:local | sudo k3s ctr images import -
 ```
 **Verificar:** `sudo k3s ctr images ls | grep blockrogue:local`. En el paso 5 tendrás que cambiar la imagen del Deployment **justo después de `apply -k` y antes de `rollout status`** (ahí se indica).
 
-**Importante con 3A:** los valores de anuncios y privacidad se fijan al **construir** la imagen. En GHCR salen de las *variables* del repositorio (Settings → Secrets and variables → Actions → Variables): `VITE_PRIVACY_URL`, `VITE_AD_PROVIDER`, `VITE_AD_CLIENT`, `VITE_AD_SLOT`, `VITE_AD_CONSENT`. Si el usuario quiere anuncios o página de privacidad, tiene que ponerlas ahí **y relanzar el workflow** (Actions → Imagen → Run workflow) antes de seguir. Sin anuncios no hace falta tocar nada.
+**Importante con 3A:** los valores de anuncios y privacidad se fijan al **construir** la imagen. En GHCR salen de las *variables* del repositorio (Settings → Secrets and variables → Actions → Variables): `VITE_CONTACT_EMAIL`, `VITE_SITE_OWNER`, `VITE_AD_PROVIDER`, `VITE_AD_CLIENT`, `VITE_AD_SLOT`, `VITE_AD_CONSENT`. Si el usuario quiere anuncios o página de privacidad, tiene que ponerlas ahí **y relanzar el workflow** (Actions → Imagen → Run workflow) antes de seguir. Sin anuncios no hace falta tocar nada.
 
 ## 4. Configuración (namespace, ConfigMap y Secret)
 

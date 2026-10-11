@@ -100,6 +100,21 @@ export function adConsentManaged(): boolean {
   return env.VITE_AD_PROVIDER === 'adsense' && env.VITE_AD_CONSENT !== 'none' && adProviderFromEnv() !== null;
 }
 
+/** ¿Los anuncios los gestiona el mensaje de consentimiento de Google (CMP certificado)? Entonces no hay aviso propio. */
+export function adCmpManaged(): boolean {
+  const env = import.meta.env;
+  return env.VITE_AD_PROVIDER === 'adsense' && env.VITE_AD_CONSENT === 'none' && adProviderFromEnv() !== null;
+}
+
+/** Reabre el mensaje de Google para cambiar o retirar el consentimiento (solo existe si Google lo ha cargado). */
+export function openAdCmp() {
+  try {
+    (window as unknown as { googlefc?: { showRevocationMessage?: () => void } }).googlefc?.showRevocationMessage?.();
+  } catch {
+    /* el mensaje no está cargado: no hay nada que reabrir */
+  }
+}
+
 /** Olvida la respuesta: la próxima carga vuelve a preguntar y, si había dicho «sí», ya no carga el script. */
 export function resetAdConsent() {
   try {

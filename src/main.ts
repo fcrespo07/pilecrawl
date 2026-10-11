@@ -12,7 +12,7 @@ import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from '
 import { ModeSelect } from './ui/modeSelect';
 import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
-import { adConsentManaged, adProviderFromEnv, resetAdConsent } from './ads/providers';
+import { adCmpManaged, adConsentManaged, adProviderFromEnv, openAdCmp, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
 import { Input } from './input';
 import { UI } from './ui/ui';
@@ -31,10 +31,11 @@ const lab = new Lab(game);
 
 const stage = document.getElementById('stage')!;
 mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
-if (adConsentManaged()) {
+if (adConsentManaged() || adCmpManaged()) {
   const prefs = document.getElementById('ad-prefs')!;
   prefs.hidden = false;
   prefs.addEventListener('click', () => {
+    if (adCmpManaged()) return openAdCmp();
     resetAdConsent();
     location.reload();
   });
@@ -398,12 +399,10 @@ async function boot() {
     open.hidden = false;
     open.addEventListener('click', () => rankingUI.open());
   }
-  const privacy = import.meta.env.VITE_PRIVACY_URL;
-  if (privacy) {
-    const a = document.getElementById('privacy-link') as HTMLAnchorElement;
-    a.href = privacy;
-    a.hidden = false;
-  }
+  // la política de privacidad viene con el juego; VITE_PRIVACY_URL solo sirve para apuntar a otra
+  const a = document.getElementById('privacy-link') as HTMLAnchorElement;
+  a.href = import.meta.env.VITE_PRIVACY_URL || '/privacidad.html';
+  a.hidden = false;
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', () => void startRun(game.mode === 'expedition' ? 'expedition' : undefined));
 

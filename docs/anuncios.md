@@ -29,16 +29,18 @@ Con poca gente, no paga ni la luz de la Pi. Además AdSense a veces rechaza webs
 
 ## Cómo activarlo (cuando tengas cuenta aprobada)
 
-1. Dominio propio, página de privacidad (borrador en `docs/despliegue.md`, sección 9) y contacto.
-2. Alta en AdSense con el dominio; espera la aprobación; crea un bloque de display adaptable.
-3. Crea `public/ads.txt` con la línea que te indica AdSense (`google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`). Sin ese fichero los ingresos bajan.
-4. En las variables del repositorio (Settings → Secrets and variables → Actions → Variables): `VITE_AD_PROVIDER=adsense`, `VITE_AD_CLIENT=ca-pub-…`, `VITE_AD_SLOT=<número del bloque>`, `VITE_PRIVACY_URL=https://…`. Relanza el workflow `Imagen` y reinicia el despliegue.
+La guía paso a paso para el dueño está en `/mnt/project-files/informes/anuncios-lo-que-te-falta.md`. Resumen:
+
+1. Dominio propio con el juego publicado. Con él ya salen solas `/privacidad.html` y `/acerca.html` (contacto), que AdSense exige.
+2. Alta en AdSense con el dominio; verifica el sitio y espera la aprobación; crea un bloque de display adaptable.
+3. En las variables del repositorio (Settings → Secrets and variables → Actions → Variables): `VITE_AD_PROVIDER=adsense`, `VITE_AD_CLIENT=ca-pub-…`, `VITE_AD_SLOT=<número del bloque>`, `VITE_CONTACT_EMAIL`, `VITE_SITE_OWNER` y, para el EEE, `VITE_AD_CONSENT=none` con el mensaje de Google activado. Relanza el workflow `Imagen` y reinicia el despliegue.
+4. `ads.txt` se genera solo en el build a partir de `VITE_AD_CLIENT` (no hay que crear ningún fichero), y la etiqueta `google-adsense-account` también.
 
 ## Consentimiento y RGPD: lo que falta
 
 Para visitantes del Espacio Económico Europeo y Reino Unido, Google exige una **plataforma de gestión del consentimiento certificada** (CMP, estándar TCF) para servir anuncios. El aviso Sí/No de este proyecto **no lo es**: con él, lo normal es que Google limite o no muestre anuncios a ese tráfico. Qué hacer:
 
-- **Para tráfico europeo:** activa el mensaje gratuito de Google (AdSense → Privacidad y mensajes), pon `VITE_AD_CONSENT=none` para quitar el aviso propio y comprueba en la documentación actual de Google que cumples.
+- **Para tráfico europeo:** activa el mensaje gratuito de Google (AdSense → Privacidad y mensajes), pon `VITE_AD_CONSENT=none` para quitar el aviso propio y comprueba en la documentación actual de Google que cumples. Con `none`, el enlace «Preferencias de anuncios» del pie llama a `googlefc.showRevocationMessage()` para reabrir el mensaje de Google (sin probar con una cuenta real: compruébalo cuando lo actives).
 - **Cuidado con `VITE_AD_CONSENT=none`:** carga los anuncios **sin preguntar**. Solo es legal fuera de la UE o si otro CMP (el de Google) ya pide el consentimiento antes. Con el aviso propio, la portada trae un enlace «Preferencias de anuncios» (pie de página) que borra la respuesta y vuelve a preguntar, porque retirar el consentimiento tiene que ser tan fácil como darlo.
 - Hasta tener el CMP, la opción prudente es **no activar anuncios** (dejar `VITE_AD_PROVIDER` vacío) o probarlos solo con tráfico de fuera del EEE.
 

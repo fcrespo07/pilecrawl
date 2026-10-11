@@ -61,3 +61,5 @@ jobs:
             VITE_AD_SLOT=${{ vars.VITE_AD_SLOT }}
             VITE_AD_CONSENT=${{ vars.VITE_AD_CONSENT }}
             VITE_PRIVACY_URL=${{ vars.VITE_PRIVACY_URL }}
+            VITE_CONTACT_EMAIL=${{ vars.VITE_CONTACT_EMAIL }}
+            VITE_SITE_OWNER=${{ vars.VITE_SITE_OWNER }}
