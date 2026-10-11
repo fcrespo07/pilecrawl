@@ -93,4 +93,21 @@ describe('expedición', () => {
     arcade.start(3, 'normal');
     expect(arcade.lockedPerks.size).toBe(0);
   });
+
+  it('el arcade ignora los desbloqueos: mismas cartas con o sin ellos', () => {
+    const offers = (unlocked: string[]) => {
+      const g = new Game();
+      g.start(7, 'normal', {}, unlocked);
+      g.bestLevel = 9999;
+      g.rerolls = 999;
+      (g as unknown as { beginChoice(): void }).beginChoice();
+      const out = [g.choices.map((c) => c.id)];
+      for (let i = 0; i < 10; i++) {
+        g.reroll();
+        out.push(g.choices.map((c) => c.id));
+      }
+      return out;
+    };
+    expect(offers([])).toEqual(offers(['cross', 'bomb']));
+  });
 });
