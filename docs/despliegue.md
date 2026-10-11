@@ -118,3 +118,15 @@ La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`,
 > **Para qué:** mostrar el ranking. **Cuánto tiempo:** mientras exista el juego o hasta que borres tus datos.
 > **Tus derechos:** puedes borrar tus datos desde Rankings → «Borrar mis datos» o escribiendo a [email]. También puedes acceder a ellos, rectificarlos o reclamar ante la AEPD.
 > **Anuncios:** si aceptas los anuncios, Google y sus socios usan cookies para mostrarlos. Puedes cambiarlo borrando los datos del sitio en tu navegador.
+
+## 10. Vista previa por PR y aviso de caídas
+
+**Vista previa** (`.github/workflows/preview.yml`): cada PR del propio repo compila el cliente sin `VITE_RANKING` ni anuncios y lo sube a Cloudflare Pages en `https://pr-N.pilecrawl-preview.pages.dev`; la URL queda en un comentario del PR. Los PR de forks no la reciben. Sin los secretos, el job se salta sin fallar. Pasos únicos:
+
+1. Cloudflare → Workers & Pages → Create → Pages → *Direct Upload*, proyecto llamado `pilecrawl-preview` (sube cualquier carpeta de prueba).
+2. Cloudflare → My Profile → API Tokens → token propio (Create Custom Token) con solo el permiso *Account · Cloudflare Pages · Edit*.
+3. En GitHub → Settings → Secrets and variables → Actions → Secrets: `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID` (el ID de cuenta sale en la barra lateral del panel).
+
+**Aviso de caídas:** `GET /api/health` responde `{"ok":true}` y comprueba la base de datos. En UptimeRobot (plan gratis) crea un monitor HTTP(s) sobre `https://pilecrawl.fun/api/health`, intervalo de 5 min (basta vigilar el código HTTP: da 500 si falla la base de datos), y añade tu correo como contacto de alerta.
+
+Las vistas previas son públicas y no se borran solas; comprueba que la rama de producción del proyecto Pages no sea `pr-N`.
