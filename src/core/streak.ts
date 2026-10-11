@@ -38,6 +38,36 @@ export function streakGain(lines: number, spin: boolean, combo: number, perfect:
   return gain;
 }
 
+// Calor por rareza: cada tipo de jugada calienta una rareza distinta y la hace más probable en la
+// siguiente oferta (multiplica su peso, ver `HEAT_BOOST` en perks.ts). Baja con cada pieza fijada.
+/** Lo que baja el calor de cada rareza por pieza. */
+export const HEAT_DECAY = { rare: 2, epic: 2, legendary: 1.5 };
+/** Raras: dobles y triples, y cada paso de combo. */
+export const HEAT_RARE_LINES = [0, 0, 18, 30, 30];
+export const HEAT_RARE_COMBO = 5;
+/** Épicas: cuádruples y giros. */
+export const HEAT_EPIC_QUAD = 40;
+export const HEAT_EPIC_SPIN = 30;
+/** Legendarias: back-to-back, combos largos (desde el cuarto paso) y limpiar todo el tablero. */
+export const HEAT_LEG_B2B = 25;
+export const HEAT_LEG_COMBO = 8;
+export const HEAT_LEG_PERFECT = 100;
+
+/** Lo que suma una limpieza normal a cada calor. */
+export function heatGain(lines: number, spin: boolean, combo: number, b2b: boolean, perfect: boolean) {
+  if (lines <= 0) return { rare: 0, epic: 0, legendary: 0 };
+  let rare = HEAT_RARE_LINES[Math.min(lines, 4)];
+  if (combo > 0) rare += HEAT_RARE_COMBO * Math.min(combo, STREAK_COMBO_CAP);
+  let epic = 0;
+  if (lines >= 4) epic += HEAT_EPIC_QUAD;
+  if (spin) epic += HEAT_EPIC_SPIN;
+  let legendary = 0;
+  if (b2b) legendary += HEAT_LEG_B2B;
+  if (combo >= 4) legendary += HEAT_LEG_COMBO * (Math.min(combo, 8) - 3);
+  if (perfect) legendary += HEAT_LEG_PERFECT;
+  return { rare, epic, legendary };
+}
+
 /** Suerte que da la racha, en las mismas unidades que `mods.luck`. */
 export function streakLuck(streak: number): number {
   return (STREAK_MAX_LUCK * streak) / STREAK_MAX;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { baseMods } from './perks';
-import { CURSES, isUnlocked, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
+import { CURSES, isUnlocked, NO_HEAT, offerOdds, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
 import { makeRng } from './rng';
 import { Game } from './game';
 
@@ -48,7 +48,7 @@ describe('perks', () => {
   it('sin progreso solo salen perks comunes y raros', () => {
     for (let i = 0; i < 300; i++) {
       for (const p of rollPerks(new Map(), 0, 3, 0)) {
-        expect(['common', 'rare']).toContain(p.rarity);
+        expect(['common', 'rare', 'legendary']).toContain(p.rarity);
       }
     }
   });
@@ -56,10 +56,35 @@ describe('perks', () => {
   it('las rarezas se desbloquean por el mejor nivel', () => {
     const epic = PERK_BY_ID.cross;
     const legendary = PERK_BY_ID.quake;
-    expect(isUnlocked(epic, 3)).toBe(false);
-    expect(isUnlocked(epic, 4)).toBe(true);
-    expect(isUnlocked(legendary, 6)).toBe(false);
-    expect(isUnlocked(legendary, 7)).toBe(true);
+    expect(isUnlocked(epic, 2)).toBe(false);
+    expect(isUnlocked(epic, 3)).toBe(true);
+    expect(isUnlocked(legendary, 4)).toBe(false);
+    expect(isUnlocked(legendary, 5)).toBe(true);
+  });
+});
+
+describe('probabilidades de rareza', () => {
+  it('una legendaria sale en torno a 1 de cada 20 ofertas sin calor', () => {
+    const odds = offerOdds(new Map(), 0);
+    expect(odds.legendary).toBeGreaterThan(0.04);
+    expect(odds.legendary).toBeLessThan(0.07);
+    expect(odds.common).toBeGreaterThan(0.4);
+  });
+
+  it('cada calor sube solo su rareza', () => {
+    const base = offerOdds(new Map(), 0);
+    for (const r of ['rare', 'epic', 'legendary'] as const) {
+      const hot = offerOdds(new Map(), 0, Infinity, false, new Set(), { ...NO_HEAT, [r]: 100 });
+      expect(hot[r]).toBeGreaterThan(base[r] * 1.5);
+      expect(hot.common).toBeLessThan(base.common);
+    }
+    const legHot = offerOdds(new Map(), 0, Infinity, false, new Set(), { ...NO_HEAT, legendary: 100 });
+    expect(legHot.legendary).toBeGreaterThan(0.28);
+  });
+
+  it('Segunda vida es legendaria pero no se bloquea a quien empieza', () => {
+    expect(PERK_BY_ID.life.rarity).toBe('legendary');
+    expect(isUnlocked(PERK_BY_ID.life, 0)).toBe(true);
   });
 });
 
@@ -76,7 +101,7 @@ describe('ofertas', () => {
 
   it('sin progreso solo salen ofertas comunes y raras', () => {
     const r = makeRng(6);
-    for (let i = 0; i < 300; i++) for (const p of rollOffer(new Map(), 0, 3, 0, r)) expect(['common', 'rare']).toContain(p.rarity);
+    for (let i = 0; i < 300; i++) for (const p of rollOffer(new Map(), 0, 3, 0, r)) expect(['common', 'rare', 'legendary']).toContain(p.rarity);
   });
 
   it('si no quedan bastantes de una rareza, se completa con otras', () => {

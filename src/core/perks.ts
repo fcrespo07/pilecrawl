@@ -57,6 +57,14 @@ export interface Mods {
   collector: number;
   /** al revivir se vacía todo el tablero y la puntuación sube (Fénix) */
   phoenix: boolean;
+  /** +puntuación por punto de racha, de 0 a 100 (Furia) */
+  fury: number;
+  /** multiplicador de lo que baja la racha con cada pieza (Furia) */
+  streakDecayMult: number;
+  /** las líneas cuentan además esta fracción extra para subir de nivel (Eco) */
+  echo: number;
+  /** rerolls que se ganan al subir de nivel (Casino) */
+  rerollPerLevel: number;
 }
 
 export function baseMods(): Mods {
@@ -100,6 +108,10 @@ export function baseMods(): Mods {
     anchor: false,
     collector: 0,
     phoenix: false,
+    fury: 0,
+    streakDecayMult: 1,
+    echo: 0,
+    rerollPerLevel: 0,
   };
 }
 
@@ -112,11 +124,26 @@ export interface PerkDef {
   pros: (stacks: number) => string[];
   cons?: (stacks: number) => string[];
   apply: (m: Mods, g: Game) => void;
+  /** Nivel de mejor marca para que salga; por defecto el de su rareza (`UNLOCK_LEVEL`). */
+  unlock?: number;
   /** Maldición: solo sale en las ofertas malditas y no tiene ventaja (sus efectos van en `cons`). */
   curse?: boolean;
 }
 
+/** Peso por carta: solo lo usa `rollPerks` (la mejora inicial del diario, que no pasa de rara). */
 export const RARITY_WEIGHT: Record<Rarity, number> = { common: 60, rare: 28, epic: 10, legendary: 3 };
+/**
+ * Peso de cada rareza en una oferta. Va por rareza, no por carta: con el peso por carta, las 24 comunes
+ * se comían la oferta y una legendaria salía en menos de 1 de cada 200 (había 3 legendarias por 24 comunes).
+ */
+export const OFFER_WEIGHT: Record<Rarity, number> = { common: 52, rare: 30, epic: 13, legendary: 5 };
+
+/** Calor por rareza (0 a 100): lo suben distintos tipos de limpieza y multiplica el peso de esa rareza. Ver `streak.ts`. */
+export type Heat = Record<Exclude<Rarity, 'common'>, number>;
+export const NO_HEAT: Heat = { rare: 0, epic: 0, legendary: 0 };
+export const HEAT_MAX = 100;
+/** Cuánto multiplica el peso a calor lleno: ×(1 + K). */
+export const HEAT_BOOST: Heat = { rare: 1.2, epic: 3, legendary: 7 };
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: 'Común',
   rare: 'Rara',
@@ -255,12 +282,6 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.extraPieces.push('I', 'SZ'); },
   },
   {
-    id: 'life', name: 'Segunda vida', rarity: 'rare', max: 3,
-    pros: () => ['<b>+1 vida</b>: al perder se vacía el tablero y sigues'],
-    cons: () => ['<b>−15%</b> a toda la puntuación'],
-    apply: (m, g) => { g.lives += 1; m.scoreMult *= 0.85; },
-  },
-  {
     id: 'exp', name: 'Experiencia', rarity: 'rare', max: 3,
     pros: () => ['Los cuádruples y los giros cuentan <b>+2 líneas</b> para subir de nivel'],
     apply: (m) => { m.expBonus += 2; },
@@ -299,7 +320,7 @@ export const PERKS: PerkDef[] = [
     id: 'fan', name: 'Abanico', rarity: 'rare', max: 1,
     pros: () => ['Eliges entre <b>4 cartas</b> en vez de 3'],
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
-    apply: (m) => { m.choices = 4; m.linesReduction -= 1; },
+    apply: (m) => { m.choices += 1; m.linesReduction -= 1; },
   },
   // ───────── Épicas ─────────
   {
@@ -357,6 +378,30 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.collector += 0.06; m.linesReduction -= 1; },
   },
   // ───────── Legendarias ─────────
+  {
+    id: 'life', name: 'Segunda vida', rarity: 'legendary', max: 2, unlock: 0, // la red de seguridad no se bloquea a quien empieza
+    pros: () => ['<b>+1 vida</b>: al perder se vacía el tablero y sigues'],
+    cons: () => ['<b>−15%</b> a toda la puntuación'],
+    apply: (m, g) => { g.lives += 1; m.scoreMult *= 0.85; },
+  },
+  {
+    id: 'fury', name: 'Furia', rarity: 'legendary', max: 1,
+    pros: () => ['La puntuación sube con la racha: hasta <b>×2</b> a racha llena'],
+    cons: () => ['La racha baja el <b>doble de rápido</b> con cada pieza'],
+    apply: (m) => { m.fury += 1; m.streakDecayMult *= 2; },
+  },
+  {
+    id: 'echo', name: 'Eco', rarity: 'legendary', max: 1,
+    pros: () => ['Cada línea cuenta <b>doble</b> para subir de nivel: más subidas, más cartas'],
+    cons: () => ['La basura sube <b>2 piezas antes</b>', 'Las piezas caen un <b>10% más rápido</b>'],
+    apply: (m) => { m.echo += 1; m.garbageDelay -= 2; m.gravitySpeed *= 1.1; },
+  },
+  {
+    id: 'casino', name: 'Casino', rarity: 'legendary', max: 1,
+    pros: () => ['<b>+4 rerolls</b> ahora y <b>+1</b> en cada subida de nivel', 'Cada reroll saca otra rareza entera: a por la legendaria'],
+    cons: () => ['Eliges entre <b>una carta menos</b> (mínimo 2)'],
+    apply: (m, g) => { g.rerolls += 4; m.rerollPerLevel += 1; m.choices -= 1; },
+  },
   {
     id: 'quake', name: 'Terremoto', rarity: 'legendary', max: 1,
     pros: () => ['Tras un <b>cuádruple</b> o un <b>giro doble</b>, todo cae rellenando huecos', 'Las líneas nuevas se <b>encadenan</b> con multiplicador'],
@@ -430,7 +475,7 @@ const NO_LOCKED: ReadonlySet<string> = new Set();
 
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
-  return bestLevel >= UNLOCK_LEVEL[p.rarity];
+  return bestLevel >= (p.unlock ?? UNLOCK_LEVEL[p.rarity]);
 }
 
 /** Saca `n` perks distintos ponderados por rareza (y suerte). `bestLevel` filtra por desbloqueos; `rand` permite usar una semilla. */
@@ -466,11 +511,12 @@ export function rollPerks(
 
 const RARITIES: Rarity[] = ['common', 'rare', 'epic', 'legendary'];
 
-/** Peso de una rareza con la suerte de Trébol (lo mismo que usa `rollPerks` carta a carta). */
-function rarityWeight(r: Rarity, luck: number): number {
-  const base = RARITY_WEIGHT[r];
+/** Peso de una rareza en una oferta, con la suerte de Trébol y el calor de los combos. */
+function rarityWeight(r: Rarity, luck: number, heat: Heat): number {
+  const base = OFFER_WEIGHT[r];
   if (r === 'common') return base;
-  return base * (1 + luck * (r === 'rare' ? 0.35 : r === 'epic' ? 0.7 : 1));
+  const lucky = 1 + luck * (r === 'rare' ? 0.35 : r === 'epic' ? 0.7 : 1);
+  return base * lucky * (1 + (HEAT_BOOST[r] * Math.max(0, Math.min(HEAT_MAX, heat[r]))) / HEAT_MAX);
 }
 
 /** Saca `n` cartas distintas de `pool` sin reponer, con igual probabilidad. */
@@ -482,13 +528,12 @@ function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] 
 }
 
 /** Rarezas que pueden salir en una oferta y su peso: por carta (con la suerte) × cartas disponibles. */
-function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>) {
+function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>, heat: Heat) {
   const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id));
   const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
   let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
   if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
-  // peso por carta × cartas disponibles: cada rareza sale tan a menudo como cuando se sorteaba carta a carta
-  const weights = rarities.map((r) => rarityWeight(r, luck) * byRarity(r).length);
+  const weights = rarities.map((r) => rarityWeight(r, luck, heat));
   return { rarities, weights, byRarity };
 }
 
@@ -499,8 +544,9 @@ export function offerOdds(
   bestLevel = Infinity,
   blessed = false,
   locked: ReadonlySet<string> = NO_LOCKED,
+  heat: Heat = NO_HEAT,
 ): Record<Rarity, number> {
-  const { rarities, weights } = offerRarities(owned, luck, bestLevel, blessed, locked);
+  const { rarities, weights } = offerRarities(owned, luck, bestLevel, blessed, locked, heat);
   const total = weights.reduce((s, w) => s + w, 0);
   const odds: Record<Rarity, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
   rarities.forEach((r, i) => (odds[r] = total > 0 ? weights[i] / total : 0));
@@ -521,8 +567,9 @@ export function rollOffer(
   /** Tras una oferta maldita la siguiente es rara o mejor (si hay alguna disponible). */
   blessed = false,
   locked: ReadonlySet<string> = NO_LOCKED,
+  heat: Heat = NO_HEAT,
 ): PerkDef[] {
-  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked);
+  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked, heat);
   if (!rarities.length) return [];
   const total = weights.reduce((s, w) => s + w, 0);
   let x = rand() * total;
