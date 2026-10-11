@@ -106,6 +106,7 @@ K apply -k k8s/
 # SOLO con la imagen local (3B): cambiar antes de esperar, o el pod quedará en ImagePullBackOff
 K -n blockrogue set image deployment/blockrogue blockrogue=blockrogue:local
 K -n blockrogue patch deployment blockrogue -p '{"spec":{"template":{"spec":{"containers":[{"name":"blockrogue","imagePullPolicy":"IfNotPresent"}]}}}}'
+K -n blockrogue delete cronjob blockrogue-updater   # solo 3B: el actualizador baja de GHCR y no aplica con imagen local
 K -n blockrogue rollout status deployment/blockrogue --timeout=180s
 ```
 **Verificar:**
@@ -174,8 +175,11 @@ Requiere U3 hecho y haber puesto las variables del repositorio y relanzado el wo
 
 ## 10. Actualizar y revertir
 
+**Normalmente no hay que hacer nada:** el CronJob `blockrogue-updater` (`k8s/updater.yaml`, se instala con `apply -k`) comprueba GHCR cada 5 minutos y reinicia el juego cuando hay imagen nueva. Estado: `K -n blockrogue get cronjob,jobs` y `K -n blockrogue logs job/<último job>` (dice «sin cambios» o «Deployment reiniciado»). Si falla con «HTTP 401/403» hacia el registro, el paquete de GHCR no es público (U1). Si una imagen nueva no arranca, vuelve sola a la última buena a los 5 minutos y lo anota en `K -n blockrogue get deploy blockrogue -o yaml | grep pilecrawl/`; dile al usuario qué digest falló. Los fallos del propio CronJob son silenciosos: revisa `get jobs` si dudas. Para pausarlo: `K -n blockrogue patch cronjob blockrogue-updater -p '{"spec":{"suspend":true}}'`. Tras el primer despliegue reinicia una vez (no tiene aún el digest anotado); es normal.
+
 ```bash
-# actualizar a la última imagen de GHCR
+# forzar la actualización a mano
+
 K -n blockrogue rollout restart deployment/blockrogue && K -n blockrogue rollout status deployment/blockrogue
 # volver a la versión anterior si algo falla
 K -n blockrogue rollout undo deployment/blockrogue

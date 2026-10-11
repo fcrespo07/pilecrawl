@@ -85,7 +85,7 @@ sudo k3s kubectl -n blockrogue port-forward svc/blockrogue 8080:80    # prueba e
 ```bash
 # logs
 sudo k3s kubectl -n blockrogue logs deploy/blockrogue -f
-# actualizar a la última imagen
+# actualizar a la última imagen (normalmente no hace falta: lo hace solo el CronJob blockrogue-updater, ver más abajo)
 sudo k3s kubectl -n blockrogue rollout restart deploy/blockrogue
 # ocultar un apodo ofensivo: primero su id, luego ocultarlo
 curl "https://TU-DOMINIO/api/admin/players?nickname=Apodo" -H "Authorization: Bearer $ADMIN_TOKEN"
@@ -93,6 +93,8 @@ curl -X POST https://TU-DOMINIO/api/admin/players/<id>/hide -H "Authorization: B
 # borrar una partida sospechosa (el id sale en la tabla: runId)
 curl -X DELETE https://TU-DOMINIO/api/admin/runs/<runId> -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
+
+**Actualizaciones automáticas.** El workflow `Imagen` construye y publica la imagen arm64 en GHCR en cada fusión a master. `k8s/updater.yaml` añade un CronJob que, cada 5 minutos, pregunta a GHCR por el digest de `latest` y, si cambió, reinicia el Deployment (que baja la imagen nueva). La Pi solo hace conexiones de salida y no necesita ningún secreto; el paquete de GHCR tiene que ser público. Cliente y servidor están en la misma imagen, así que un cambio de reglas (`RULES_VERSION`) se despliega siempre entero. Ver el último resultado: `sudo k3s kubectl -n blockrogue logs job/$(sudo k3s kubectl -n blockrogue get jobs -o name | tail -1 | cut -d/ -f2)`. Pausarlo: `sudo k3s kubectl -n blockrogue patch cronjob blockrogue-updater -p '{"spec":{"suspend":true}}'`. Si la imagen nueva no queda disponible en 5 minutos (`progressDeadlineSeconds`), el actualizador vuelve a la última que funcionó, anota la mala (`pilecrawl/bad-digest` en el Deployment) y no la reintenta hasta que salga otra distinta. Entre medias el juego está caído unos 5 minutos. Avisos: (1) los fallos del CronJob son silenciosos (por ejemplo, si el paquete pasa a privado): mira de vez en cuando `kubectl -n blockrogue get jobs`; (2) hasta que se publique la primera imagen que lleva `updater.mjs`, el CronJob falla con «Cannot find module» (inofensivo); (3) con `rollout undo` a mano, pausa también el CronJob, o volverá a poner `latest`.
 
 La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`, `bests`, `replays`, `starts`.
 
