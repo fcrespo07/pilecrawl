@@ -1,0 +1,10 @@
+/* Páginas estáticas (privacidad, acerca de): texto legible, sin el motor del juego */
+:root { color-scheme: dark; }
+body { margin: 0; background: #101426; color: #dfe4f5; font: 18px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+h1 { font-size: 28px; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 32px 0 6px; color: #fff; }
+a { color: #8fd1ff; }
+nav { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; font-size: 16px; }
+kbd { background: #1c2240; border: 1px solid #3a4375; border-radius: 4px; padding: 0 6px; font-size: 15px; }
+.note { color: #9aa3c7; font-size: 15px; }

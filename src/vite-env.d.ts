@@ -15,4 +15,6 @@ interface ImportMetaEnv {
   readonly VITE_AD_CONSENT?: string;
   /** Página de privacidad. Obligatoria si hay ranking o anuncios. */
   readonly VITE_PRIVACY_URL?: string;
+  readonly VITE_CONTACT_EMAIL?: string;
+  readonly VITE_SITE_OWNER?: string;
 }
