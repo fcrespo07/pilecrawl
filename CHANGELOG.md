@@ -5,7 +5,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.19.7 — 2026-10-11
-- La versión que sirve la página también aparece en el menú de pausa, además del pie de la portada, para saber qué build tienes delante (#PR).
+- La versión que sirve la página también aparece en el menú de pausa, además del pie de la portada, para saber qué build tienes delante (#41).
 
 ## 0.19.6 — 2026-10-11
 - Ranking en la portada: el panel del diario y el de partida (semana) enseñan los tres primeros y, si juegas, tu puesto con 2 puestos por encima y 2 por debajo (el servidor devuelve `near` en `/api/leaderboard`). El día del desafío lo marca el servidor (`/api/config` trae `now`), así que un reloj mal puesto no cambia el diario; sin servidor se usa el reloj local (#40). Arregla además la lista «Tus mejores» de la portada, que salía apretada.
