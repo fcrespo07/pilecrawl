@@ -1067,8 +1067,15 @@ body.tutorial #perk-list .empty { display: none; }
 .home-panel h2 { margin: 0; font-family: var(--f-display); font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--hi); line-height: 1.5; }
 .home-panel h2 i { font-style: normal; color: var(--hi2); }
 .rank-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
-.rank-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 16px; color: var(--muted); }
+.home-panel .rank-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 0; font-size: 16px; color: var(--muted); }
+.home-panel .rank-list { max-height: none; overflow: visible; }
 .rank-list b { font-family: var(--f-display); font-weight: 400; font-size: 12px; color: var(--ink); }
+.home-rank { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.home-rank li { display: grid; grid-template-columns: 2em 1fr auto; gap: 6px; align-items: baseline; font-size: 16px; color: var(--muted); padding: 2px 6px; }
+.home-rank li.me { background: var(--panel-hi); color: var(--hi); }
+.home-rank li.gap { margin-top: 6px; border-top: 2px dashed var(--muted); padding-top: 6px; }
+.home-rank .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-rank .s { font-family: var(--f-display); font-size: 11px; color: var(--ink); }
 .rank-big { margin: 4px 0; font-family: var(--f-display); font-size: 22px; color: var(--ink); }
 .rank-note { margin: 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
 .home-first .home-hero .home-title { margin: 12px 0 14px; }

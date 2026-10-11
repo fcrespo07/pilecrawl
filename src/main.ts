@@ -6,7 +6,7 @@ import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, 
 import { Gestures } from './gestures';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
-import { dailySeed, MODES, utcDate, type ModeId } from './core/modes';
+import { dailySeed, MODES, msToNextDaily, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
@@ -40,7 +40,10 @@ if (adConsentManaged() || adCmpManaged()) {
     location.reload();
   });
 }
-const rankingUI = new RankingUI(() => home.focus({ preventScroll: true }));
+const rankingUI = new RankingUI(
+  () => home.focus({ preventScroll: true }),
+  () => refreshPanels(true),
+);
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
   onPlay: () => void startRun(),
@@ -54,10 +57,24 @@ const tutorial = new Tutorial(game, {
 });
 const panelLeft = document.getElementById('panel-left')!;
 const panelRight = document.getElementById('panel-right')!;
-const refreshPanels = () => renderHomePanels(panelLeft, panelRight);
+const refreshPanels = (force = false) => renderHomePanels(panelLeft, panelRight, force);
 refreshPanels();
 // la cuenta atrás y el número del diario cambian con la portada abierta
-window.setInterval(refreshPanels, 30_000);
+window.setInterval(() => refreshPanels(), 30_000);
+// y justo al cambiar de día (medianoche UTC) se repinta sin esperar al ciclo
+const atRollover = () =>
+  window.setTimeout(() => {
+    modeSelect.refresh();
+    refreshPanels();
+    atRollover();
+  }, msToNextDaily(net.now()) + 500);
+atRollover();
+// con la hora del servidor el día del desafío puede cambiar respecto al reloj local
+void net.serverDay().then((d) => {
+  if (!d) return;
+  modeSelect.refresh();
+  refreshPanels();
+});
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
 function renderResolution(scale: number) {
@@ -137,7 +154,7 @@ function wireAudioAndFeel() {
     if (game.mode !== 'tutorial') ui.showGameOver(prize);
     modeSelect.refresh();
     offerPublish();
-    refreshPanels();
+    refreshPanels(true);
   });
 }
 
@@ -238,7 +255,9 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   starting = true;
   const mode = forced ?? modeSelect.mode;
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
-  const date = utcDate();
+  // la fecha la da el servidor si responde (un reloj mal puesto no cambia el desafío); si no, la del reloj local
+  if (mode === 'daily') await net.serverDay(1500);
+  const date = net.dailyDate();
   // las partidas libres con ranking usan la semilla y los desbloqueos del servidor; si falla, se juega sin ranking
   let ranked: net.RankedStart | null = null;
   if (net.RANKING_ENABLED && (mode === 'normal' || mode === 'timed') && net.loadPlayer()) {

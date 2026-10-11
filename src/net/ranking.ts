@@ -1,6 +1,6 @@
 // Cliente del ranking en línea. Todo es opcional: sin `VITE_RANKING=1` o sin servidor, el juego sigue siendo local.
 import type { Replay } from '../core/game';
-import type { ModeId } from '../core/modes';
+import { utcDate, type ModeId } from '../core/modes';
 
 export const RANKING_ENABLED = import.meta.env.VITE_RANKING === '1';
 const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
@@ -26,6 +26,8 @@ export interface Board {
   scope: string;
   total: number;
   entries: Entry[];
+  /** Puestos alrededor del jugador (2 por encima y 2 por debajo); vacío si no tiene puntuación. */
+  near: Entry[];
   me: { nickname: string; rank: number | null; best: number | null } | null;
 }
 
@@ -144,4 +146,53 @@ export function leaderboard(mode: ModeId, scope: 'daily' | 'weekly' | 'all', dat
   const q = new URLSearchParams({ mode, scope });
   if (date) q.set('date', date);
   return call<Board>('GET', `/api/leaderboard?${q}`, undefined, loadPlayer() !== null);
+}
+
+export interface ServerDay {
+  /** Fecha UTC del servidor (AAAA-MM-DD): la del desafío diario de hoy. */
+  today: string;
+  dailyNumber: number;
+  /** Cuánto adelanta el reloj del servidor al local, en ms. */
+  offset: number;
+}
+
+let dayCache: { at: number; day: ServerDay } | null = null;
+let dayFailedAt = 0;
+let dayPending: Promise<ServerDay | null> | null = null;
+
+/**
+ * Día del desafío según el servidor, que es quien lo comprueba al publicar: así un reloj mal puesto
+ * no cambia el desafío. Se guarda unos minutos. Sin servidor devuelve `null` y se usa el reloj local.
+ */
+export function serverDay(timeoutMs = 3000): Promise<ServerDay | null> {
+  if (!RANKING_ENABLED) return Promise.resolve(null);
+  if (dayCache && Date.now() - dayCache.at < 5 * 60_000) return Promise.resolve(dayCache.day);
+  // un fallo reciente no se reintenta enseguida; las peticiones a la vez comparten la misma
+  if (Date.now() - dayFailedAt < 2 * 60_000) return Promise.resolve(dayCache?.day ?? null);
+  dayPending ??= fetchDay(timeoutMs).finally(() => (dayPending = null));
+  return dayPending;
+}
+
+async function fetchDay(timeoutMs: number): Promise<ServerDay | null> {
+  try {
+    const t0 = Date.now();
+    const c = await call<{ now: number; today: string; dailyNumber: number }>('GET', '/api/config', undefined, false, timeoutMs);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(c.today) || !Number.isFinite(c.now)) return null;
+    const t1 = Date.now();
+    dayCache = { at: t1, day: { today: c.today, dailyNumber: c.dailyNumber, offset: c.now - (t0 + t1) / 2 } };
+    return dayCache.day;
+  } catch {
+    dayFailedAt = Date.now();
+    return null;
+  }
+}
+
+/** Ahora, con el reloj corregido por la última hora que dio el servidor (o el local si no la hay). */
+export function now(): Date {
+  return new Date(Date.now() + (dayCache?.day.offset ?? 0));
+}
+
+/** Fecha del desafío de hoy sin esperar a la red. */
+export function dailyDate(): string {
+  return utcDate(now());
 }

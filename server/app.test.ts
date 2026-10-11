@@ -16,7 +16,8 @@ let seedAt = 0;
 
 function setup(extra: Partial<Config> = {}) {
   const cfg: Config = { ...loadConfig({}), nickBlocklist: ['feo'], adminToken: 'admin-secret-token', now: () => new Date(clock), newSeed: () => SEEDS[seedAt++ % SEEDS.length], ...extra };
-  const app = createApp(cfg, openDb(':memory:'));
+  const db = openDb(':memory:');
+  const app = createApp(cfg, db);
   // IP distinta por prueba para no tropezar con los límites
   const ip = `10.0.0.${++n}`;
   const call = async (method: string, path: string, body?: unknown, token?: string) => {
@@ -26,7 +27,7 @@ function setup(extra: Partial<Config> = {}) {
     return { status: res.status, body: (await res.json()) as any };
   };
   const register = async (nickname: string) => (await call('POST', '/api/players', { nickname })).body.token as string;
-  return { call, register };
+  return { call, register, db };
 }
 
 beforeEach(() => {
@@ -160,6 +161,29 @@ describe('desafío diario', () => {
     const board = (await call('GET', `/api/leaderboard?mode=daily&date=${date}`)).body;
     expect(board.entries.map((e: any) => e.nickname)).toEqual(['Fer']);
     expect(board.scope).toBe('d:2026-10-14');
+  });
+
+  it('la tabla incluye una ventana de 2 por encima y 2 por debajo del jugador', async () => {
+    const { call, register, db } = setup();
+    const date = '2026-10-14';
+    const tokens: string[] = [];
+    // 7 jugadores con puntuaciones 7000, 6000 ... 1000 (el 1.º es el de más puntos), metidos a mano
+    for (let i = 0; i < 7; i++) {
+      // el alta por la API tiene tope por IP: solo se registran los que luego preguntan
+      if (i === 0 || i === 3 || i === 6) tokens[i] = await register(`Jugador ${i}`);
+      else db.prepare("INSERT INTO players (id, nickname, secret_hash, created_at) VALUES (?, ?, 'x', 0)").run(`p${i}`, `Jugador ${i}`);
+      const id = (db.prepare('SELECT id FROM players WHERE nickname = ?').get(`Jugador ${i}`) as { id: string }).id;
+      const run = db
+        .prepare("INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, hash, created_at) VALUES (?, 'daily', ?, 1, 1, ?, 1, 1, 1, ?, 0)")
+        .run(id, date, (7 - i) * 1000, `h${i}`);
+      db.prepare("INSERT INTO bests (player_id, mode, scope, score, level, lines, run_id) VALUES (?, 'daily', ?, ?, 1, 1, ?)").run(id, `d:${date}`, (7 - i) * 1000, run.lastInsertRowid);
+    }
+    const near = async (i: number) => (await call('GET', `/api/leaderboard?mode=daily&date=${date}`, undefined, tokens[i])).body.near.map((e: any) => e.rank);
+    expect(await near(3)).toEqual([2, 3, 4, 5, 6]);
+    expect(await near(0)).toEqual([1, 2, 3, 4, 5]);
+    expect(await near(6)).toEqual([5, 6, 7]);
+    // sin identificar no hay ventana
+    expect((await call('GET', `/api/leaderboard?mode=daily&date=${date}`)).body.near).toEqual([]);
   });
 
   it('rechaza semilla de otro día, fechas viejas o futuras', async () => {
