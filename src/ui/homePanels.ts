@@ -67,7 +67,7 @@ async function loadBoards(left: HTMLElement, right: HTMLElement, force: boolean)
     if (force) again = true;
     return;
   }
-  if (!force && (!homeVisible() || (Date.now() - boards.at < 30_000) && boards.date === net.dailyDate()) return;
+  if (!force && (!homeVisible() || (Date.now() - boards.at < 30_000 && boards.date === net.dailyDate()))) return;
   loading = true;
   try {
     await net.serverDay();
