@@ -426,6 +426,8 @@ export const CURSES: PerkDef[] = [
 
 export const PERK_BY_ID: Record<string, PerkDef> = Object.fromEntries([...PERKS, ...CURSES].map((p) => [p.id, p]));
 
+const NO_LOCKED: ReadonlySet<string> = new Set();
+
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
   return bestLevel >= UNLOCK_LEVEL[p.rarity];
@@ -438,8 +440,10 @@ export function rollPerks(
   n = 3,
   bestLevel = Infinity,
   rand: () => number = Math.random,
+  /** Perks bloqueados por retos (Expedición): no salen. */
+  locked: ReadonlySet<string> = NO_LOCKED,
 ): PerkDef[] {
-  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
+  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id));
   const weight = (p: PerkDef) => {
     const base = RARITY_WEIGHT[p.rarity];
     if (p.rarity === 'common') return base;
@@ -478,8 +482,8 @@ function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] 
 }
 
 /** Rarezas que pueden salir en una oferta y su peso: por carta (con la suerte) × cartas disponibles. */
-function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean) {
-  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel));
+function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>) {
+  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id));
   const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
   let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
   if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
@@ -494,8 +498,9 @@ export function offerOdds(
   luck: number,
   bestLevel = Infinity,
   blessed = false,
+  locked: ReadonlySet<string> = NO_LOCKED,
 ): Record<Rarity, number> {
-  const { rarities, weights } = offerRarities(owned, luck, bestLevel, blessed);
+  const { rarities, weights } = offerRarities(owned, luck, bestLevel, blessed, locked);
   const total = weights.reduce((s, w) => s + w, 0);
   const odds: Record<Rarity, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
   rarities.forEach((r, i) => (odds[r] = total > 0 ? weights[i] / total : 0));
@@ -515,8 +520,9 @@ export function rollOffer(
   rand: () => number = Math.random,
   /** Tras una oferta maldita la siguiente es rara o mejor (si hay alguna disponible). */
   blessed = false,
+  locked: ReadonlySet<string> = NO_LOCKED,
 ): PerkDef[] {
-  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed);
+  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked);
   if (!rarities.length) return [];
   const total = weights.reduce((s, w) => s + w, 0);
   let x = rand() * total;

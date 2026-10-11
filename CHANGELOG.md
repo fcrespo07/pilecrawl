@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.19.0 — 2026-10-11
+- **Expedición: retos y perks bloqueados**: 8 perks (Cruz, Maestro del giro, Combo eterno, Interés compuesto, Bomba, Prisma, Terremoto y Fénix) no salen en las ofertas de la Expedición hasta cumplir su reto en una sola partida (3 cuádruples, 5 giros, combo 6, nivel 6, 30 y 60 líneas, nivel 9, 10 minutos). El progreso se ve en la pantalla de la Expedición y el catálogo indica el reto de cada perk. El arcade no cambia (#32).
+
 ## 0.18.0 — 2026-10-11
 - **Modo Expedición (primera parte)**: nuevo modo con progresión entre partidas y sin ranking. Cada partida da fragmentos (8 por nivel + 1 por línea) que se gastan en 7 mejoras permanentes: Repuesto, Vista larga, Aguante, Calma, Ritmo, Vida de repuesto y Buen arranque. Se entra desde el botón «Expedición» de la portada; el progreso se guarda en el navegador (`blockrogue.exp`). Las repeticiones de este modo no se pueden validar y el servidor las rechaza; el arcade no cambia. Sin equilibrar (#31).
 

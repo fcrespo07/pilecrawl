@@ -7,6 +7,7 @@ import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
+import { perkName } from '../core/expedition';
 import { loadBest, submitScore } from '../records';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
@@ -136,8 +137,8 @@ export class UI {
       : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>');
   }
 
-  /** `shards`: fragmentos ganados si fue una Expedición; null en los demás modos. */
-  showGameOver(shards: number | null = null) {
+  /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
+  showGameOver(prize: { shards: number; unlocked: string[] } | null = null) {
     const g = this.game;
     // el laboratorio falsea la partida: ni récord ni ranking
     const isBest = !g.sandbox && submitScore(g.mode, this.date, g.score);
@@ -165,7 +166,8 @@ export class UI {
       stat('Tiempo', clock(g.time)) +
       stat('Mejor nivel', loadMeta().bestLevel) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
-      (shards !== null ? stat('Fragmentos', `+${fmt(shards)}`) : '');
+      (prize ? stat('Fragmentos', `+${fmt(prize.shards)}`) : '') +
+      (prize?.unlocked.length ? stat('Perk abierto', prize.unlocked.map(perkName).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);

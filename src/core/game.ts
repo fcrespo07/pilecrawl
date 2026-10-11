@@ -8,7 +8,7 @@ import {
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
-import { applyUpgrades, level as expLevel, type Owned } from './expedition';
+import { applyUpgrades, level as expLevel, lockedPerks, type Owned } from './expedition';
 
 // Tablero propio de 11×18 visibles (no el 10×20 clásico del género)
 export const COLS = 11;
@@ -188,6 +188,10 @@ export class Game {
   time = 0;
   maxCombo = 0;
   quads = 0;
+  /** Giros que han limpiado líneas (los cuentan los retos de la Expedición). */
+  spins = 0;
+  /** Perks bloqueados en esta partida (solo Expedición, hasta cumplir su reto). */
+  lockedPerks: ReadonlySet<string> = new Set();
   /** Bonus acumulado de Fénix (+0,25 por cada vez que revives). */
   phoenixBonus = 0;
   /** Hiperperk de la partida (solo una) o null si aún no se ha elegido. */
@@ -270,6 +274,8 @@ export class Game {
     this.time = 0;
     this.maxCombo = 0;
     this.quads = 0;
+    this.spins = 0;
+    this.lockedPerks = new Set();
     this.phoenixBonus = 0;
     this.hyper = null;
     this.hyperCharge = 0;
@@ -298,7 +304,7 @@ export class Game {
   }
 
   /** Empieza una partida. Sin semilla se elige una al azar. */
-  start(seed = randomSeed(), mode: ModeId = 'normal', upgrades: Owned = {}) {
+  start(seed = randomSeed(), mode: ModeId = 'normal', upgrades: Owned = {}, unlocked: readonly string[] = []) {
     this.reset();
     this.seed = seed >>> 0;
     this.mode = mode;
@@ -311,12 +317,13 @@ export class Game {
     // Expedición: las mejoras permanentes solo cuentan en ese modo (el resto no las ve)
     if (def.expedition) {
       applyUpgrades(this.mods, upgrades);
+      this.lockedPerks = lockedPerks(unlocked);
       this.rerolls += expLevel(upgrades, 'reroll');
       this.lives += expLevel(upgrades, 'vida');
     }
     if (def.starterPerk || (def.expedition && expLevel(upgrades, 'arranque') > 0)) {
       // azar propio para no mover la cola ni las cartas: solo comunes y raras
-      const [perk] = rollPerks(this.perks, 0, 1, 0, makeRng((this.seed ^ 0x5bd1e995) >>> 0));
+      const [perk] = rollPerks(this.perks, 0, 1, 0, makeRng((this.seed ^ 0x5bd1e995) >>> 0), this.lockedPerks);
       if (perk) this.grantPerk(perk);
     }
     this.state = 'playing';
@@ -760,7 +767,8 @@ export class Game {
     } else {
       base *= 1 + cascade;
     }
-    if (lines >= 4) this.quads++;
+    if (lines >= 4 && !blast) this.quads++;
+    if (spin !== null) this.spins++;
 
     let total = base;
     if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;
@@ -1102,7 +1110,7 @@ export class Game {
       if (this.choices.length > 0) return;
       this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
     }
-    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer);
+    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer, this.lockedPerks);
   }
 
   /** Suerte de las ofertas: la de los perks (Trébol) más la de la racha. */
@@ -1114,7 +1122,7 @@ export class Game {
   offerOdds(): Record<Rarity, number> {
     // jugando, la próxima oferta es «bendita» si la última fue maldita
     const blessed = this.state === 'choosing' ? this.blessedOffer : this.cursedOffer;
-    return offerOdds(this.perks, this.offerLuck(), this.bestLevel, blessed);
+    return offerOdds(this.perks, this.offerLuck(), this.bestLevel, blessed, this.lockedPerks);
   }
 
   /** Probabilidad de que la próxima subida traiga hiperperk (0 si ya la tienes o aún no toca). */

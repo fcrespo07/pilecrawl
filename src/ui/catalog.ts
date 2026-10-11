@@ -1,5 +1,6 @@
 // Catálogo: todas las mejoras, maldiciones e hiperperks en una página aparte (se abre desde la portada).
 import { HYPERS } from '../core/hypers';
+import { CHALLENGES } from '../core/expedition';
 import { UNLOCK_LEVEL } from '../core/meta';
 import { CURSES, PERKS, type PerkDef, type Rarity } from '../core/perks';
 import { effectsHTML, hyperFoot, rarityKey, rarityLabel } from './ui';
@@ -16,11 +17,13 @@ function maxLabel(p: PerkDef): string {
 
 function perkItem(p: PerkDef): string {
   const lock = !p.curse && UNLOCK_LEVEL[p.rarity] > 0 ? `<span class="cat-lock">Se desbloquea llegando al nivel ${UNLOCK_LEVEL[p.rarity]}</span>` : '';
+  const reto = CHALLENGES.find((c) => c.perk === p.id);
+  const exp = reto ? `<span class="cat-lock">En Expedición: ${reto.text.charAt(0).toLowerCase()}${reto.text.slice(1)}</span>` : '';
   return `<article class="cat-item r-${rarityKey(p)}">
     <div class="b-ico">${perkIcon(p.id)}</div>
     <div class="cat-body">
       <div class="b-name">${p.name}<small>${rarityLabel(p)} · ${maxLabel(p)}</small></div>
-      ${effectsHTML(p, 1)}${lock}
+      ${effectsHTML(p, 1)}${lock}${exp}
     </div>
   </article>`;
 }
