@@ -28,6 +28,8 @@ export interface PieceSpec {
   gold: boolean;
   /** Bomba solo por Bombardeo: no pasa a la reserva y no borra si era prisma u oro. */
   hyperBomb?: boolean;
+  /** Pieza que era antes de que Diluvio la volviera una I: es la que va a la reserva. */
+  hyperFrom?: PieceDef;
 }
 
 export interface ActivePiece extends PieceSpec {
@@ -99,7 +101,7 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 7;
+export const RULES_VERSION = 8;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -403,6 +405,7 @@ export class Game {
       this.lifelineReadyAt = this.piecesLocked + 12;
       this.events.emit('lifeline', undefined);
     }
+    if (this.hyperActive('flood') && s.def.name !== 'I') s = { ...s, def: PIECES.I, hyperFrom: s.def };
     const def = s.def;
     const x = Math.floor((COLS - def.size) / 2);
     // aparece en la primera fila visible si cabe, si no un poco más arriba
@@ -511,7 +514,7 @@ export class Game {
     if (this.holdUsed && !this.mods.infiniteHold) return;
     this.record([this.steps, 'hold']);
     const a = this.active;
-    const spec: PieceSpec = { def: a.def, bomb: a.bomb, prism: a.prism, gold: a.gold };
+    const spec: PieceSpec = { def: a.hyperFrom ?? a.def, bomb: a.bomb, prism: a.prism, gold: a.gold };
     let next: PieceSpec | undefined;
     if (this.hold.length >= this.mods.holdSlots) next = this.hold.shift();
     this.hold.push(spec);
@@ -693,7 +696,8 @@ export class Game {
       const placed = sand ? this.sandCells(cells) : cells;
       for (const [x, y] of placed) if (y >= 0) this.board[y][x] = value;
       this.events.emit('lock', { cells: placed, color: a.def.color });
-      this.resolveClears(sand ? null : spin, a.def, placed);
+      const compacted = this.hyperActive('gravity') && this.compactBoard();
+      this.resolveClears(sand || compacted ? null : spin, a.def, placed);
       // una pieza con algún bloque por encima del búfer oculto es un bloqueo fuera: cuenta como topOut
       if (placed.some(([, y]) => y < 0) && !this.topOut()) return;
     }
@@ -865,6 +869,14 @@ export class Game {
     return columns;
   }
 
+  /** Gravedad: todos los bloques caen a los huecos de su columna. Devuelve si algo se movió. */
+  private compactBoard(): boolean {
+    const all = Array.from({ length: COLS }, (_, x) => ({ x, y: ROWS - 1 }));
+    const columns = this.settleColumns(all);
+    if (columns > 0) this.events.emit('settle', { columns });
+    return columns > 0;
+  }
+
   private settleAfterBlast(removed: { x: number; y: number }[]) {
     if (removed.length === 0) return;
     const columns = this.settleColumns(removed);
@@ -996,8 +1008,9 @@ export class Game {
 
   /** Devuelve true si queda una vida y la partida sigue; false si termina. No genera pieza. */
   private topOut(): boolean {
-    if (this.lives > 0) {
-      this.lives--;
+    const shield = this.hyperActive('shield');
+    if (shield || this.lives > 0) {
+      if (!shield) this.lives--;
       // deja sólo las 5 filas de abajo; con Fénix, nada
       const keep = this.mods.phoenix ? 0 : 5;
       for (let y = 0; y < ROWS - keep; y++) this.board[y].fill(0);
@@ -1220,17 +1233,50 @@ export class Game {
 
   /** Suelta la hiperperk. Es una acción del jugador: se graba para la repetición. */
   activateHyper(): boolean {
-    if (this.state !== 'playing' || !this.active || !this.hyperReady()) return false;
+    if (this.state !== 'playing' || !this.active) return false;
+    // con la hiperperk activa, volver a pulsar la corta (sin devolver la carga)
+    if (this.hyperLeft > 0) return this.stopHyper();
+    if (!this.hyperReady()) return false;
     const h = this.hyper!;
     this.record([this.steps, 'hyper']);
     this.hyperCharge = 0;
     this.hyperLeft = Math.round(h.durationMs / STEP_MS);
     this.events.emit('hyper', { hyper: h });
     if (h.id === 'barrage') this.active!.hyperBomb = true;
+    if (h.id === 'flood') this.floodActive();
     if (h.id === 'wipe') this.wipeBoard();
     // las instantáneas también avisan de que han terminado
     if (this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: h });
     return true;
+  }
+
+  /** Corta la hiperperk activa. Es una acción del jugador: se graba igual que soltarla. */
+  private stopHyper(): boolean {
+    const h = this.hyper!;
+    this.record([this.steps, 'hyper']);
+    this.hyperLeft = 0;
+    const a = this.active!;
+    // la pieza que ya está cayendo vuelve a ser la normal
+    if (h.id === 'barrage') a.hyperBomb = false;
+    if (h.id === 'flood' && a.hyperFrom && !this.collides(a.hyperFrom, a.x, a.y, 0)) {
+      a.def = a.hyperFrom;
+      a.rot = 0;
+      a.hyperFrom = undefined;
+    }
+    this.events.emit('hyperEnd', { hyper: h });
+    return true;
+  }
+
+  /** Diluvio: la pieza que cae ahora también pasa a ser una I. */
+  private floodActive() {
+    const a = this.active!;
+    if (a.def.name === 'I') return;
+    const x = Math.floor((COLS - PIECES.I.size) / 2);
+    if (this.collides(PIECES.I, x, a.y, 0)) return;
+    a.hyperFrom = a.def;
+    a.def = PIECES.I;
+    a.rot = 0;
+    a.x = x;
   }
 
   /** Arena: cada bloque cae al hueco libre más bajo de su columna, aunque esté tapado. */

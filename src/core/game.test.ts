@@ -573,6 +573,70 @@ describe('hiperperks', () => {
     expect(g.hyperLeft).toBe(0);
   });
 
+  it('volver a pulsar corta la hiperperk activa, sin devolver la carga, y se graba', () => {
+    const g = withHyper('frenzy');
+    let ended = false;
+    g.events.on('hyperEnd', () => (ended = true));
+    g.activateHyper();
+    expect(g.hyperActive('frenzy')).toBe(true);
+    expect(g.activateHyper()).toBe(true);
+    expect(g.hyperActive('frenzy')).toBe(false);
+    expect(ended).toBe(true);
+    expect(g.hyperCharge).toBe(0);
+    expect(g.hyperReady()).toBe(false);
+    expect(g.replay().actions.filter((a) => a[1] === 'hyper')).toHaveLength(2);
+  });
+
+  it('cortar Bombardeo deja la pieza que cae como pieza normal', () => {
+    const g = withHyper('barrage');
+    g.activateHyper();
+    expect(g.active!.hyperBomb).toBe(true);
+    g.activateHyper();
+    expect(g.active!.hyperBomb).toBe(false);
+  });
+
+  it('Diluvio vuelve I las piezas y la reserva guarda la original', () => {
+    const g = withHyper('flood');
+    g.mods.infiniteHold = true;
+    setActive(g, PIECES.T, 4, 2);
+    g.activateHyper();
+    expect(g.active!.def.name).toBe('I');
+    g.holdPiece();
+    expect(g.hold[0].def.name).toBe('T');
+    expect(g.active!.def.name).toBe('I');
+  });
+
+  it('al cortar Diluvio, la pieza que cae recupera su forma', () => {
+    const g = withHyper('flood');
+    setActive(g, PIECES.T, 4, 2);
+    g.activateHyper();
+    g.activateHyper();
+    expect(g.active!.def.name).toBe('T');
+  });
+
+  it('Gravedad compacta todo el tablero al fijar una pieza', () => {
+    const g = withHyper('gravity');
+    // un agujero tapado en la columna 0
+    g.board[ROWS - 2][0] = PIECES.T.id;
+    g.activateHyper();
+    setActive(g, PIECES.M1, 10, 0);
+    g.hardDrop();
+    expect(g.board[ROWS - 1][0]).toBe(PIECES.T.id);
+    expect(g.board[ROWS - 2][0]).toBe(0);
+  });
+
+  it('Escudo evita perder sin gastar vidas', () => {
+    const g = withHyper('shield');
+    g.activateHyper();
+    const lives = g.lives;
+    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS - 1; x++) g.board[y][x] = PIECES.T.id;
+    g['topOut']();
+    expect(g.state).not.toBe('over');
+    expect(g.lives).toBe(lives);
+    expect(g.board[0].every((v) => v === 0)).toBe(true);
+    expect(g.board[ROWS - 1][0]).toBe(PIECES.T.id);
+  });
+
   it('las hiperperks instantáneas también avisan al terminar', () => {
     const g = withHyper('wipe');
     let ended = false;

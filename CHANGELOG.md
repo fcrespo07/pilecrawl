@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- Las hiperperks con duración se pueden cortar: volver a pulsar D (o tocar la tarjeta Hiper) las termina al momento, sin devolver la carga. Tres hiperperks nuevas, cada una con su piel: **Diluvio** (todas las piezas son barras I, 10 s), **Gravedad** (el tablero se compacta al fijar cada pieza, 6 s) y **Escudo** (no puedes perder: si te desbordas se vacía el tablero salvo 5 filas, 10 s). `RULES_VERSION` sube a 8 (#42).
 
 ## 0.19.7 — 2026-10-11
 - La versión que sirve la página también aparece en el menú de pausa, además del pie de la portada, para saber qué build tienes delante (#41).

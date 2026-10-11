@@ -345,7 +345,7 @@ export class UI {
     const text = !h
       ? 'Sale con la racha'
       : active
-        ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s`
+        ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s · ${window.matchMedia('(pointer: coarse)').matches ? 'tócala para cortar' : 'D corta'}`
         : ready
           ? (window.matchMedia('(pointer: coarse)').matches ? 'Lista: tócala' : 'Lista: pulsa D')
           : `${g.hyperCharge}/${h.charge} líneas`;

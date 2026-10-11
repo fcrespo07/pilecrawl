@@ -80,7 +80,25 @@ body[data-skin='plano'] {
   --accent: #ffffff; --hi: #ffffff; --hi-deep: #9fb8d8; --hi-light: #ffffff; --on-hi: #0f2f55; --hi2: #9fd0ff; --hot: #ffd23f;
   --shade: #0a2445; --raise: #1e4a80; --raise-hi: #2a5c98;
 }
-body[data-skin='apagon'], body[data-skin='terminal'], body[data-skin='neon'], body[data-skin='plano'] {
+body[data-skin='hielo'] {
+  --bg: #08202f; --panel: #0b2c42; --panel-hi: #103a56; --line: #8fe8ff; --text: #e6faff; --muted: #8cc4d8;
+  --ink: #e6faff; --paper: #0b2c42; --veil-a: rgba(8, 32, 47, 0.8); --veil-b: rgba(8, 32, 47, 0.96);
+  --accent: #8fe8ff; --hi: #8fe8ff; --hi-deep: #3a8aa6; --hi-light: #e6faff; --on-hi: #08202f; --hi2: #5fb8d8; --hot: #ffffff;
+  --shade: #061a28; --raise: #164a6a; --raise-hi: #1f6088;
+}
+body[data-skin='magma'] {
+  --bg: #1c0704; --panel: #2a0c06; --panel-hi: #3a120a; --line: #ff6a2b; --text: #ffd9b0; --muted: #c98a5c;
+  --ink: #ffd9b0; --paper: #2a0c06; --veil-a: rgba(28, 7, 4, 0.8); --veil-b: rgba(28, 7, 4, 0.96);
+  --accent: #ff6a2b; --hi: #ff8a3d; --hi-deep: #a83c10; --hi-light: #ffe0b8; --on-hi: #1c0704; --hi2: #ffb05c; --hot: #ffdd55;
+  --shade: #140503; --raise: #4a1a0c; --raise-hi: #66260f;
+}
+body[data-skin='oro'] {
+  --bg: #1f1604; --panel: #2b1f06; --panel-hi: #3a2a09; --line: #ffd23f; --text: #fff0b8; --muted: #c9ab5c;
+  --ink: #fff0b8; --paper: #2b1f06; --veil-a: rgba(31, 22, 4, 0.8); --veil-b: rgba(31, 22, 4, 0.96);
+  --accent: #ffd23f; --hi: #ffd23f; --hi-deep: #a8800f; --hi-light: #fff6d0; --on-hi: #1f1604; --hi2: #f0b030; --hot: #ffffff;
+  --shade: #150f03; --raise: #4a350c; --raise-hi: #66490f;
+}
+body[data-skin='apagon'], body[data-skin='terminal'], body[data-skin='neon'], body[data-skin='plano'], body[data-skin='hielo'], body[data-skin='magma'], body[data-skin='oro'] {
   --page: var(--bg);
   --pro: #6fd39a; --con: #ff7a6b; --common: #b9b4a6; --rare: #79b4ea; --epic: #c79bea; --legendary: #f0c060; --curse: #ff6f93; --danger: #ff7a6b;
 }
