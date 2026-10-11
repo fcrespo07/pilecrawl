@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## 0.17.1 — 2026-10-11
-- **Arreglo del cuelgue sin cartas**: si todas las cartas están al máximo, la subida de nivel ya no deja la partida parada: se resuelve sola con puntos (1000 × nivel). Las partidas anteriores dejan de aceptarse en el ranking (reglas v7): hay que redesplegar el servidor (#30).
+- **Arreglo del cuelgue sin cartas**: si todas las cartas están al máximo, la subida de nivel ya no deja la partida parada: se resuelve sola con puntos (1000 × nivel) y un aviso en pantalla. Las partidas anteriores dejan de aceptarse en el ranking (reglas v7): hay que redesplegar el servidor (#30).
 - Texto interno: «ulti» pasa a «hiperperk» en los comentarios (no había texto visible con «ulti»).
 
 ## 0.17.0 — 2026-10-11

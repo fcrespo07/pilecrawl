@@ -701,6 +701,10 @@ export class Renderer {
       this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
     });
 
+    ev.on('emptyOffer', ({ points }) => {
+      this.floatText(`SIN CARTAS +${points.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 16, delay: 0.3 });
+    });
+
     ev.on('breather', ({ rows }) => {
       rows.forEach((values, i) => {
         const row = ROWS - 1 - i;

@@ -74,6 +74,8 @@ export interface GameEvents {
   garbageWarn: { progress: number };
   levelup: { level: number };
   interest: { amount: number };
+  /** Subida sin cartas que ofrecer: se resuelve sola con estos puntos. */
+  emptyOffer: { points: number };
   breather: { rows: number[][] };
   lifeline: void;
   harvest: { rerolls: number };
@@ -1072,7 +1074,8 @@ export class Game {
     if (this.state !== 'choosing' || this.choosingHyper || this.choices.length > 0) return;
     const levels = this.pendingLevelUps;
     this.pendingLevelUps = 0;
-    this.addScore(EMPTY_OFFER_POINTS * this.level * levels, false);
+    const points = this.addScore(EMPTY_OFFER_POINTS * this.level * levels, false);
+    this.events.emit('emptyOffer', { points });
     this.choices = [];
     this.state = 'playing';
     this.spawn();

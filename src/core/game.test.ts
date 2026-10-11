@@ -602,6 +602,17 @@ describe('ofertas sin cartas', () => {
     expect(g.active).not.toBeNull();
   });
 
+  it('con la hiperperk de por medio y todas las cartas al máximo, la partida también sigue', () => {
+    const g = playing();
+    for (const p of [...PERKS, ...CURSES]) g.perks.set(p.id, p.max);
+    g.hyperPending = true;
+    levelUp(g);
+    expect(g.hyper).not.toBeNull();
+    expect(g.state).toBe('playing');
+    expect(g.choices).toEqual([]);
+    expect(g.pendingLevelUps).toBe(0);
+  });
+
   it('si solo queda una carta, se ofrece y al elegirla la partida sigue, aunque haya subidas pendientes', () => {
     const g = playing();
     const last = PERKS.find((p) => p.rarity === 'common')!;
