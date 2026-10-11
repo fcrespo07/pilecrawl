@@ -1105,6 +1105,7 @@ body.tutorial #perk-list .empty { display: none; }
 .cat-item .b-name small { display: block; font-family: var(--f-ui); font-size: 14px; color: var(--c); margin-top: 2px; }
 .cat-item .fx li { font-size: 15px; }
 .cat-lock { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
+.cat-exp { color: var(--hot); }
 
 .lab-badge {
   position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 20;
@@ -1149,6 +1150,7 @@ body.tutorial #perk-list .empty { display: none; }
   .cat-grid { grid-template-columns: 1fr; }
 }
 .home-link { font-size: 14px; padding: 12px 20px; }
+.home-center .home-link { font-size: 15px; padding: 12px 20px; margin-top: 0; }
 .home-center .home-title { font-size: clamp(26px, 7.4vw, 44px); white-space: nowrap; text-shadow: 4px 4px 0 var(--hot), 8px 8px 0 var(--raise); }
 @media (max-width: 900px) { .home-center .ad-slot { margin-top: 48px; } }
 /* ═════════════ Ranking en línea ═════════════ */

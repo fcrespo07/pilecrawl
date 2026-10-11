@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.19.5 — 2026-10-11
+- Catálogo de mejoras accesible desde la primera pantalla de la portada (antes estaba dentro de «Cómo se juega y más»). Las mejoras que Expedición bloquea hasta cumplir un reto lo indican con el reto al lado (#39).
+
 ## 0.19.4 — 2026-10-11
 - El logo (la criatura sobre la pila) sale en la portada, sobre el título, y en las cabeceras de las páginas de privacidad y contacto. Al compartir el enlace se ve con una imagen de vista previa (`og:image`) (#37).
 

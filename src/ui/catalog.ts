@@ -18,7 +18,7 @@ function maxLabel(p: PerkDef): string {
 function perkItem(p: PerkDef): string {
   const lock = !p.curse && UNLOCK_LEVEL[p.rarity] > 0 ? `<span class="cat-lock">Se desbloquea llegando al nivel ${UNLOCK_LEVEL[p.rarity]}</span>` : '';
   const reto = CHALLENGES.find((c) => c.perk === p.id);
-  const exp = reto ? `<span class="cat-lock">En Expedición: ${reto.text.charAt(0).toLowerCase()}${reto.text.slice(1)}</span>` : '';
+  const exp = reto ? `<span class="cat-lock cat-exp">Bloqueada en Expedición hasta: ${reto.text.charAt(0).toLowerCase()}${reto.text.slice(1)}</span>` : '';
   return `<article class="cat-item r-${rarityKey(p)}">
     <div class="b-ico">${perkIcon(p.id)}</div>
     <div class="cat-body">
