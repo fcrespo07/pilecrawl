@@ -3,7 +3,9 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
-- Ranking en la portada: el panel del diario y el de partida (semana) enseñan los tres primeros y, si juegas, tu puesto con 2 puestos por encima y 2 por debajo (el servidor devuelve `near` en `/api/leaderboard`). El día del desafío lo marca el servidor (`/api/config` trae `now`), así que un reloj mal puesto no cambia el diario; sin servidor se usa el reloj local (#40).
+
+## 0.19.6 — 2026-10-11
+- Ranking en la portada: el panel del diario y el de partida (semana) enseñan los tres primeros y, si juegas, tu puesto con 2 puestos por encima y 2 por debajo (el servidor devuelve `near` en `/api/leaderboard`). El día del desafío lo marca el servidor (`/api/config` trae `now`), así que un reloj mal puesto no cambia el diario; sin servidor se usa el reloj local (#40). Arregla además la lista «Tus mejores» de la portada, que salía apretada.
 
 ## 0.19.5 — 2026-10-11
 - Catálogo de mejoras accesible desde la primera pantalla de la portada (antes estaba dentro de «Cómo se juega y más»). Las mejoras que Expedición bloquea hasta cumplir un reto lo indican con el reto al lado (#39).
