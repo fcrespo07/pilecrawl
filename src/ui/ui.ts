@@ -1,5 +1,5 @@
 import { Game, STEP_MS } from '../core/game';
-import { RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
+import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
 import { STREAK_MAX } from '../core/streak';
 import { audio } from '../fx/audio';
@@ -360,19 +360,24 @@ export class UI {
     $('hyper-state').textContent = text;
   }
 
-  /** Medidor de racha: barra y lo que da ahora (rareza rara o mejor e hiperperk). */
+  /** Medidor de racha y calor por rareza: cada jugada calienta una rareza y se ve su probabilidad ahora. */
   private updateStreak() {
     const g = this.game;
     $('streak-fill').style.transform = `scaleX(${g.streak / STREAK_MAX})`;
     const odds = g.offerOdds();
-    const better = 1 - odds.common;
     const hyper = g.hyperOfferChance();
-    const key = `${Math.round(g.streak)}|${pctTxt(better)}|${pctTxt(hyper)}`;
+    const rows = (['rare', 'epic', 'legendary'] as const).map((r) => ({ r, heat: Math.round(g.heat[r]), odd: pctTxt(odds[r]) }));
+    const key = `${Math.round(g.streak)}|${pctTxt(hyper)}|${rows.map((x) => `${x.heat}.${x.odd}`).join(',')}`;
     if (key === this.streakKey) return;
     this.streakKey = key;
     $('streak-num').textContent = String(Math.round(g.streak));
     $('streak-odds').innerHTML =
-      `<span>Rara+ <b>${pctTxt(better)}</b></span>` + (hyper > 0 ? `<span class="hy">Hiper <b>${pctTxt(hyper)}</b></span>` : '');
+      rows
+        .map(
+          (x) =>
+            `<div class="heat r-${x.r}"><span>${RARITY_LABEL[x.r]}</span><div class="hy-bar"><i style="transform:scaleX(${x.heat / HEAT_MAX})"></i></div><b>${x.odd}</b></div>`,
+        )
+        .join('') + (hyper > 0 ? `<span class="hy">Hiper <b>${pctTxt(hyper)}</b></span>` : '');
   }
 
   update(dt: number) {

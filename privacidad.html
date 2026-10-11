@@ -26,15 +26,20 @@
       <p><b>Para qué:</b> mostrar el ranking y comprobar que las partidas son legítimas. <b>Cuánto tiempo:</b> mientras exista el juego o hasta que borres tus datos.</p>
       <p><b>Tus derechos:</b> puedes borrar tus datos en <i>Rankings → Borrar mis datos</i> o escribiendo a {{EMAIL}}. También puedes pedir acceso o rectificación, y reclamar ante la autoridad de protección de datos de tu país (en España, la AEPD).</p>
 
+      <h2>Estadísticas anónimas de partidas</h2>
+      <p>Cuando termina una partida (o la dejas a medias), el juego envía al servidor un resumen para poder equilibrarlo: modo, nivel, puntos, líneas, duración, motivo del final, versión del juego y las cartas que se te ofrecieron y las que elegiste. <b>No lleva apodo, clave, identificador ni cookies</b>, la dirección IP no se guarda con ellos (solo se cuenta en memoria para limitar abusos) y de la fecha solo se conserva el día. No lleva ningún dato que te identifique: ni apodo ni identificador. Ojo: las partidas que tú mismo publicas en el ranking ya son públicas (puntos, nivel y líneas), así que esas cifras podrían coincidir con las de su resumen. Los datos se conservan un máximo de 13 meses.</p>
+      <p><label><input type="checkbox" id="stats-optout" /> Enviar estadísticas anónimas de mis partidas</label> <span class="note">(se recuerda en este navegador; también se respeta la señal «No rastrear»)</span></p>
+
       <h2>Cloudflare</h2>
       <p>El tráfico de la web pasa por Cloudflare, que actúa como intermediario técnico: ve las peticiones y las direcciones IP antes de que lleguen al servidor del juego.</p>
 
       <h2>Anuncios y cookies</h2>
       <p>Esta web puede mostrar anuncios de Google AdSense. Google y sus socios pueden usar cookies o identificadores similares para mostrarlos y medir su rendimiento. En el Espacio Económico Europeo y el Reino Unido los anuncios solo se cargan si das tu consentimiento en el aviso que aparece en la portada, y puedes cambiarlo en cualquier momento con el enlace «Preferencias de anuncios» del pie de la portada. Puedes saber más sobre cómo Google usa los datos en <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">policies.google.com/technologies/partner-sites</a> y gestionar la personalización en <a href="https://adssettings.google.com" rel="noopener">adssettings.google.com</a>.</p>
-      <p>Aparte de lo anterior, el juego no usa cookies de seguimiento ni herramientas de analítica.</p>
+      <p>Aparte de lo anterior, el juego no usa cookies de seguimiento ni herramientas de analítica de terceros.</p>
 
       <h2>Cambios</h2>
       <p>Si esta política cambia, se actualizará aquí.</p>
     </main>
+    <script type="module" src="/src/statsoptout.ts"></script>
   </body>
 </html>

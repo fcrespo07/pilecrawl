@@ -50,6 +50,9 @@ const PATHS: Record<string, string> = {
   flood: `<rect x="3" y="4" width="26" height="6" rx="1.5"/><rect x="3" y="13" width="26" height="6" rx="1.5" stroke-opacity=".7"/><rect x="3" y="22" width="26" height="6" rx="1.5" stroke-opacity=".4"/><path d="M9 4v6M16 4v6M23 4v6" stroke-opacity=".6"/>`,
   gravity: `<path d="M4 28h24"/><path d="M16 3v14M11.5 12.5L16 17l4.5-4.5"/>${B(4, 22, 5)}${B(11, 22, 5)}${B(18, 22, 5)}${B(25, 22, 3)}<path d="M4 8h6M22 8h6" stroke-opacity=".5"/>`,
   shield: `<path d="M16 3l11 4v9c0 7-5 11-11 13C10 27 5 23 5 16V7z"/><path d="M11 16l4 4 7-8" stroke-opacity=".8"/>`,
+  fury: `<path d="M4 27h24"/><path d="M6 27l4-10 4 4 4-13 4 9 4-5v15"/><path d="M16 8v-4M12 10l-2-3M20 10l2-3" stroke-opacity=".6"/>`,
+  echo: `<rect x="4" y="12" width="10" height="10" rx="1"/><rect x="14" y="8" width="10" height="10" rx="1" stroke-opacity=".7"/><rect x="22" y="4" width="8" height="8" rx="1" stroke-opacity=".45"/>${B(7, 15, 4)}`,
+  casino: `<rect x="4" y="9" width="16" height="16" rx="3"/><circle cx="9" cy="14" r="1.4" fill="currentColor"/><circle cx="12" cy="17" r="1.4" fill="currentColor"/><circle cx="15" cy="20" r="1.4" fill="currentColor"/><path d="M22 6l5 3-2 6-6-1z" fill="currentColor" fill-opacity=".35"/><path d="M24 20v7M21 23.5h6"/>`,
   prism: `<path d="M15 5l10 18H5z"/><path d="M1 17.5l9.5-2"/><path d="M20 13.5l11-5M21.2 15.7H31M20.5 18l10.5 4.5" stroke-opacity=".75"/>`,
 };
 

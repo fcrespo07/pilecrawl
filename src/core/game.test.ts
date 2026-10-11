@@ -392,6 +392,52 @@ describe('racha', () => {
     expect(combo.streak).toBe(STREAK_MAX);
   });
 
+  it('cada tipo de limpieza calienta su rareza', () => {
+    const single = playing();
+    single.board[ROWS - 2][COLS - 1] = PIECES.T.id; // sin tablero vacío (no es limpieza total)
+    clearBottomLineWithI(single);
+    expect(single.heat).toEqual({ rare: 0, epic: 0, legendary: 0 });
+    const quad = playing();
+    for (let y = ROWS - 4; y < ROWS; y++) for (let x = 1; x < COLS; x++) quad.board[y][x] = PIECES.T.id;
+    quad.board[ROWS - 5][COLS - 1] = PIECES.T.id; // sin tablero vacío (no es limpieza total)
+    setActive(quad, PIECES.I, -2, 0, 1);
+    quad.hardDrop();
+    expect(quad.heat.epic).toBeGreaterThan(0);
+    expect(quad.heat.legendary).toBe(0);
+    const b2b = playing();
+    b2b.b2b = true;
+    for (let y = ROWS - 4; y < ROWS; y++) for (let x = 1; x < COLS; x++) b2b.board[y][x] = PIECES.T.id;
+    b2b.board[ROWS - 5][COLS - 1] = PIECES.T.id;
+    setActive(b2b, PIECES.I, -2, 0, 1);
+    b2b.hardDrop();
+    expect(b2b.heat.legendary).toBeGreaterThan(0);
+  });
+
+  it('Furia sube la puntuación con la racha, Casino da rerolls y Eco acelera los niveles', () => {
+    const g = playing();
+    const base = g.scoreMultNow();
+    PERK_BY_ID.fury.apply(g.mods, g);
+    g.streak = 100;
+    expect(g.scoreMultNow()).toBeCloseTo(base * 2);
+    g.streak = 0;
+    expect(g.scoreMultNow()).toBeCloseTo(base);
+    const r = g.rerolls;
+    PERK_BY_ID.casino.apply(g.mods, g);
+    expect(g.rerolls).toBe(r + 4);
+    expect(g.mods.choices).toBe(2);
+    PERK_BY_ID.echo.apply(g.mods, g);
+    expect(g.mods.echo).toBe(1);
+  });
+
+  it('el calor sube la rareza de la oferta y baja con las piezas', () => {
+    const g = playing();
+    const cold = g.offerOdds();
+    g.heat.legendary = 100;
+    expect(g.offerOdds().legendary).toBeGreaterThan(cold.legendary * 3);
+    g.hardDrop();
+    expect(g.heat.legendary).toBeLessThan(100);
+  });
+
   it('mejora las probabilidades de la oferta', () => {
     const g = playing();
     const cold = g.offerOdds();

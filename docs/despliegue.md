@@ -96,7 +96,9 @@ curl -X DELETE https://TU-DOMINIO/api/admin/runs/<runId> -H "Authorization: Bear
 
 **Actualizaciones automáticas.** El workflow `Imagen` construye y publica la imagen arm64 en GHCR en cada fusión a master. `k8s/updater.yaml` añade un CronJob que, cada 5 minutos, pregunta a GHCR por el digest de `latest` y, si cambió, reinicia el Deployment (que baja la imagen nueva). La Pi solo hace conexiones de salida y no necesita ningún secreto; el paquete de GHCR tiene que ser público. Cliente y servidor están en la misma imagen, así que un cambio de reglas (`RULES_VERSION`) se despliega siempre entero. Ver el último resultado: `sudo k3s kubectl -n blockrogue logs job/$(sudo k3s kubectl -n blockrogue get jobs -o name | tail -1 | cut -d/ -f2)`. Pausarlo: `sudo k3s kubectl -n blockrogue patch cronjob blockrogue-updater -p '{"spec":{"suspend":true}}'`. Si la imagen nueva no queda disponible en 5 minutos (`progressDeadlineSeconds`), el actualizador vuelve a la última que funcionó, anota la mala (`pilecrawl/bad-digest` en el Deployment) y no la reintenta hasta que salga otra distinta. Entre medias el juego está caído unos 5 minutos. Avisos: (1) los fallos del CronJob son silenciosos (por ejemplo, si el paquete pasa a privado): mira de vez en cuando `kubectl -n blockrogue get jobs`; (2) hasta que se publique la primera imagen que lleva `updater.mjs`, el CronJob falla con «Cannot find module» (inofensivo); (3) con `rollout undo` a mano, pausa también el CronJob, o volverá a poner `latest`.
 
-La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`, `bests`, `replays`, `starts`.
+La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`, `bests`, `replays`, `starts`, `stats`.
+
+**Estadísticas anónimas.** Al acabar (o abandonar) una partida el cliente manda `POST /api/stats` con un resumen sin identificadores (modo, nivel, puntos, duración, final, versión, cartas vistas y elegidas); solo se guarda el día. Límite: 40 por hora y IP y 60 por minuto en total; máximo 200 000 filas (se borran las más antiguas) y se purgan a los 400 días. Sin `TRUST_PROXY=cloudflare` todos los jugadores comparten IP y el tope de 40/h valdría para toda la web: casi todas las estadísticas se perderían sin aviso. Se leen con `https://TU-DOMINIO/stats.html` (pide `ADMIN_TOKEN`) o con `curl "https://TU-DOMINIO/api/admin/stats?days=30&mode=normal&rules=7" -H "Authorization: Bearer $ADMIN_TOKEN"` (`mode=all` junta los modos). Para vaciar los datos de prueba: `curl -X DELETE "https://TU-DOMINIO/api/admin/stats?before=AAAA-MM-DD" -H "Authorization: Bearer $ADMIN_TOKEN"`. Cualquiera puede enviar datos falsos (no hay sesión): sirven para equilibrar, no para nada que dependa de que sean verdad. El jugador puede apagarlas en `privacidad.html`.
 
 ## 8. Cómo funciona el ranking (decisiones tomadas)
 
@@ -118,3 +120,15 @@ La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`,
 > **Para qué:** mostrar el ranking. **Cuánto tiempo:** mientras exista el juego o hasta que borres tus datos.
 > **Tus derechos:** puedes borrar tus datos desde Rankings → «Borrar mis datos» o escribiendo a [email]. También puedes acceder a ellos, rectificarlos o reclamar ante la AEPD.
 > **Anuncios:** si aceptas los anuncios, Google y sus socios usan cookies para mostrarlos. Puedes cambiarlo borrando los datos del sitio en tu navegador.
+
+## 10. Vista previa por PR y aviso de caídas
+
+**Vista previa** (`.github/workflows/preview.yml`): cada PR del propio repo compila el cliente sin `VITE_RANKING` ni anuncios y lo sube a Cloudflare Pages en `https://pr-N.pilecrawl-preview.pages.dev`; la URL queda en un comentario del PR. Los PR de forks no la reciben. Sin los secretos, el job se salta sin fallar. Pasos únicos:
+
+1. Cloudflare → Workers & Pages → Create → Pages → *Direct Upload*, proyecto llamado `pilecrawl-preview` (sube cualquier carpeta de prueba).
+2. Cloudflare → My Profile → API Tokens → token propio (Create Custom Token) con solo el permiso *Account · Cloudflare Pages · Edit*.
+3. En GitHub → Settings → Secrets and variables → Actions → Secrets: `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID` (el ID de cuenta sale en la barra lateral del panel).
+
+**Aviso de caídas:** `GET /api/health` responde `{"ok":true}` y comprueba la base de datos. En UptimeRobot (plan gratis) crea un monitor HTTP(s) sobre `https://pilecrawl.fun/api/health`, intervalo de 5 min (basta vigilar el código HTTP: da 500 si falla la base de datos), y añade tu correo como contacto de alerta.
+
+Las vistas previas son públicas y no se borran solas; comprueba que la rama de producción del proyecto Pages no sea `pr-N`.
