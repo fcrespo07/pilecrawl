@@ -269,8 +269,20 @@
           <label for="ranking-nick-input">Para entrar en la tabla, elige un apodo (3 a 16 caracteres)</label>
           <div><input id="ranking-nick-input" maxlength="16" minlength="3" autocomplete="off" required /><button class="home-btn small" type="submit">Crear</button></div>
           <p id="ranking-nick-msg" class="rank-msg" role="status"></p>
+          <button id="ranking-recover-open" class="rank-link" type="button">Ya tengo un apodo en otro navegador</button>
         </form>
-        <p id="ranking-me" class="rank-me" hidden>Juegas como <b id="ranking-me-name"></b>. <button id="ranking-delete" class="rank-link" type="button">Borrar mis datos</button></p>
+        <form id="ranking-recover" class="rank-nick" hidden>
+          <label for="ranking-recover-input">Pega tu código de recuperación</label>
+          <div><input id="ranking-recover-input" maxlength="80" autocomplete="off" spellcheck="false" required /><button class="home-btn small" type="submit">Recuperar</button></div>
+        </form>
+        <div id="ranking-me" class="rank-me" hidden>
+          <p>Juegas como <b id="ranking-me-name"></b>. <button id="ranking-rename" class="rank-link" type="button">Cambiar apodo</button> · <button id="ranking-code" class="rank-link" type="button">Código de recuperación</button> · <button id="ranking-delete" class="rank-link" type="button">Borrar mis datos</button></p>
+          <form id="ranking-rename-form" class="rank-nick" hidden>
+            <div><input id="ranking-rename-input" maxlength="16" minlength="3" autocomplete="off" aria-label="Nuevo apodo" required /><button class="home-btn small" type="submit">Guardar</button></div>
+          </form>
+          <p id="ranking-code-box" hidden>Guárdalo: quien lo tenga puede jugar como tú. <input id="ranking-code-text" readonly aria-label="Código de recuperación" /></p>
+        </div>
+        <p id="ranking-msg2" class="rank-msg" role="status"></p>
         <p class="rank-fine">Se guardan tu apodo, un identificador anónimo y tus partidas publicadas. Nada más.
           <a id="privacy-link" href="#" target="_blank" rel="noopener" hidden>Privacidad</a></p>
       </div>

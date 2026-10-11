@@ -55,6 +55,22 @@ describe('jugadores', () => {
   });
 });
 
+describe('identidad', () => {
+  it('cambia de apodo, filtra palabras y se recupera con el código', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    await register('Otro');
+    expect((await call('PATCH', '/api/players/me', { nickname: 'otro' }, token)).status).toBe(409);
+    expect((await call('PATCH', '/api/players/me', { nickname: 'Sh1t' }, token)).status).toBe(400);
+    expect((await call('PATCH', '/api/players/me', { nickname: 'Ferran' }, token)).body.nickname).toBe('Ferran');
+    expect((await call('GET', '/api/players/me', undefined, token)).body.nickname).toBe('Ferran');
+    const rec = await call('POST', '/api/players/recover', { code: token });
+    expect(rec.status).toBe(200);
+    expect(rec.body).toMatchObject({ nickname: 'Ferran', token });
+    expect((await call('POST', '/api/players/recover', { code: 'xx.yy' })).status).toBe(404);
+  });
+});
+
 describe('partida libre', () => {
   it('acepta una partida legítima y la pone en la tabla', async () => {
     const { call, register } = setup();

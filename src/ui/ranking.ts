@@ -45,6 +45,40 @@ export class RankingUI {
       e.preventDefault();
       void this.createPlayer($('ranking-nick-input') as HTMLInputElement, $('ranking-nick-msg'), () => this.load());
     });
+    $('ranking-recover-open').addEventListener('click', () => {
+      $('ranking-recover').hidden = false;
+      ($('ranking-recover-input') as HTMLInputElement).focus();
+    });
+    $('ranking-recover').addEventListener('submit', (e) => {
+      e.preventDefault();
+      void this.run(async () => {
+        await net.recover(($('ranking-recover-input') as HTMLInputElement).value.trim());
+        $('ranking-recover').hidden = true;
+        await this.load();
+      });
+    });
+    $('ranking-rename').addEventListener('click', () => {
+      const f = $('ranking-rename-form');
+      f.hidden = !f.hidden;
+      const i = $('ranking-rename-input') as HTMLInputElement;
+      i.value = net.loadPlayer()?.nickname ?? '';
+      if (!f.hidden) i.focus();
+    });
+    $('ranking-rename-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      void this.run(async () => {
+        await net.rename(($('ranking-rename-input') as HTMLInputElement).value);
+        $('ranking-rename-form').hidden = true;
+        await this.load();
+      });
+    });
+    $('ranking-code').addEventListener('click', () => {
+      const box = $('ranking-code-box');
+      box.hidden = !box.hidden;
+      const t = $('ranking-code-text') as HTMLInputElement;
+      t.value = net.loadPlayer()?.token ?? '';
+      if (!box.hidden) t.select();
+    });
     $('ranking-delete').addEventListener('click', () => void this.deleteMe());
     $('publish-nick').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -84,6 +118,8 @@ export class RankingUI {
     });
     $('ranking-nick').hidden = player !== null;
     $('ranking-me').hidden = player === null;
+    $('ranking-code-box').hidden = true;
+    $('ranking-rename-form').hidden = true;
     if (player) $('ranking-me-name').textContent = player.nickname;
     list.innerHTML = '<li class="rank-empty">Cargando…</li>';
     try {
@@ -99,6 +135,15 @@ export class RankingUI {
         list.insertAdjacentHTML('beforeend', `<li class="me gap"><span class="r">${b.me.rank}</span><span class="n">${esc(b.me.nickname)}</span><span class="s">${fmt(b.me.best ?? 0)}</span><span class="l"></span></li>`);
     } catch (e) {
       list.innerHTML = `<li class="rank-empty">${esc((e as Error).message)}</li>`;
+    }
+  }
+
+  private async run(fn: () => Promise<void>) {
+    $('ranking-msg2').textContent = '';
+    try {
+      await fn();
+    } catch (e) {
+      $('ranking-msg2').textContent = (e as Error).message;
     }
   }
 

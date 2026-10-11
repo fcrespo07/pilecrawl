@@ -53,6 +53,9 @@ function scopeRange(scope: string): [string, string] {
   return [day, new Date(Date.parse(`${day}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10)];
 }
 
+/** Palabras que nunca valen en un apodo, además de las de `NICK_BLOCKLIST`. Corta a propósito: la moderación fina es cosa del administrador. */
+const DEFAULT_NICK_BLOCKLIST = ['nazi', 'hitler', 'mierda', 'cabron', 'gilipollas', 'polla', 'follar', 'negrata', 'maricon', 'fuck', 'shit', 'nigger', 'nigga', 'faggot', 'cunt'];
+
 export function createApp(cfg: Config, db: DatabaseSync) {
   const general = new RateLimiter(240, 60_000);
   const createLimit = new RateLimiter(5, 3_600_000);
@@ -61,12 +64,15 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   /** Revalidar cuesta CPU en un único hilo: tope global, aunque falle el límite por IP. */
   const revalidations = new RateLimiter(30, 60_000);
   const adminFails = new RateLimiter(10, 600_000);
+  const renameLimit = new RateLimiter(3, 86_400_000);
+  const recoverLimit = new RateLimiter(10, 600_000);
 
   const q = {
     player: db.prepare('SELECT id, nickname, best_level, hidden FROM players WHERE id = ?'),
     playerSecret: db.prepare('SELECT secret_hash FROM players WHERE id = ?'),
     insertPlayer: db.prepare('INSERT INTO players (id, nickname, secret_hash, created_at) VALUES (?, ?, ?, ?)'),
     deletePlayer: db.prepare('DELETE FROM players WHERE id = ?'),
+    renamePlayer: db.prepare('UPDATE players SET nickname = ? WHERE id = ?'),
     setHidden: db.prepare('UPDATE players SET hidden = ? WHERE id = ?'),
     insertStart: db.prepare('INSERT INTO starts (id, player_id, mode, seed, best_level, created_at) VALUES (?, ?, ?, ?, ?, ?)'),
     getStart: db.prepare('SELECT * FROM starts WHERE id = ? AND player_id = ?'),
@@ -161,7 +167,9 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     if (len < 3 || len > 16) throw new ApiError(400, 'el apodo tiene de 3 a 16 caracteres');
     if (!/^[\p{L}\p{N}_ .-]+$/u.test(nick)) throw new ApiError(400, 'el apodo solo admite letras, números, espacio, punto, guion y guion bajo');
     const flat = nick.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    if (cfg.nickBlocklist.some((w) => flat.includes(w))) throw new ApiError(400, 'ese apodo no está permitido');
+    // «p3n3» y similares: se pasan a letras antes de comparar
+    const leet = flat.replace(/[\s._-]+/g, '').replace(/[0134578@$]/g, (c) => ({ '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', $: 's' })[c]!);
+    if ([...DEFAULT_NICK_BLOCKLIST, ...cfg.nickBlocklist].some((w) => flat.includes(w) || leet.includes(w))) throw new ApiError(400, 'ese apodo no está permitido');
     return nick;
   }
 
@@ -204,9 +212,29 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       return json({ id, nickname: nick, secret, token: `${id}.${secret}` }, 201);
     }
 
+    // Recuperar el jugador en otro navegador con el código (es el propio token: no hace falta nada nuevo en la base)
+    if (method === 'POST' && path === '/api/players/recover') {
+      if (!recoverLimit.allow(`c:${ip}`, now)) throw new ApiError(429, 'demasiados intentos, prueba más tarde');
+      const code = String((await readJson(req)).code ?? '').trim();
+      const fake = new Request('http://x/', { headers: { authorization: `Bearer ${code}` } });
+      const p = auth(fake);
+      if (!p) throw new ApiError(404, 'código no válido');
+      return json({ id: p.id, nickname: p.nickname, token: code });
+    }
+
     if (path === '/api/players/me') {
       const me = needPlayer(req);
       if (method === 'GET') return json({ id: me.id, nickname: me.nickname, bestLevel: me.best_level });
+      if (method === 'PATCH') {
+        if (!renameLimit.allow(`n:${me.id}`, now)) throw new ApiError(429, 'solo puedes cambiar de apodo 3 veces al día');
+        const nick = cleanNickname((await readJson(req)).nickname);
+        try {
+          q.renamePlayer.run(nick, me.id);
+        } catch {
+          throw new ApiError(409, 'ese apodo ya está cogido');
+        }
+        return json({ id: me.id, nickname: nick });
+      }
       if (method === 'DELETE') {
         q.deletePlayer.run(me.id);
         return json({ ok: true });
