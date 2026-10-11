@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.19.5 — 2026-10-11
 - Catálogo de mejoras accesible desde la primera pantalla de la portada (antes estaba dentro de «Cómo se juega y más»). Las mejoras que Expedición bloquea hasta cumplir un reto lo indican con el reto al lado (#39).
 
 ## 0.19.4 — 2026-10-11
