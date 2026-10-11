@@ -24,6 +24,7 @@ ENV NODE_ENV=production STATIC_DIR=/app/dist DB_PATH=/data/blockrogue.db BACKUP_
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server/server.mjs ./server.mjs
+COPY --from=build /app/dist-server/updater.mjs ./updater.mjs
 RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME /data
