@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
+import { nickKey } from './nick';
 import { dirname } from 'node:path';
 
 /** Abre (y crea si falta) la base de datos. `:memory:` para las pruebas. */
@@ -66,5 +67,19 @@ export function openDb(path: string): DatabaseSync {
       data   BLOB NOT NULL
     );
   `);
+  // clave normalizada del apodo (contra suplantaciones): se añade a las bases anteriores y se rellena
+  const cols = db.prepare('PRAGMA table_info(players)').all() as { name: string }[];
+  if (!cols.some((c) => c.name === 'nick_key')) {
+    db.exec('ALTER TABLE players ADD COLUMN nick_key TEXT');
+    const seen = new Set<string>();
+    const set = db.prepare('UPDATE players SET nick_key = ? WHERE id = ?');
+    for (const r of db.prepare('SELECT id, nickname FROM players ORDER BY created_at').all() as { id: string; nickname: string }[]) {
+      let k = nickKey(r.nickname);
+      if (seen.has(k)) k = `${k}#${r.id}`; // choque entre apodos ya existentes: el más antiguo conserva la clave
+      seen.add(k);
+      set.run(k, r.id);
+    }
+  }
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS players_nick_key ON players (nick_key)');
   return db;
 }

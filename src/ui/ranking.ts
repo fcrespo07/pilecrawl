@@ -79,6 +79,13 @@ export class RankingUI {
       t.value = net.loadPlayer()?.token ?? '';
       if (!box.hidden) t.select();
     });
+    $('ranking-rotate').addEventListener('click', () => {
+      if (!window.confirm('El código anterior dejará de valer en todos los navegadores. ¿Generar uno nuevo?')) return;
+      void this.run(async () => {
+        const p = await net.rotateCode();
+        ($('ranking-code-text') as HTMLInputElement).value = p.token;
+      });
+    });
     $('ranking-delete').addEventListener('click', () => void this.deleteMe());
     $('publish-nick').addEventListener('submit', (e) => {
       e.preventDefault();

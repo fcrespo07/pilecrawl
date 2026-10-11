@@ -68,6 +68,18 @@ describe('identidad', () => {
     expect(rec.status).toBe(200);
     expect(rec.body).toMatchObject({ nickname: 'Ferran', token });
     expect((await call('POST', '/api/players/recover', { code: 'xx.yy' })).status).toBe(404);
+    expect((await call('POST', '/api/players/recover', { code: '€uro' })).status).toBe(404);
+    expect((await call('POST', '/api/players/recover', { code: 'a\nb' })).status).toBe(404);
+    const rot = await call('POST', '/api/players/me/rotate', undefined, token);
+    expect(rot.body.token).not.toBe(token);
+    expect((await call('GET', '/api/players/me', undefined, token)).status).toBe(401);
+    expect((await call('GET', '/api/players/me', undefined, rot.body.token)).status).toBe(200);
+  });
+
+  it('no deja suplantar apodos ni colar palabras, pero admite nombres legítimos', async () => {
+    const { call } = setup();
+    expect((await call('POST', '/api/players', { nickname: 'Ana' })).status).toBe(201);
+    for (const n of ['Anа', 'A.na', '4na']) expect((await call('POST', '/api/players', { nickname: n })).status, n).toBeGreaterThanOrEqual(400);
   });
 });
 

@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
-- **Apodos en el ranking**: se puede cambiar el apodo (3 veces al día) y recuperarlo en otro navegador con un código de recuperación que se ve en la ventana de Rankings; el servidor trae una lista corta de palabras prohibidas propia (sumada a `NICK_BLOCKLIST`) que también entiende cambios como `3` por `e`. Sin cambios en la base de datos ni en las repeticiones.
+- **Apodos en el ranking**: se puede cambiar el apodo (3 veces al día), recuperarlo en otro navegador con un código de recuperación (se ve en la ventana de Rankings) y generar un código nuevo que invalida el anterior. Los apodos son únicos también frente a parecidos («A.na», «4na», letras de otro alfabeto) y solo admiten escritura latina; el filtro de palabras prohibidas, propio y sumado a `NICK_BLOCKLIST`, entiende letras repetidas, cifras por letras y trucos de Unicode sin bloquear nombres como Ignazio o Pollack. La base de datos gana una columna `nick_key` (se migra sola al arrancar). Sin cambios en las repeticiones (#29).
 
 ## 0.16.0 — 2026-10-11
 - **Móvil en vertical y con gestos**: en el móvil de pie el juego pasa a una disposición vertical centrada en el tablero (marcador arriba, reserva y siguientes sobre el tablero, hiperperk y racha debajo; las cartas se apilan). Los botones táctiles se sustituyen por gestos: arrastrar mueve, tocar gira, deslizar hacia arriba guarda, un tirón rápido hacia abajo suelta y arrastrar despacio baja; quedan el botón de pausa y la tarjeta Hiper. En horizontal sigue como antes (#28).

@@ -118,6 +118,14 @@ export async function recover(code: string): Promise<Player> {
   return p;
 }
 
+/** Cambia el secreto: el código anterior deja de valer en todos los navegadores. */
+export async function rotateCode(): Promise<Player> {
+  const r = await call<{ token: string; nickname: string }>('POST', '/api/players/me/rotate', undefined, true);
+  const p = { token: r.token, nickname: r.nickname };
+  savePlayer(p);
+  return p;
+}
+
 export async function deleteMe(): Promise<void> {
   await call('DELETE', '/api/players/me', undefined, true);
   savePlayer(null);

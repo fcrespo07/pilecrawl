@@ -1,4 +1,5 @@
 // API del ranking. Una función `(Request, ip) => Response`: sin sockets, así se prueba directamente.
+import { NICK_CHARS, isBlockedNick, nickKey } from './nick';
 import type { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -53,9 +54,6 @@ function scopeRange(scope: string): [string, string] {
   return [day, new Date(Date.parse(`${day}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10)];
 }
 
-/** Palabras que nunca valen en un apodo, además de las de `NICK_BLOCKLIST`. Corta a propósito: la moderación fina es cosa del administrador. */
-const DEFAULT_NICK_BLOCKLIST = ['nazi', 'hitler', 'mierda', 'cabron', 'gilipollas', 'polla', 'follar', 'negrata', 'maricon', 'fuck', 'shit', 'nigger', 'nigga', 'faggot', 'cunt'];
-
 export function createApp(cfg: Config, db: DatabaseSync) {
   const general = new RateLimiter(240, 60_000);
   const createLimit = new RateLimiter(5, 3_600_000);
@@ -70,9 +68,10 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const q = {
     player: db.prepare('SELECT id, nickname, best_level, hidden FROM players WHERE id = ?'),
     playerSecret: db.prepare('SELECT secret_hash FROM players WHERE id = ?'),
-    insertPlayer: db.prepare('INSERT INTO players (id, nickname, secret_hash, created_at) VALUES (?, ?, ?, ?)'),
+    insertPlayer: db.prepare('INSERT INTO players (id, nickname, nick_key, secret_hash, created_at) VALUES (?, ?, ?, ?, ?)'),
     deletePlayer: db.prepare('DELETE FROM players WHERE id = ?'),
-    renamePlayer: db.prepare('UPDATE players SET nickname = ? WHERE id = ?'),
+    renamePlayer: db.prepare('UPDATE players SET nickname = ?, nick_key = ? WHERE id = ?'),
+    setSecret: db.prepare('UPDATE players SET secret_hash = ? WHERE id = ?'),
     setHidden: db.prepare('UPDATE players SET hidden = ? WHERE id = ?'),
     insertStart: db.prepare('INSERT INTO starts (id, player_id, mode, seed, best_level, created_at) VALUES (?, ?, ?, ?, ?, ?)'),
     getStart: db.prepare('SELECT * FROM starts WHERE id = ? AND player_id = ?'),
@@ -140,13 +139,14 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   };
 
   /** Jugador de la cabecera `Authorization: Bearer <id>.<secreto>`, o null. */
-  const auth = (req: Request): PlayerRow | null => {
-    const m = /^Bearer ([0-9a-f]{24})\.([A-Za-z0-9_-]{20,64})$/.exec(req.headers.get('authorization') ?? '');
+  const authToken = (token: string): PlayerRow | null => {
+    const m = /^([0-9a-f]{24})\.([A-Za-z0-9_-]{20,64})$/.exec(token);
     if (!m) return null;
     const row = q.playerSecret.get(m[1]) as { secret_hash: string } | undefined;
     if (!row || !safeEq(row.secret_hash, sha256(m[2]))) return null;
     return q.player.get(m[1]) as unknown as PlayerRow;
   };
+  const auth = (req: Request): PlayerRow | null => authToken(/^Bearer (.+)$/.exec(req.headers.get('authorization') ?? '')?.[1] ?? '');
   const needPlayer = (req: Request): PlayerRow => {
     const p = auth(req);
     if (!p) throw new ApiError(401, 'jugador no identificado');
@@ -162,14 +162,12 @@ export function createApp(cfg: Config, db: DatabaseSync) {
 
   function cleanNickname(raw: unknown): string {
     if (typeof raw !== 'string') throw new ApiError(400, 'apodo no válido');
-    const nick = raw.normalize('NFC').trim().replace(/\s+/g, ' ');
+    const nick = raw.normalize('NFKC').trim().replace(/\s+/g, ' ');
     const len = [...nick].length;
     if (len < 3 || len > 16) throw new ApiError(400, 'el apodo tiene de 3 a 16 caracteres');
-    if (!/^[\p{L}\p{N}_ .-]+$/u.test(nick)) throw new ApiError(400, 'el apodo solo admite letras, números, espacio, punto, guion y guion bajo');
-    const flat = nick.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    // «p3n3» y similares: se pasan a letras antes de comparar
-    const leet = flat.replace(/[\s._-]+/g, '').replace(/[0134578@$]/g, (c) => ({ '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a', $: 's' })[c]!);
-    if ([...DEFAULT_NICK_BLOCKLIST, ...cfg.nickBlocklist].some((w) => flat.includes(w) || leet.includes(w))) throw new ApiError(400, 'ese apodo no está permitido');
+    if (!NICK_CHARS.test(nick)) throw new ApiError(400, 'el apodo solo admite letras latinas, números, espacio, punto, guion y guion bajo');
+    if (nickKey(nick).length < 3) throw new ApiError(400, 'el apodo necesita al menos 3 letras o números');
+    if (isBlockedNick(nick, cfg.nickBlocklist)) throw new ApiError(400, 'ese apodo no está permitido');
     return nick;
   }
 
@@ -205,7 +203,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       const id = randomBytes(12).toString('hex');
       const secret = randomBytes(24).toString('base64url');
       try {
-        q.insertPlayer.run(id, nick, sha256(secret), now);
+        q.insertPlayer.run(id, nick, nickKey(nick), sha256(secret), now);
       } catch {
         throw new ApiError(409, 'ese apodo ya está cogido');
       }
@@ -216,20 +214,27 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     if (method === 'POST' && path === '/api/players/recover') {
       if (!recoverLimit.allow(`c:${ip}`, now)) throw new ApiError(429, 'demasiados intentos, prueba más tarde');
       const code = String((await readJson(req)).code ?? '').trim();
-      const fake = new Request('http://x/', { headers: { authorization: `Bearer ${code}` } });
-      const p = auth(fake);
+      const p = authToken(code);
       if (!p) throw new ApiError(404, 'código no válido');
       return json({ id: p.id, nickname: p.nickname, token: code });
+    }
+
+    // Código nuevo: invalida el anterior en todos los navegadores
+    if (method === 'POST' && path === '/api/players/me/rotate') {
+      const me = needPlayer(req);
+      const secret = randomBytes(24).toString('base64url');
+      q.setSecret.run(sha256(secret), me.id);
+      return json({ id: me.id, nickname: me.nickname, token: `${me.id}.${secret}` });
     }
 
     if (path === '/api/players/me') {
       const me = needPlayer(req);
       if (method === 'GET') return json({ id: me.id, nickname: me.nickname, bestLevel: me.best_level });
       if (method === 'PATCH') {
-        if (!renameLimit.allow(`n:${me.id}`, now)) throw new ApiError(429, 'solo puedes cambiar de apodo 3 veces al día');
         const nick = cleanNickname((await readJson(req)).nickname);
+        if (!renameLimit.allow(`n:${me.id}`, now)) throw new ApiError(429, 'solo puedes cambiar de apodo 3 veces al día');
         try {
-          q.renamePlayer.run(nick, me.id);
+          q.renamePlayer.run(nick, nickKey(nick), me.id);
         } catch {
           throw new ApiError(409, 'ese apodo ya está cogido');
         }
