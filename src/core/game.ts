@@ -99,6 +99,8 @@ export interface GameEvents {
  * tantas veces como toque, así la partida no depende de los fotogramas y se puede rejugar.
  */
 export const STEP_MS = 1000 / 120;
+/** Pasos tras soltar una hiperperk en los que pulsar otra vez no la corta (0,3 s). */
+export const HYPER_STOP_GRACE = 36;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
 export const RULES_VERSION = 8;
@@ -1015,7 +1017,7 @@ export class Game {
       const keep = this.mods.phoenix ? 0 : 5;
       for (let y = 0; y < ROWS - keep; y++) this.board[y].fill(0);
       // tope de +50%: con Segunda vida, Fénix no debe crecer sin límite
-      if (this.mods.phoenix) this.phoenixBonus = Math.min(0.5, this.phoenixBonus + 0.25);
+      if (this.mods.phoenix && !shield) this.phoenixBonus = Math.min(0.5, this.phoenixBonus + 0.25);
       this.combo = -1;
       this.events.emit('revive', { livesLeft: this.lives });
       return true;
@@ -1235,7 +1237,11 @@ export class Game {
   activateHyper(): boolean {
     if (this.state !== 'playing' || !this.active) return false;
     // con la hiperperk activa, volver a pulsar la corta (sin devolver la carga)
-    if (this.hyperLeft > 0) return this.stopHyper();
+    if (this.hyperLeft > 0) {
+      // un segundo toque justo después de soltarla (p. ej. doble toque sin querer) no la corta
+      const total = Math.round(this.hyper!.durationMs / STEP_MS);
+      return total - this.hyperLeft >= HYPER_STOP_GRACE ? this.stopHyper() : false;
+    }
     if (!this.hyperReady()) return false;
     const h = this.hyper!;
     this.record([this.steps, 'hyper']);

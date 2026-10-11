@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { COLS, Game, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
+import { runReplay } from './replay';
+import { COLS, Game, HYPER_STOP_GRACE, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
 import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
@@ -579,18 +580,27 @@ describe('hiperperks', () => {
     g.events.on('hyperEnd', () => (ended = true));
     g.activateHyper();
     expect(g.hyperActive('frenzy')).toBe(true);
+    // justo después de soltarla, un segundo toque no cuenta
+    expect(g.activateHyper()).toBe(false);
+    expect(g.hyperActive('frenzy')).toBe(true);
+    for (let i = 0; i < HYPER_STOP_GRACE; i++) g.step();
     expect(g.activateHyper()).toBe(true);
     expect(g.hyperActive('frenzy')).toBe(false);
     expect(ended).toBe(true);
     expect(g.hyperCharge).toBe(0);
     expect(g.hyperReady()).toBe(false);
     expect(g.replay().actions.filter((a) => a[1] === 'hyper')).toHaveLength(2);
+    const re = runReplay(JSON.parse(JSON.stringify(g.replay())));
+    expect(re.ok, re.reason).toBe(true);
+    expect(re.game.hyperLeft).toBe(0);
+    expect(re.game.hyperCharge).toBe(0);
   });
 
   it('cortar Bombardeo deja la pieza que cae como pieza normal', () => {
     const g = withHyper('barrage');
     g.activateHyper();
     expect(g.active!.hyperBomb).toBe(true);
+    for (let i = 0; i < HYPER_STOP_GRACE; i++) g.step();
     g.activateHyper();
     expect(g.active!.hyperBomb).toBe(false);
   });
@@ -610,6 +620,7 @@ describe('hiperperks', () => {
     const g = withHyper('flood');
     setActive(g, PIECES.T, 4, 2);
     g.activateHyper();
+    for (let i = 0; i < HYPER_STOP_GRACE; i++) g.step();
     g.activateHyper();
     expect(g.active!.def.name).toBe('T');
   });

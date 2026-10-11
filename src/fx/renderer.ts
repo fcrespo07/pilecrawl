@@ -2,7 +2,7 @@ import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Text
 import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
-import { colorOfId, GOLD_COLOR, type PieceDef } from '../core/pieces';
+import { colorOfId, GOLD_COLOR, PIECES, type PieceDef } from '../core/pieces';
 import {
   accentFor, BOARD_H, BOARD_W, BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, HYPER_COLOR, NEXT_W, NEXT_X, NEXT_Y, PORTRAIT, W, hex,
 } from './layout';
@@ -1051,7 +1051,7 @@ export class Renderer {
     const n = Math.min(next.length, g.queue.length);
     for (let i = 0; i < n; i++) {
       const sl = next[i];
-      this.drawMini(g.queue[i], sl.x + sl.s / 2, sl.y + sl.s / 2, i === 0 ? 14 : 10, i === 0 ? 1 : 0.8);
+      this.drawMini(g.hyperActive('flood') ? { ...g.queue[i], def: PIECES.I } : g.queue[i], sl.x + sl.s / 2, sl.y + sl.s / 2, i === 0 ? 14 : 10, i === 0 ? 1 : 0.8);
     }
   }
 
