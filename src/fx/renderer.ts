@@ -473,7 +473,7 @@ export class Renderer {
 
   shake(amount: number) { this.trauma = Math.min(1, this.trauma + amount * (REDUCED_MOTION ? 0.25 : 1)); }
 
-  /** Gancho para las ultis: estallido de pantalla (pixelado, aberración y pulso de color). */
+  /** Gancho para las hiperperks: estallido de pantalla (pixelado, aberración y pulso de color). */
   ultiBurst(color: number = HYPER_COLOR) {
     if (REDUCED_MOTION) { this.post.pulse(color, 0.5); return; }
     this.post.pixelate(10, 0.35);
