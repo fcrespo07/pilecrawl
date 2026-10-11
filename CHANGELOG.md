@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.19.8 — 2026-10-11
 - Cada PR despliega una vista previa del cliente en Cloudflare Pages (sin ranking ni anuncios) y comenta la URL; la guía incluye el aviso de caídas con `/api/health` (#44).
 
 ## 0.19.7 — 2026-10-11
