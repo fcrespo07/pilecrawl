@@ -42,7 +42,7 @@ function cors(req: IncomingMessage, res: ServerResponse) {
     res.setHeader('access-control-allow-origin', origin);
     res.setHeader('vary', 'Origin');
     res.setHeader('access-control-allow-headers', 'content-type, authorization');
-    res.setHeader('access-control-allow-methods', 'GET, POST, DELETE, OPTIONS');
+    res.setHeader('access-control-allow-methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.setHeader('access-control-max-age', '600');
   }
 }

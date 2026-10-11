@@ -102,6 +102,30 @@ export async function register(nickname: string): Promise<Player> {
   return p;
 }
 
+export async function rename(nickname: string): Promise<Player> {
+  const p = loadPlayer();
+  const r = await call<{ nickname: string }>('PATCH', '/api/players/me', { nickname }, true);
+  const np = { token: p!.token, nickname: r.nickname };
+  savePlayer(np);
+  return np;
+}
+
+/** Recupera tu jugador en este navegador con el código que se ve en la ventana de rankings. */
+export async function recover(code: string): Promise<Player> {
+  const r = await call<{ token: string; nickname: string }>('POST', '/api/players/recover', { code });
+  const p = { token: r.token, nickname: r.nickname };
+  savePlayer(p);
+  return p;
+}
+
+/** Cambia el secreto: el código anterior deja de valer en todos los navegadores. */
+export async function rotateCode(): Promise<Player> {
+  const r = await call<{ token: string; nickname: string }>('POST', '/api/players/me/rotate', undefined, true);
+  const p = { token: r.token, nickname: r.nickname };
+  savePlayer(p);
+  return p;
+}
+
 export async function deleteMe(): Promise<void> {
   await call('DELETE', '/api/players/me', undefined, true);
   savePlayer(null);

@@ -55,6 +55,34 @@ describe('jugadores', () => {
   });
 });
 
+describe('identidad', () => {
+  it('cambia de apodo, filtra palabras y se recupera con el código', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    await register('Otro');
+    expect((await call('PATCH', '/api/players/me', { nickname: 'otro' }, token)).status).toBe(409);
+    expect((await call('PATCH', '/api/players/me', { nickname: 'Sh1t' }, token)).status).toBe(400);
+    expect((await call('PATCH', '/api/players/me', { nickname: 'Ferran' }, token)).body.nickname).toBe('Ferran');
+    expect((await call('GET', '/api/players/me', undefined, token)).body.nickname).toBe('Ferran');
+    const rec = await call('POST', '/api/players/recover', { code: token });
+    expect(rec.status).toBe(200);
+    expect(rec.body).toMatchObject({ nickname: 'Ferran', token });
+    expect((await call('POST', '/api/players/recover', { code: 'xx.yy' })).status).toBe(404);
+    expect((await call('POST', '/api/players/recover', { code: '€uro' })).status).toBe(404);
+    expect((await call('POST', '/api/players/recover', { code: 'a\nb' })).status).toBe(404);
+    const rot = await call('POST', '/api/players/me/rotate', undefined, token);
+    expect(rot.body.token).not.toBe(token);
+    expect((await call('GET', '/api/players/me', undefined, token)).status).toBe(401);
+    expect((await call('GET', '/api/players/me', undefined, rot.body.token)).status).toBe(200);
+  });
+
+  it('no deja suplantar apodos ni colar palabras, pero admite nombres legítimos', async () => {
+    const { call } = setup();
+    expect((await call('POST', '/api/players', { nickname: 'Ana' })).status).toBe(201);
+    for (const n of ['Anа', 'A.na', '4na']) expect((await call('POST', '/api/players', { nickname: n })).status, n).toBeGreaterThanOrEqual(400);
+  });
+});
+
 describe('partida libre', () => {
   it('acepta una partida legítima y la pone en la tabla', async () => {
     const { call, register } = setup();
