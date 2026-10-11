@@ -2,6 +2,11 @@
 
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
+## Sin publicar
+
+## 0.18.0 — 2026-10-11
+- **Modo Expedición (primera parte)**: nuevo modo con progresión entre partidas y sin ranking. Cada partida da fragmentos (8 por nivel + 1 por línea) que se gastan en 7 mejoras permanentes: Repuesto, Vista larga, Aguante, Calma, Ritmo, Vida de repuesto y Buen arranque. Se entra desde el botón «Expedición» de la portada; el progreso se guarda en el navegador (`blockrogue.exp`). Las repeticiones de este modo no se pueden validar y el servidor las rechaza; el arcade no cambia. Sin equilibrar (#31).
+
 ## 0.17.1 — 2026-10-11
 - **Arreglo del cuelgue sin cartas**: si todas las cartas están al máximo, la subida de nivel ya no deja la partida parada: se resuelve sola con puntos (1000 × nivel) y un aviso en pantalla. Las partidas anteriores dejan de aceptarse en el ranking (reglas v7): hay que redesplegar el servidor (#30).
 - Texto interno: «ulti» pasa a «hiperperk» en los comentarios (no había texto visible con «ulti»).

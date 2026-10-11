@@ -1,7 +1,7 @@
 // Modos de juego. Todos usan las mismas reglas de `game.ts`; cada modo solo cambia
 // la semilla, los desbloqueos o cuándo termina la partida.
 
-export type ModeId = 'normal' | 'daily' | 'timed' | 'tutorial';
+export type ModeId = 'normal' | 'daily' | 'timed' | 'tutorial' | 'expedition';
 
 export interface ModeDef {
   id: ModeId;
@@ -19,6 +19,8 @@ export interface ModeDef {
   starterPerk: boolean;
   /** Tutorial guiado: sin récord ni ranking, y no sale en el selector de la portada. */
   tutorial?: boolean;
+  /** Progresión entre partidas (`expedition.ts`): sin ranking ni récords del arcade, y no sale en el selector. */
+  expedition?: boolean;
 }
 
 export const MODES: Record<ModeId, ModeDef> = {
@@ -54,11 +56,19 @@ export const MODES: Record<ModeId, ModeDef> = {
     starterPerk: false,
     tutorial: true,
   },
+  expedition: {
+    id: 'expedition',
+    name: 'Expedición',
+    desc: 'Cada partida da fragmentos para comprar mejoras permanentes. Sin ranking.',
+    timeLimitMs: 0,
+    starterPerk: false,
+    expedition: true,
+  },
 };
 
 export const MODE_IDS = Object.keys(MODES) as ModeId[];
 /** Los modos que se eligen en la portada (el tutorial tiene su propio botón). */
-export const PLAY_MODE_IDS = MODE_IDS.filter((id) => !MODES[id].tutorial);
+export const PLAY_MODE_IDS = MODE_IDS.filter((id) => !MODES[id].tutorial && !MODES[id].expedition);
 
 export const isModeId = (v: unknown): v is ModeId => typeof v === 'string' && Object.hasOwn(MODES, v);
 

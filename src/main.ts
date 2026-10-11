@@ -6,7 +6,7 @@ import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, 
 import { Gestures } from './gestures';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
-import { dailySeed, utcDate, type ModeId } from './core/modes';
+import { dailySeed, MODES, utcDate, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
@@ -19,6 +19,8 @@ import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
 import { renderCatalog } from './ui/catalog';
+import { renderExpedition, wireExpedition } from './ui/expeditionScreen';
+import { awardRun, loadExpedition } from './expedition';
 import { Lab, LAB_ENABLED } from './ui/lab';
 
 const game = new Game();
@@ -119,13 +121,16 @@ function wireAudioAndFeel() {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
     // el tutorial y el laboratorio no cuentan para desbloquear rarezas
-    if (game.mode !== 'tutorial' && !game.sandbox) recordBestLevel(level);
+    // la Expedición (con mejoras permanentes) tampoco: desbloquearía rarezas del arcade sin merecerlo
+    if (game.mode !== 'tutorial' && !MODES[game.mode].expedition && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
     audio.stopMusic();
     audio.gameOver();
-    if (game.mode !== 'tutorial') ui.showGameOver();
+    // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
+    const shards = game.mode === 'expedition' && !game.sandbox ? awardRun(game.level, game.lines) : null;
+    if (game.mode !== 'tutorial') ui.showGameOver(shards);
     modeSelect.refresh();
     offerPublish();
     refreshPanels();
@@ -176,7 +181,18 @@ function showCatalog(on: boolean) {
   (on ? catalog : home).focus({ preventScroll: true });
 }
 
+const expScreen = document.getElementById('expedition')!;
+
+function showExpedition(on: boolean) {
+  if (on) renderExpedition(expScreen);
+  expScreen.classList.toggle('hidden', !on);
+  home.classList.toggle('hidden', on);
+  (on ? expScreen : home).scrollTop = 0;
+  (on ? expScreen : home).focus({ preventScroll: true });
+}
+
 function showHome(show: boolean) {
+  expScreen.classList.add('hidden');
   home.classList.toggle('hidden', !show);
   if (show) {
     tutorial.stop();
@@ -213,7 +229,7 @@ function offerPublish() {
   rankingUI.offerPublish(done);
 }
 
-async function startRun(forced?: 'tutorial') {
+async function startRun(forced?: 'tutorial' | 'expedition') {
   if (starting) return;
   starting = true;
   const mode = forced ?? modeSelect.mode;
@@ -243,7 +259,7 @@ async function startRun(forced?: 'tutorial') {
   game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
-  game.start(seed, mode);
+  game.start(seed, mode, mode === 'expedition' ? loadExpedition().owned : {});
   currentRun = { mode, date, runId: ranked?.runId };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
@@ -284,12 +300,18 @@ function onKeyDown(e: KeyboardEvent) {
       if (e.code === 'Escape') showCatalog(false);
       return;
     }
+    // la pantalla de la Expedición: Enter juega, Esc vuelve
+    if (!expScreen.classList.contains('hidden')) {
+      if (e.code === 'Escape') showExpedition(false);
+      else if (e.code === 'Enter' && !e.repeat && !(e.target as HTMLElement | null)?.closest('button')) void startRun('expedition');
+      return;
+    }
     // con la portada visible, Espacio desplaza la página: solo Enter arranca
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
       // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
-      void startRun(st === 'over' && game.mode === 'tutorial' ? 'tutorial' : undefined);
+      void startRun(st === 'over' && (game.mode === 'tutorial' || game.mode === 'expedition') ? game.mode : undefined);
     }
     return;
   }
@@ -351,6 +373,10 @@ async function boot() {
   renderCatalog(catalog);
   document.getElementById('catalog-open')!.addEventListener('click', () => showCatalog(true));
   document.getElementById('catalog-back')!.addEventListener('click', () => showCatalog(false));
+  wireExpedition(expScreen);
+  for (const id of ['home-exp', 'exp-open']) document.getElementById(id)!.addEventListener('click', () => showExpedition(true));
+  document.getElementById('exp-back')!.addEventListener('click', () => showExpedition(false));
+  document.getElementById('exp-play')!.addEventListener('click', () => void startRun('expedition'));
   const labBtn = document.getElementById('lab-open')!;
   labBtn.hidden = !LAB_ENABLED;
   labBtn.addEventListener('click', () => lab.open());
@@ -375,7 +401,7 @@ async function boot() {
     a.hidden = false;
   }
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
-  document.getElementById('retry-btn')!.addEventListener('click', () => void startRun());
+  document.getElementById('retry-btn')!.addEventListener('click', () => void startRun(game.mode === 'expedition' ? 'expedition' : undefined));
 
   wireAudioAndFeel();
   wireTouch();

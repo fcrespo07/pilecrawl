@@ -8,6 +8,7 @@ import {
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
 import { makeRng, randomSeed, type Rng } from './rng';
+import { applyUpgrades, level as expLevel, type Owned } from './expedition';
 
 // Tablero propio de 11×18 visibles (no el 10×20 clásico del género)
 export const COLS = 11;
@@ -297,7 +298,7 @@ export class Game {
   }
 
   /** Empieza una partida. Sin semilla se elige una al azar. */
-  start(seed = randomSeed(), mode: ModeId = 'normal') {
+  start(seed = randomSeed(), mode: ModeId = 'normal', upgrades: Owned = {}) {
     this.reset();
     this.seed = seed >>> 0;
     this.mode = mode;
@@ -307,7 +308,13 @@ export class Game {
     this.perkRng = makeRng((this.seed ^ 0x9e3779b9) >>> 0);
     this.hyperRng = makeRng((this.seed ^ 0x2545f491) >>> 0);
     this.lastHole = Math.floor(this.rng() * COLS);
-    if (def.starterPerk) {
+    // Expedición: las mejoras permanentes solo cuentan en ese modo (el resto no las ve)
+    if (def.expedition) {
+      applyUpgrades(this.mods, upgrades);
+      this.rerolls += expLevel(upgrades, 'reroll');
+      this.lives += expLevel(upgrades, 'vida');
+    }
+    if (def.starterPerk || (def.expedition && expLevel(upgrades, 'arranque') > 0)) {
       // azar propio para no mover la cola ni las cartas: solo comunes y raras
       const [perk] = rollPerks(this.perks, 0, 1, 0, makeRng((this.seed ^ 0x5bd1e995) >>> 0));
       if (perk) this.grantPerk(perk);

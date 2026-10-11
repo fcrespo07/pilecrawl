@@ -136,7 +136,8 @@ export class UI {
       : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>');
   }
 
-  showGameOver() {
+  /** `shards`: fragmentos ganados si fue una Expedición; null en los demás modos. */
+  showGameOver(shards: number | null = null) {
     const g = this.game;
     // el laboratorio falsea la partida: ni récord ni ranking
     const isBest = !g.sandbox && submitScore(g.mode, this.date, g.score);
@@ -163,7 +164,8 @@ export class UI {
       stat('Combo máx.', Math.max(0, g.maxCombo)) +
       stat('Tiempo', clock(g.time)) +
       stat('Mejor nivel', loadMeta().bestLevel) +
-      (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '');
+      (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
+      (shards !== null ? stat('Fragmentos', `+${fmt(shards)}`) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);
