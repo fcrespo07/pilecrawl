@@ -18,12 +18,18 @@ import { Input } from './input';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
+import { postStats, StatsCollector } from './net/stats';
 import { renderCatalog } from './ui/catalog';
 import { renderExpedition, wireExpedition } from './ui/expeditionScreen';
 import { awardRun, loadExpedition } from './expedition';
 import { Lab, LAB_ENABLED } from './ui/lab';
 
 const game = new Game();
+// estadísticas anónimas: solo si hay servidor (el mismo del ranking); ver privacidad.html
+const stats = new StatsCollector(game, (s) => {
+  if (net.RANKING_ENABLED) postStats(net.BASE, s);
+});
+addEventListener('pagehide', () => stats.finish('quit'));
 const renderer = new Renderer(game);
 const input = new Input(game);
 const ui = new UI(game);
@@ -283,6 +289,7 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
   const exp = mode === 'expedition' ? loadExpedition() : null;
+  stats.begin();
   game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? []);
   currentRun = { mode, date, runId: ranked?.runId };
   ui.startGame(date);

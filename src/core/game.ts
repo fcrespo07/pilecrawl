@@ -90,6 +90,8 @@ export interface GameEvents {
   wipe: { removed: { x: number; y: number; v: number }[]; points: number };
   gameover: { reason: EndReason };
   perk: { perk: PerkDef; stacks: number };
+  /** Cartas que se enseñan ahora (también tras cada reroll). Solo informa: no cambia reglas. */
+  offer: { kind: 'perk' | 'curse' | 'hyper'; ids: string[] };
 }
 
 /**
@@ -1107,6 +1109,13 @@ export class Game {
 
   /** Saca las cartas del tipo de oferta actual (el reroll mantiene el tipo). */
   private rollChoices() {
+    this.rollChoicesNow();
+    const hyper = this.choosingHyper;
+    const ids = hyper ? this.hyperChoices.map((h) => h.id) : this.choices.map((c) => c.id);
+    if (ids.length > 0) this.events.emit('offer', { kind: hyper ? 'hyper' : this.cursedOffer ? 'curse' : 'perk', ids });
+  }
+
+  private rollChoicesNow() {
     const n = Math.max(2, this.mods.choices);
     if (this.hyperPending) {
       this.choices = [];
