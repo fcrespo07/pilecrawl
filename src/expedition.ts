@@ -4,6 +4,12 @@ import { buy, shardsFor, UPGRADE_BY_ID, UPGRADES, type ExpeditionSave, type Owne
 
 const KEY = 'blockrogue.exp';
 
+/** Entero >= 0 y finito; cualquier otra cosa (texto, negativo, Infinity) vale 0. */
+const clean = (v: unknown): number => {
+  const n = Math.floor(Number(v));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
 const EMPTY = (): ExpeditionSave => ({ shards: 0, owned: {}, runs: 0 });
 
 export function loadExpedition(): ExpeditionSave {
@@ -12,10 +18,10 @@ export function loadExpedition(): ExpeditionSave {
     if (!p || typeof p !== 'object') return EMPTY();
     const owned: Owned = {};
     for (const u of UPGRADES) {
-      const n = Math.floor(Number((p.owned as Owned | undefined)?.[u.id]) || 0);
+      const n = clean((p.owned as Owned | undefined)?.[u.id]);
       if (n > 0) owned[u.id] = Math.min(n, u.costs.length);
     }
-    return { shards: Math.max(0, Math.floor(Number(p.shards)) || 0), owned, runs: Math.max(0, Math.floor(Number(p.runs)) || 0) };
+    return { shards: clean(p.shards), owned, runs: clean(p.runs) };
   } catch {
     /* sin almacenamiento o JSON roto: se empieza de cero */
     return EMPTY();

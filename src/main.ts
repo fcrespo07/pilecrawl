@@ -6,7 +6,7 @@ import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, 
 import { Gestures } from './gestures';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
-import { dailySeed, utcDate, type ModeId } from './core/modes';
+import { dailySeed, MODES, utcDate, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
 import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
@@ -121,7 +121,8 @@ function wireAudioAndFeel() {
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
     // el tutorial y el laboratorio no cuentan para desbloquear rarezas
-    if (game.mode !== 'tutorial' && !game.sandbox) recordBestLevel(level);
+    // la Expedición (con mejoras permanentes) tampoco: desbloquearía rarezas del arcade sin merecerlo
+    if (game.mode !== 'tutorial' && !MODES[game.mode].expedition && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
