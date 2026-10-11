@@ -1264,3 +1264,7 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 #expedition .home-card { margin: 18px 0; }
 #expedition .home-card .home-btn { margin-top: 16px; }
 #expedition .home-lead { text-align: left; }
+
+/* Logo de la portada */
+.home-logo { display: block; width: 64px; height: 64px; margin: 0 auto 8px; image-rendering: pixelated; }
+@media (max-height: 640px) { .home-logo { width: 44px; height: 44px; margin-bottom: 4px; } }
