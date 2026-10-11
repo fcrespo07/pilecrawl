@@ -47,28 +47,44 @@ function boardHtml(b: net.Board | null | 'error'): string {
 interface Boards {
   weekly: net.Board | null | 'error';
   daily: net.Board | null | 'error';
-  day: net.ServerDay | null;
+  /** Fecha del desafío con la que se pidió `daily`: si ya no es la de hoy, esa tabla no vale. */
+  date: string;
   at: number;
 }
-let boards: Boards = { weekly: null, daily: null, day: null, at: 0 };
+let boards: Boards = { weekly: null, daily: null, date: '', at: 0 };
 let loading = false;
+let again = false;
 
-/** Pide las tablas al servidor, como mucho una vez cada 30 s salvo `force`, y repinta al llegar. */
+const homeVisible = () => !document.hidden && !document.getElementById('home')?.classList.contains('hidden');
+
+/**
+ * Pide las tablas al servidor y repinta al llegar. Sin `force` solo si la portada se ve y han pasado
+ * 30 s; con `force` (acabar o publicar una partida) siempre, y si había una carga en curso se repite al terminar.
+ */
 async function loadBoards(left: HTMLElement, right: HTMLElement, force: boolean) {
-  if (!net.RANKING_ENABLED || loading || (!force && Date.now() - boards.at < 30_000)) return;
+  if (!net.RANKING_ENABLED) return;
+  if (loading) {
+    if (force) again = true;
+    return;
+  }
+  if (!force && (!homeVisible() || (Date.now() - boards.at < 30_000) && boards.date === net.dailyDate()) return;
   loading = true;
   try {
-    const day = await net.serverDay();
+    await net.serverDay();
     const date = net.dailyDate();
     const [weekly, daily] = await Promise.all([
       net.leaderboard('normal', 'weekly').catch(() => 'error' as const),
       net.leaderboard('daily', 'daily', date).catch(() => 'error' as const),
     ]);
-    boards = { weekly, daily, day, at: Date.now() };
+    boards = { weekly, daily, date, at: Date.now() };
   } finally {
     loading = false;
   }
   renderHomePanels(left, right);
+  if (again) {
+    again = false;
+    void loadBoards(left, right, true);
+  }
 }
 
 /** Pinta los dos paneles. Se llama al abrir la portada y al acabar una partida. */
@@ -85,7 +101,7 @@ export function renderHomePanels(left: HTMLElement, right: HTMLElement, force = 
   right.innerHTML = `<h2>Diario <i>#${dailyNumber(date)}</i></h2>
     <p class="rank-big">${score(loadBest('daily', date))}</p>
     <p class="rank-note">Tu mejor de hoy. Mismas piezas y cartas para todos.</p>
-    ${online ? boardHtml(boards.daily) : ''}
+    ${online ? boardHtml(boards.date === date ? boards.daily : null) : ''}
     <p class="rank-note"><time data-next>${nextDailyLabel()}</time></p>`;
   void loadBoards(left, right, force);
 }

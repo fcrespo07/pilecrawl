@@ -157,14 +157,23 @@ export interface ServerDay {
 }
 
 let dayCache: { at: number; day: ServerDay } | null = null;
+let dayFailedAt = 0;
+let dayPending: Promise<ServerDay | null> | null = null;
 
 /**
  * Día del desafío según el servidor, que es quien lo comprueba al publicar: así un reloj mal puesto
  * no cambia el desafío. Se guarda unos minutos. Sin servidor devuelve `null` y se usa el reloj local.
  */
-export async function serverDay(timeoutMs = 3000): Promise<ServerDay | null> {
-  if (!RANKING_ENABLED) return null;
-  if (dayCache && Date.now() - dayCache.at < 5 * 60_000) return dayCache.day;
+export function serverDay(timeoutMs = 3000): Promise<ServerDay | null> {
+  if (!RANKING_ENABLED) return Promise.resolve(null);
+  if (dayCache && Date.now() - dayCache.at < 5 * 60_000) return Promise.resolve(dayCache.day);
+  // un fallo reciente no se reintenta enseguida; las peticiones a la vez comparten la misma
+  if (Date.now() - dayFailedAt < 2 * 60_000) return Promise.resolve(dayCache?.day ?? null);
+  dayPending ??= fetchDay(timeoutMs).finally(() => (dayPending = null));
+  return dayPending;
+}
+
+async function fetchDay(timeoutMs: number): Promise<ServerDay | null> {
   try {
     const t0 = Date.now();
     const c = await call<{ now: number; today: string; dailyNumber: number }>('GET', '/api/config', undefined, false, timeoutMs);
@@ -173,6 +182,7 @@ export async function serverDay(timeoutMs = 3000): Promise<ServerDay | null> {
     dayCache = { at: t1, day: { today: c.today, dailyNumber: c.dailyNumber, offset: c.now - (t0 + t1) / 2 } };
     return dayCache.day;
   } catch {
+    dayFailedAt = Date.now();
     return null;
   }
 }

@@ -248,7 +248,7 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   const mode = forced ?? modeSelect.mode;
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
   // la fecha la da el servidor si responde (un reloj mal puesto no cambia el desafío); si no, la del reloj local
-  await net.serverDay(1500);
+  if (mode === 'daily') await net.serverDay(1500);
   const date = net.dailyDate();
   // las partidas libres con ranking usan la semilla y los desbloqueos del servidor; si falla, se juega sin ranking
   let ranked: net.RankedStart | null = null;
