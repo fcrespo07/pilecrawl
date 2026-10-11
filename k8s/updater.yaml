@@ -1,6 +1,7 @@
 # Actualización automática: cada 5 minutos pregunta a GitHub Container Registry si la imagen `latest`
 # ha cambiado y, si es así, reinicia el Deployment (que baja la nueva: imagePullPolicy Always).
-# Es la Pi la que pregunta hacia fuera; no hay que abrirle nada a GitHub ni guardar ningún secreto.
+# Si la imagen nueva no llega a arrancar (progressDeadlineSeconds), vuelve a la última que funcionó y no
+# reintenta ese digest. Es la Pi la que pregunta hacia fuera; no hay que abrirle nada a GitHub ni guardar ningún secreto.
 # Requisito: el paquete de la imagen en GHCR debe ser público. Cliente y servidor van en la misma imagen,
 # así que un cambio de reglas (RULES_VERSION) se despliega siempre completo.
 # Para pararlo: kubectl -n blockrogue patch cronjob blockrogue-updater -p '{"spec":{"suspend":true}}'
@@ -54,6 +55,7 @@ spec:
         spec:
           serviceAccountName: blockrogue-updater
           restartPolicy: Never
+          automountServiceAccountToken: true # solo este pod necesita hablar con la API
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

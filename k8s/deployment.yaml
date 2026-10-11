@@ -6,6 +6,8 @@ metadata:
 spec:
   # SQLite y el límite de peticiones viven en un solo proceso: una réplica, y sin solapar versiones
   replicas: 1
+  # si la imagen nueva no queda disponible en 5 min (bajarla en una Pi es lento), el actualizador vuelve a la anterior
+  progressDeadlineSeconds: 300
   strategy:
     type: Recreate
   selector:
@@ -14,6 +16,7 @@ spec:
     metadata:
       labels: { app: blockrogue }
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
