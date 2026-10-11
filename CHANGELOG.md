@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- Logo y favicon de Pilecrawl: una criatura sobre una pila de bloques, en píxel art (SVG, PNG y apple-touch-icon), puesto en la portada y en las páginas de privacidad y contacto (#PR).
 
 ## 0.19.2 — 2026-10-11
 - Anuncios: la web trae sus páginas de privacidad y de contacto (`/privacidad.html`, `/acerca.html`, con enlaces en el pie de la portada), `ads.txt` y la etiqueta de verificación de AdSense se generan solos en el build desde las variables, y con `VITE_AD_CONSENT=none` el enlace «Preferencias de anuncios» reabre el mensaje de consentimiento de Google. Variables nuevas: `VITE_CONTACT_EMAIL`, `VITE_SITE_OWNER` (#34).
