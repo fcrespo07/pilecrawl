@@ -15,7 +15,7 @@ export interface Skin {
   panel: number;
   /** Fondo oscuro: los colores de texto y acento se aclaran para que se lean. */
   dark: boolean;
-  /** Cielo de estrellas y colinas de píxeles al fondo (solo la piel de base). */
+  /** Cielo de estrellas y colinas de píxeles al fondo. */
   stars?: boolean;
   /** Color del estallido de pantalla al soltar la hiperperk que pone esta piel. */
   burst?: number;
@@ -26,7 +26,8 @@ export const SKINS: Record<SkinId, Skin> = {
   // modo noche: mismo cielo de estrellas y colinas que la base, pero más oscuro
   apagon: { bg0: 0x161a3d, bg1: 0x0a0c20, ink: 0xd9d4c4, paper: 0x0e1128, panel: 0x1b1e29, dark: true, stars: true, burst: 0xffb13d },
   terminal: { bg0: 0x061209, bg1: 0x020803, ink: 0x6dff8e, paper: 0x061209, panel: 0x0a1a0e, dark: true, burst: 0x6dff8e },
-  neon: { bg0: 0x0b0716, bg1: 0x05030b, ink: 0xf2e9ff, paper: 0x0b0716, panel: 0x120c22, dark: true, burst: 0xff4dd2 },
+  // el fondo tiene que notarse violeta: casi negro y sin estrellas parecía que se había roto
+  neon: { bg0: 0x3d1456, bg1: 0x1d0a2e, ink: 0xf2e9ff, paper: 0x120c22, panel: 0x120c22, dark: true, stars: true, burst: 0xff4dd2 },
   // panel muy oscuro: las piezas azules tienen que destacar sobre el plano
   plano: { bg0: 0x1a426f, bg1: 0x133457, ink: 0xeaf2ff, paper: 0x0f2f55, panel: 0x0f2f55, dark: true, burst: 0x6fb6ff },
   hielo: { bg0: 0x0d3550, bg1: 0x08202f, ink: 0xe6faff, paper: 0x082436, panel: 0x0b2c42, dark: true, burst: 0x8fe8ff },

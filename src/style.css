@@ -69,8 +69,8 @@ body[data-skin='terminal'] {
   --shade: #04100a; --raise: #12301a; --raise-hi: #1c4426;
 }
 body[data-skin='neon'] {
-  --bg: #05030b; --panel: #120c22; --panel-hi: #1a1130; --line: #ff4dd2; --text: #f2e9ff; --muted: #a99bc4;
-  --ink: #f2e9ff; --paper: #120c22; --accent: #2ef2ff; --veil-a: rgba(5, 3, 11, 0.8); --veil-b: rgba(5, 3, 11, 0.96);
+  --bg: #1d0a2e; --panel: #120c22; --panel-hi: #1a1130; --line: #ff4dd2; --text: #f2e9ff; --muted: #a99bc4;
+  --ink: #f2e9ff; --paper: #120c22; --accent: #2ef2ff; --veil-a: rgba(29, 10, 46, 0.8); --veil-b: rgba(29, 10, 46, 0.96);
   --hi: #2ef2ff; --hi-deep: #138c96; --hi-light: #c8fcff; --on-hi: #05030b; --hi2: #ff4dd2; --hot: #ff4dd2;
   --shade: #0a0616; --raise: #241640; --raise-hi: #34205a;
 }
