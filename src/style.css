@@ -26,8 +26,6 @@
   --legendary: #ffd23f;
   --curse: #ff4f7b;
   --hyper: #b07aff;
-  /* arcoíris de las hiperperks: un ciclo que se repite (ver .rainbow) */
-  --rainbow: linear-gradient(90deg, #ff4d6d, #ffb84d, #f5f54a, #4dff88, #4dd8ff, #7a8cff, #d07aff, #ff4dd2, #ff4d6d);
   --danger: #ff3b5c;
   /* píxel: amarillo de títulos, azul secundario, rojo de alerta y los dos tonos del relieve */
   --hi: #ffd23f;
@@ -1343,36 +1341,3 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 }
 .home-center .resume-box .home-btn { font-size: 18px; padding: 14px 20px; }
 .home-center .resume-box .home-btn small { font-size: 18px; }
-
-/* ───────────── hiperperks: arcoíris que se mueve ───────────── */
-/* el ciclo del arcoíris mide 240 px y se repite: al desplazarlo un ciclo, el bucle no da saltos */
-@keyframes rainbow-run { from { background-position: 0 0; } to { background-position: 240px 0; } }
-.card.r-hyper .card-band { background: var(--rainbow) 0 0 / 240px 100% repeat; animation: rainbow-run 2.4s linear infinite; }
-.card.r-hyper .card-name,
-#perks.hyper .perk-title span,
-.p-hyper .hy-name,
-.build-row.r-hyper .b-name,
-.cat-item.r-hyper .b-name {
-  background: var(--rainbow) 0 0 / 240px 100% repeat;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  text-shadow: none;
-  animation: rainbow-run 2.4s linear infinite;
-}
-.card.r-hyper .card-front::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--rainbow) 0 0 / 240px 100% repeat;
-  opacity: 0.22;
-  mix-blend-mode: screen;
-  animation: rainbow-run 2.4s linear infinite;
-  pointer-events: none;
-}
-.p-hyper .hy-bar i { background: var(--rainbow) 0 0 / 240px 100% repeat; }
-@media (prefers-reduced-motion: reduce) {
-  .card.r-hyper .card-band, .card.r-hyper .card-name, #perks.hyper .perk-title span,
-  .p-hyper .hy-name, .build-row.r-hyper .b-name, .cat-item.r-hyper .b-name, .card.r-hyper .card-front::after { animation: none; }
-}
