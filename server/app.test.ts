@@ -241,7 +241,7 @@ describe('moderación', () => {
     expect((await call('DELETE', `/api/admin/runs/${best.id}`, undefined, 'admin-secret-token')).status).toBe(200);
     const board = (await call('GET', '/api/leaderboard?mode=normal&scope=all')).body;
     expect(board.entries[0].score).toBe(other.score);
-  });
+  }, 30_000); // juega hasta dos partidas completas: en CI, con los demás tests en paralelo, pasa de los 5 s
 });
 
 describe('modos sin ranking', () => {
