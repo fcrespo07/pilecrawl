@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp, weekStart } from './app';
 import { loadConfig, type Config } from './config';
 import { openDb } from './db';
+import { RULES_VERSION } from '../src/core/game';
 import { dailySeed } from '../src/core/modes';
 import { clientIp } from './ip';
 import type { IncomingMessage } from 'node:http';
@@ -104,6 +105,27 @@ describe('partida libre', () => {
     expect(rep.body.seed).toBe(start.seed);
   });
 
+  it('las puntuaciones de reglas viejas no cuentan en las tablas ni bloquean las nuevas', async () => {
+    const { call, register, db } = setup();
+    const token = await register('Fer');
+    const start = (await call('POST', '/api/runs/start', { mode: 'normal' }, token)).body;
+    const g = playHuman(start.seed, 400_000, 'normal', start.bestLevel);
+    expect((await call('POST', '/api/runs', { runId: start.runId, score: g.score, replay: g.replay() }, token)).status).toBe(200);
+    // como si se hubiera jugado con las reglas anteriores
+    db.prepare('UPDATE runs SET version = version - 1').run();
+    const board = (await call('GET', '/api/leaderboard?mode=normal&scope=all', undefined, token)).body;
+    expect(board.entries).toHaveLength(0);
+    // una partida nueva entra aunque sea peor que la vieja
+    db.prepare('UPDATE bests SET score = score + 1000000').run();
+    const start2 = (await call('POST', '/api/runs/start', { mode: 'normal' }, token)).body;
+    const g2 = playHuman(start2.seed, 400_000, 'normal', start2.bestLevel);
+    const sent = await call('POST', '/api/runs', { runId: start2.runId, score: g2.score, replay: g2.replay() }, token);
+    expect(sent.status).toBe(200);
+    const after = (await call('GET', '/api/leaderboard?mode=normal&scope=all', undefined, token)).body;
+    expect(after.entries).toHaveLength(1);
+    expect(after.entries[0].score).toBe(g2.score);
+  });
+
   it('rechaza puntuación falsa, semilla ajena, campos extra y reutilizar la partida', async () => {
     const { call, register } = setup();
     const token = await register('Fer');
@@ -174,8 +196,8 @@ describe('desafío diario', () => {
       else db.prepare("INSERT INTO players (id, nickname, secret_hash, created_at) VALUES (?, ?, 'x', 0)").run(`p${i}`, `Jugador ${i}`);
       const id = (db.prepare('SELECT id FROM players WHERE nickname = ?').get(`Jugador ${i}`) as { id: string }).id;
       const run = db
-        .prepare("INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, hash, created_at) VALUES (?, 'daily', ?, 1, 1, ?, 1, 1, 1, ?, 0)")
-        .run(id, date, (7 - i) * 1000, `h${i}`);
+        .prepare("INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, hash, created_at) VALUES (?, 'daily', ?, 1, ?, ?, 1, 1, 1, ?, 0)")
+        .run(id, date, RULES_VERSION, (7 - i) * 1000, `h${i}`);
       db.prepare("INSERT INTO bests (player_id, mode, scope, score, level, lines, run_id) VALUES (?, 'daily', ?, ?, 1, 1, ?)").run(id, `d:${date}`, (7 - i) * 1000, run.lastInsertRowid);
     }
     const near = async (i: number) => (await call('GET', `/api/leaderboard?mode=daily&date=${date}`, undefined, tokens[i])).body.near.map((e: any) => e.rank);

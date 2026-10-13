@@ -108,7 +108,7 @@ La base se puede abrir con `sqlite3` desde una copia. Tablas: `players`, `runs`,
 - **Tablas:** diaria; semanal (lunes UTC) y de siempre para partida libre y contrarreloj. Solo cuenta la mejor de cada jugador.
 - **Validación:** la repetición se rechaza si lleva cualquier campo que no conozca el servidor. Así el modo de pruebas (`sandbox: true`) y cualquier otro truco quedan fuera automáticamente.
 - **Lo que no impide:** un bot que juegue de verdad, con entradas perfectas. La repetición lo hace visible: `GET /api/runs/<runId>/replay` devuelve la de cada primer puesto para revisarla; la de un diario no se sirve hasta dos días después (plazo de envío), y una repetición idéntica a otra del mismo periodo se rechaza, para que nadie copie la del primero.
-- **Si cambias las reglas:** sube `RULES_VERSION` (ya es la práctica) y las partidas con la versión anterior se rechazan; las tablas viejas siguen ahí. Para empezar de cero, borra `bests`.
+- **Si cambias las reglas:** sube `RULES_VERSION` (ya es la práctica) y las partidas con la versión anterior se rechazan y las tablas (y la comprobación de «¿mejora tu marca?») solo cuentan partidas con `RULES_VERSION` actual (`runs.version`). Las filas viejas siguen en `bests` y el panel de administración las ve, pero no hace falta borrar nada para empezar de cero.
 - **Límites:** 240 peticiones/min por IP, 5 jugadores nuevos/hora por IP, 60 envíos y 120 partidas iniciadas por hora y jugador. Cuerpo máximo 512 KB. Repetición válida: hasta 300 000 pasos (unos 40 minutos de juego). Tope global de 30 revalidaciones por minuto. Las repeticiones de tablas diarias y semanales de más de 30 días se borran salvo la del primer puesto.
 
 ## 9. Borrador de página de privacidad

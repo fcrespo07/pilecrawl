@@ -241,6 +241,30 @@ describe('perks nuevos', () => {
     expect(g.board.filter((r) => r.some((v) => v !== 0))).toHaveLength(1);
   });
 
+  it('regala un reroll al llegar a los niveles 5, 10, 15…', () => {
+    const g = playing();
+    const r = g.rerolls;
+    g.level = 3;
+    g['addLevelProgress'](g.linesNeeded());
+    expect(g.level).toBe(4);
+    expect(g.rerolls).toBe(r);
+    g['addLevelProgress'](g.linesNeeded());
+    expect(g.level).toBe(5);
+    expect(g.rerolls).toBe(r + 1);
+    g.level = 9;
+    g['addLevelProgress'](g.linesNeeded());
+    expect(g.rerolls).toBe(r + 2);
+  });
+
+  it('Martillo suma +2 al multiplicador por copia (×3, ×5, ×7)', () => {
+    const g = playing();
+    take(g, 'hammer');
+    expect(g.mods.hardDropMult).toBe(3);
+    take(g, 'hammer');
+    take(g, 'hammer');
+    expect(g.mods.hardDropMult).toBe(7);
+  });
+
   it('Abanico ofrece 4 cartas', () => {
     const g = playing();
     take(g, 'fan');

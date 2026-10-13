@@ -103,9 +103,11 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 /** Pasos tras soltar una hiperperk en los que pulsar otra vez no la corta (0,3 s). */
 export const HYPER_STOP_GRACE = 36;
+/** Cada cuántos niveles se regala un reroll (al llegar al 5, 10, 15…). */
+export const REROLL_EVERY_LEVELS = 5;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 10;
+export const RULES_VERSION = 11;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -798,7 +800,7 @@ export class Game {
 
     let total = base;
     if (this.combo > 0 && cascade === 0 && !blast) total += 50 * this.combo * lvl * this.mods.comboMult;
-    total += gold * 300 * lvl;
+    total += gold * 150 * lvl;
     total += garbageRows * 200 * this.mods.recycle * lvl;
     // Reflejos: solo las piezas que limpian línea, y rápido desde que aparecen
     if (this.mods.reflexPoints > 0 && piece && cascade === 0 && !blast && this.time - this.pieceStart < 1500) {
@@ -1076,6 +1078,10 @@ export class Game {
       this.level++;
       this.pendingLevelUps++;
       if (this.mods.rerollPerLevel > 0) this.rerolls += this.mods.rerollPerLevel;
+      if (this.level % REROLL_EVERY_LEVELS === 0) {
+        this.rerolls++;
+        this.events.emit('harvest', { rerolls: 1 });
+      }
       // la hiperperk no está garantizada: cada subida tiene una probabilidad que sube con la racha
       if (!this.hyper && !this.hyperPending && this.level >= HYPER_FROM_LEVEL && this.hyperRng() < hyperChance(this.streak, this.level)) {
         this.hyperPending = true;
