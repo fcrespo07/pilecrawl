@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- Las hiperperks cambian el morado del borde por un arcoíris en diagonal que se desliza (tarjeta de oferta, indicador de la partida, pausa y catálogo). El texto y el relleno vuelven a su color de siempre. Con movimiento reducido el arcoíris queda quieto. Solo cambia el aspecto, no las reglas.
 
 ## 0.24.4 — 2026-10-13
 - Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos, y por debajo de 1080 px bajan debajo del botón Jugar.

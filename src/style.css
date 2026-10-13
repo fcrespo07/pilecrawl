@@ -1342,30 +1342,41 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 .home-center .resume-box .home-btn { font-size: 18px; padding: 14px 20px; }
 .home-center .resume-box .home-btn small { font-size: 18px; }
 
-/* ───────────── hiperperks: arcoíris por bloques ─────────────
-   Color que va cambiando en pasos de píxel (sin degradado). Se registra como propiedad para poder
-   animarla; cada elemento animado la pasa a sus hijos en --c o en el color de sus textos.
-   Con movimiento reducido se queda el morado de base y las bandas llevan franjas fijas. */
-@property --rb { syntax: '<color>'; inherits: true; initial-value: #b07aff; }
-@keyframes rb {
-  0% { --rb: #ff4d6d; animation-timing-function: step-end; }
-  14% { --rb: #ffb13d; animation-timing-function: step-end; }
-  28% { --rb: #ffe14d; animation-timing-function: step-end; }
-  42% { --rb: #6dff8e; animation-timing-function: step-end; }
-  57% { --rb: #2ee6ff; animation-timing-function: step-end; }
-  71% { --rb: #6fb6ff; animation-timing-function: step-end; }
-  85% { --rb: #ff4dd2; animation-timing-function: step-end; }
-  100% { --rb: #ff4d6d; }
+/* ───────────── hiperperks: barrido de arcoíris en los bordes ─────────────
+   El morado de siempre se queda en el relleno; solo el borde pasa a un arcoíris en diagonal que se
+   desliza. La franja se repite cada 140 px y la teselita mide exactamente su proyección sobre el
+   ángulo (115°), así que el bucle no tiene costura. Con movimiento reducido queda quieto. */
+@keyframes hy-sweep { from { background-position: 0 0; } to { background-position: 154.455px 0; } }
+.card.r-hyper .card-front { box-shadow: inset 0 0 0 8px var(--paper), inset 0 -14px 0 var(--shade); }
+.card.r-hyper .card-front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 4px;
+  pointer-events: none;
+  background: repeating-linear-gradient(115deg, #ff4d6d 0 20px, #ffb13d 20px 40px, #ffe14d 40px 60px, #6dff8e 60px 80px, #2ee6ff 80px 100px, #6fb6ff 100px 120px, #ff4dd2 120px 140px) 0 0 / 154.455px 331.3px;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: hy-sweep 2.8s linear infinite;
 }
-.card.r-hyper .card-band { background-image: linear-gradient(90deg, #ff4d6d 0 14%, #ffb13d 14% 28%, #ffe14d 28% 42%, #6dff8e 42% 57%, #2ee6ff 57% 71%, #6fb6ff 71% 85%, #ff4dd2 85%); }
-.card.r-hyper .card-tilt, .build-row.r-hyper, .cat-item.r-hyper, #perks.hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] {
-  animation: rb 2.8s linear infinite;
+.build-row.r-hyper, .cat-item.r-hyper { position: relative; border-left-color: transparent; }
+.build-row.r-hyper::before, .cat-item.r-hyper::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: repeating-linear-gradient(115deg, #ff4d6d 0 20px, #ffb13d 20px 40px, #ffe14d 40px 60px, #6dff8e 60px 80px, #2ee6ff 80px 100px, #6fb6ff 100px 120px, #ff4dd2 120px 140px) 0 0 / 154.455px 331.3px;
+  animation: hy-sweep 2.8s linear infinite;
 }
-.card.r-hyper .card-tilt { --c: var(--rb); }
-.build-row.r-hyper, .cat-item.r-hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] { --c: var(--rb); }
-.card.r-hyper .card-name, .build-row.r-hyper .b-name, .cat-item.r-hyper .b-name,
-#hyper-box[data-state='ready'] .hy-name, #hyper-box[data-state='active'] .hy-name, #perks.hyper .perk-title span { color: var(--rb); }
+#hyper-box[data-state='ready']::before, #hyper-box[data-state='active']::before {
+  padding: 2px;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  background: repeating-linear-gradient(115deg, #ff4d6d 0 20px, #ffb13d 20px 40px, #ffe14d 40px 60px, #6dff8e 60px 80px, #2ee6ff 80px 100px, #6fb6ff 100px 120px, #ff4dd2 120px 140px) 0 0 / 154.455px 331.3px;
+  animation: hy-sweep 2.8s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .card.r-hyper .card-tilt, .build-row.r-hyper, .cat-item.r-hyper, #perks.hyper,
-  #hyper-box[data-state='ready'], #hyper-box[data-state='active'] { animation: none; }
+  .card.r-hyper .card-front::before, .build-row.r-hyper::before, .cat-item.r-hyper::before,
+  #hyper-box[data-state='ready']::before, #hyper-box[data-state='active']::before { animation: none; }
 }
