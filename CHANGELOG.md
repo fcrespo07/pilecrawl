@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.25.1 — 2026-10-13
 - [interno] (#61) El repositorio pasa a llamarse pilecrawl: la imagen de los manifiestos de k8s (`ghcr.io/fcrespo07/pilecrawl`), el enlace de reportar bugs y las guías de despliegue usan el nombre nuevo.
 
 ## 0.25.0 — 2026-10-13
