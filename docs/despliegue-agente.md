@@ -20,7 +20,7 @@ K() { sudo k3s kubectl "$@"; }   # si usas otro kubectl (PC), cámbialo por: K()
 | **Dominio público** (p. ej. `juego.midominio.com`) | Dirección del juego | Debe estar en Cloudflare (DNS gestionado por Cloudflare). Sin dominio solo se puede probar con `port-forward`. |
 | **Token de Cloudflare Tunnel** | Sacar el juego a internet sin abrir puertos | Lo crea el usuario (paso U2). Es un secreto: pídelo por un canal privado y no lo repitas. |
 | **`admin-token`** | Moderación del ranking | Puedes **generarlo tú**: `openssl rand -hex 32`. Dáselo al usuario una sola vez para que lo guarde. |
-| **Usuario de GitHub y nombre del repositorio** | Nombre de la imagen en GHCR | Por defecto `fcrespo07/tetris-roguelite`. El usuario tiene pendiente renombrar el repositorio: confírmalo con `git remote get-url origin`. |
+| **Usuario de GitHub y nombre del repositorio** | Nombre de la imagen en GHCR | Por defecto `fcrespo07/pilecrawl`. Confírmalo con `git remote get-url origin`. |
 | **¿Activa anuncios?** sí/no | Variables de anuncios | Por defecto **no**. Si sí: necesita cuenta de AdSense aprobada (paso U3) con `ca-pub-…`, número de bloque y página de privacidad. Detalles y advertencia legal (consentimiento europeo) en `docs/anuncios.md`. |
 | **Dirección de la página de privacidad** | Enlace en Rankings (y obligatoria con anuncios) | Ya no hace falta: la web trae `/privacidad.html` y `/acerca.html`. Pide solo `VITE_CONTACT_EMAIL` y `VITE_SITE_OWNER` (el correo y el nombre que saldrán en ellas). Guía de anuncios para el dueño: `docs/anuncios.md`. |
 | **Palabras prohibidas en apodos** | `nick-blocklist` | Opcional; lista separada por comas. |
@@ -28,7 +28,7 @@ K() { sudo k3s kubectl "$@"; }   # si usas otro kubectl (PC), cámbialo por: K()
 
 ## Pasos que solo puede hacer el usuario (pídeselos en el momento indicado y espera su confirmación)
 
-- **U1. Hacer público el paquete de la imagen** (solo si usas GHCR): GitHub → su perfil → Packages → el paquete `tetris-roguelite` (el nombre del repositorio) → Package settings → Change visibility → Public. Existe una alternativa sin esto: construcción local (3B).
+- **U1. Hacer público el paquete de la imagen** (solo si usas GHCR): GitHub → su perfil → Packages → el paquete `pilecrawl` (el nombre del repositorio) → Package settings → Change visibility → Public. Existe una alternativa sin esto: construcción local (3B).
 - **U2. Crear el túnel en Cloudflare:** panel de Cloudflare → Zero Trust → Networks → Tunnels → Create a tunnel → tipo Cloudflared → ponle nombre → **copiar el token** (la cadena larga que sale en el comando de instalación, después de `--token`). En la pestaña *Public Hostname* (o *Published application routes*): añadir el dominio elegido con servicio `HTTP` y URL `blockrogue.blockrogue.svc.cluster.local:80`. No hace falta ejecutar el comando de instalación que muestra Cloudflare: lo hace el cluster.
 - **U3. (Opcional) Cuenta de AdSense:** crearla con el dominio, esperar la aprobación y crear un bloque de display adaptable. Sin esto, no actives anuncios.
 
@@ -60,7 +60,7 @@ command -v curl openssl git   # deben existir; si falta alguno: sudo apt install
 
 ## 3. La imagen
 
-Variables: `REPO=<usuario>/<repositorio>` en minúsculas (p. ej. `fcrespo07/tetris-roguelite`); `IMAGE=ghcr.io/$REPO:latest`.
+Variables: `REPO=<usuario>/<repositorio>` en minúsculas (p. ej. `fcrespo07/pilecrawl`); `IMAGE=ghcr.io/$REPO:latest`.
 
 **3A. GHCR (por defecto).** La construye el workflow `Imagen` al llegar a `master`.
 - **Comprobar que se puede descargar** (ya con k3s del paso 2): `K run probe -n default --rm -i --restart=Never --image=$IMAGE --command -- true` (tarda un poco; debe terminar sin `ErrImagePull`). Si falla, pide al usuario que confirme en GitHub → Actions que el último workflow «Imagen» de `master` terminó en verde y que hizo público el paquete (U1), o pasa a 3B.
