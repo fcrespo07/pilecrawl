@@ -273,7 +273,6 @@ kbd {
 #hyper-box[data-state='ready'] .hy-state,
 #hyper-box[data-state='active'] .hy-state { color: var(--c); font-weight: 700; }
 #hyper-box[data-state='ready'] .hy-bar i { animation: hy-pulse 0.6s ease-in-out infinite alternate; }
-#hyper-box[data-state='active'] { animation: hy-pulse 0.45s ease-in-out infinite alternate; }
 @keyframes hy-pulse { to { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) {
   #hyper-box[data-state='ready'] .hy-bar i,
@@ -1342,3 +1341,31 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 }
 .home-center .resume-box .home-btn { font-size: 18px; padding: 14px 20px; }
 .home-center .resume-box .home-btn small { font-size: 18px; }
+
+/* ───────────── hiperperks: arcoíris por bloques ─────────────
+   Color que va cambiando en pasos de píxel (sin degradado). Se registra como propiedad para poder
+   animarla; cada elemento animado la pasa a sus hijos en --c o en el color de sus textos.
+   Con movimiento reducido se queda el morado de base y las bandas llevan franjas fijas. */
+@property --rb { syntax: '<color>'; inherits: true; initial-value: #b07aff; }
+@keyframes rb {
+  0% { --rb: #ff4d6d; animation-timing-function: step-end; }
+  14% { --rb: #ffb13d; animation-timing-function: step-end; }
+  28% { --rb: #ffe14d; animation-timing-function: step-end; }
+  42% { --rb: #6dff8e; animation-timing-function: step-end; }
+  57% { --rb: #2ee6ff; animation-timing-function: step-end; }
+  71% { --rb: #6fb6ff; animation-timing-function: step-end; }
+  85% { --rb: #ff4dd2; animation-timing-function: step-end; }
+  100% { --rb: #ff4d6d; }
+}
+.card.r-hyper .card-band { background-image: linear-gradient(90deg, #ff4d6d 0 14%, #ffb13d 14% 28%, #ffe14d 28% 42%, #6dff8e 42% 57%, #2ee6ff 57% 71%, #6fb6ff 71% 85%, #ff4dd2 85%); }
+.card.r-hyper .card-tilt, .build-row.r-hyper, .cat-item.r-hyper, #perks.hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] {
+  animation: rb 2.8s linear infinite;
+}
+.card.r-hyper .card-tilt { --c: var(--rb); }
+.build-row.r-hyper, .cat-item.r-hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] { --c: var(--rb); }
+.card.r-hyper .card-name, .build-row.r-hyper .b-name, .cat-item.r-hyper .b-name,
+#hyper-box[data-state='ready'] .hy-name, #hyper-box[data-state='active'] .hy-name, #perks.hyper .perk-title span { color: var(--rb); }
+@media (prefers-reduced-motion: reduce) {
+  .card.r-hyper .card-tilt, .build-row.r-hyper, .cat-item.r-hyper, #perks.hyper,
+  #hyper-box[data-state='ready'], #hyper-box[data-state='active'] { animation: none; }
+}
