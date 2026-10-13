@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.24.2 — 2026-10-13
+- Ranking: las lecturas se reintentan una vez si la red falla, y el aviso de «sin conexión» menciona que una red de colegio o empresa puede estar filtrando el servidor (#51).
+
 ## 0.24.1 — 2026-10-13
 - Los ojos del marcianito del logo de la portada siguen al cursor (o al último toque, y tras un momento vuelven a su posición de reposo). Pasos de un píxel, sin coste con la partida en marcha y quietos con movimiento reducido (#50).
 
