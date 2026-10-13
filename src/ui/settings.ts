@@ -1,7 +1,7 @@
 // Pantalla de Ajustes: volúmenes, efectos, teclas y manejo. Se abre desde la portada y desde la pausa.
 import { audio } from '../fx/audio';
 import {
-  ACTIONS, ACTION_LABEL, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, resetHandling, resetKeys, setHandling,
+  ACTIONS, ACTION_LABEL, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, mouseOn, resetHandling, resetKeys, setHandling, setMouse,
   type Action,
 } from '../settings';
 
@@ -46,6 +46,10 @@ export class SettingsUI {
     });
     $('set-mute').addEventListener('click', () => {
       audio.toggleMute();
+      this.renderToggles();
+    });
+    $('set-mouse-toggle').addEventListener('click', () => {
+      setMouse(!mouseOn.value);
       this.renderToggles();
     });
     const das = $('set-das') as HTMLInputElement;
@@ -121,6 +125,8 @@ export class SettingsUI {
   renderToggles() {
     $('set-music').setAttribute('aria-pressed', String(audio.musicOn));
     $('set-music').querySelector('span')!.textContent = audio.musicOn ? 'Música: sí' : 'Música: no';
+    $('set-mouse-toggle').setAttribute('aria-pressed', String(mouseOn.value));
+    $('set-mouse-toggle').querySelector('span')!.textContent = mouseOn.value ? 'Control con ratón: sí' : 'Control con ratón: no';
     $('set-mute').setAttribute('aria-pressed', String(!audio.muted));
     $('set-mute').querySelector('span')!.textContent = audio.muted ? 'Sonido: no' : 'Sonido: sí';
   }

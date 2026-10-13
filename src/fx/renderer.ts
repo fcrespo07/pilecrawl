@@ -260,6 +260,8 @@ export class Renderer {
   private punch = 0;
   private accent = accentFor(1);
   private accentTarget = accentFor(1);
+  /** Colocación que sugiere el ratón (columna y giro); solo se dibuja, no cambia el juego. */
+  preview: { x: number; rot: number } | null = null;
   private visX = 0;
   private visY = 0;
   private snapPiece = true;
@@ -992,23 +994,27 @@ export class Renderer {
       this.visY = a.y;
       this.snapPiece = false;
     }
+    const pv = this.preview && !g.collides(a.def, this.preview.x, a.y, this.preview.rot) ? this.preview : null;
+    const ax = pv ? pv.x : a.x;
+    const arot = pv ? pv.rot : a.rot;
     const k = 1 - Math.exp(-sec * 45);
     // con la flecha abajo la pieza se dibuja con la fracción de celda que lleva: se ve bajar, no saltar
     const targetY = a.y + (g.softDropping ? g.dropFraction() : 0);
-    this.visX += (a.x - this.visX) * k;
+    this.visX += (ax - this.visX) * k;
     this.visY += (targetY - this.visY) * (g.softDropping ? 1 : k);
-    if (Math.abs(a.x - this.visX) > 3 || Math.abs(a.y - this.visY) > 4) {
-      this.visX = a.x;
+    if (Math.abs(ax - this.visX) > 3 || Math.abs(a.y - this.visY) > 4) {
+      this.visX = ax;
       this.visY = targetY;
     }
 
-    const shape = a.def.shapes[a.rot];
+    const shape = a.def.shapes[arot];
     // ghost
-    const gy = g.ghostY();
+    let gy = a.y;
+    while (!g.collides(a.def, ax, gy + 1, arot)) gy++;
     shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;
-      this.placeCell(this.ghosts, this.px(a.x + cx), this.py(y), CELL, this.specColor(a, i), 0.7);
+      this.placeCell(this.ghosts, this.px(ax + cx), this.py(y), CELL, this.specColor(a, i), 0.7);
     });
     // pieza
     const lp = g.lockProgress();

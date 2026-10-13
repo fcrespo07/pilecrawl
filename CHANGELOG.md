@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.26.0 — 2026-10-13
+- (#63) Control con ratón en escritorio: la pieza cae en la columna del cursor, con una sugerencia de giro que se cambia con la rueda o el clic derecho; clic para soltar y clic en la reserva para guardar. Se puede apagar en Ajustes. Usa las acciones de siempre, así que las repeticiones y el ranking no cambian.
+
 ## 0.25.4 — 2026-10-13
 - [interno] (#60) Las estadísticas anónimas pasan a la pestaña «Estadísticas» de `/admin.html`, con gráficas (partidas por día, nivel en el que acaban, cómo acaban por modo, elección de cada carta y diferencia de nivel) dibujadas a mano en SVG, sin librerías ni nada de fuera. `/stats.html` redirige a la página de administración. Las tablas siguen disponibles en un desplegable.
 
