@@ -104,7 +104,7 @@ export function summarize(rows: StatsRow[], perkMode: ModeId | null) {
         mode,
         {
           runs: rs.length,
-          level: { avg: avg(levels), p25: pct(levels, 0.25), median: pct(levels, 0.5), p75: pct(levels, 0.75), max: Math.max(...levels) },
+          level: { avg: avg(levels), p25: pct(levels, 0.25), median: pct(levels, 0.5), p75: pct(levels, 0.75), max: levels.reduce((m, l) => (l > m ? l : m), 0) },
           score: { avg: avg(rs.map((r) => r.score)), median: pct(rs.map((r) => r.score), 0.5) },
           secs: { avg: avg(rs.map((r) => r.secs)), median: pct(rs.map((r) => r.secs), 0.5) },
           ends,
