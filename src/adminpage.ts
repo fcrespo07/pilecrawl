@@ -163,6 +163,8 @@ const n = (v: number | null | undefined, d = 1) => (v === null || v === undefine
 const pct = (v: number | null) => (v === null ? '–' : `${Math.round(v * 100)}%`);
 /** Una carta solo entra en las gráficas con esta exposición mínima: con menos casos la diferencia es ruido. */
 const MIN_SHOWN = 10;
+/** Barras del histograma de niveles: de aquí en adelante van juntos. */
+const LEVEL_CAP = 40;
 const END_NAMES: Record<string, { name: string; color: string }> = {
   topout: { name: 'Pierde', color: C.bad },
   time: { name: 'Se acaba el tiempo', color: C.good },
@@ -207,11 +209,16 @@ function renderStats(s: Summary) {
 
   const top = modes[0];
   if (top) {
+    // los niveles por encima de LEVEL_CAP (el cliente puede mandar hasta 9999) se juntan en la última barra
     const hist = top[1].levelHistogram;
-    const lv = Object.keys(hist).map(Number);
-    const all = Array.from({ length: Math.max(...lv) }, (_, i) => i + 1);
-    h += `<h3>En qué nivel acaban (${esc(top[0])})</h3>` +
-      columns(all.map((l) => ({ label: String(l), value: hist[l] ?? 0, tip: `Nivel ${l}: ${hist[l] ?? 0} partidas` })), { mark: { label: String(top[1].level.median), text: 'mediana' } });
+    const cap = Math.min(top[1].level.max, LEVEL_CAP);
+    const count = (l: number) => (l < LEVEL_CAP ? (hist[l] ?? 0) : Object.entries(hist).reduce((a, [k, v]) => a + (Number(k) >= LEVEL_CAP ? v : 0), 0));
+    const med = Math.min(Math.round(top[1].level.median ?? 0), LEVEL_CAP);
+    const bars = Array.from({ length: cap }, (_, i) => i + 1).map((l) => {
+      const label = l === LEVEL_CAP ? `${l}+` : String(l);
+      return { label, value: count(l), tip: `Nivel ${label}: ${count(l)} partidas` };
+    });
+    h += `<h3>En qué nivel acaban (${esc(top[0])})</h3>` + columns(bars, { mark: { label: bars[med - 1]?.label ?? '', text: 'mediana' } });
   }
 
   h += '<h3>Cómo acaban las partidas</h3>' + legend(Object.values(END_NAMES)) +
