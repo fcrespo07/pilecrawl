@@ -187,6 +187,9 @@ export class RankingUI {
     this.publishing = false;
     $('publish-msg').textContent = '';
     this.refreshPublish();
+    // con apodo, la partida se publica sola al acabar; el servidor solo guarda la que mejora tu marca.
+    // Si falla, queda el botón para reintentar.
+    if (run && net.loadPlayer()) void this.publish();
   }
 
   private refreshPublish() {

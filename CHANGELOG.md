@@ -4,8 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
-## 0.23.1 — 2026-10-13
+## 0.24.1 — 2026-10-13
 - Los ojos del marcianito del logo de la portada siguen al cursor (o al último toque, que vuelven al centro tras un momento). Pasos de un píxel, sin coste con la partida en marcha y quietos con movimiento reducido (#50).
+
+## 0.24.0 — 2026-10-13
+- (#49) Con apodo, la partida se publica sola al acabar en arcade, diario y contrarreloj; el servidor solo guarda las que mejoran tu marca. Si el envío falla, queda el botón para reintentar. No cambian las reglas ni las repeticiones.
 
 ## 0.23.0 — 2026-10-13
 - Pantalla de Ajustes (desde la portada y la pausa): volumen general, de música y de efectos, efectos de pantalla, teclas reasignables (hasta tres por acción, con aviso si chocan) y manejo (espera y repetición). En la pausa, «Guardar y salir» guarda la partida en el navegador y «Continuar partida» en la portada la retoma exactamente donde estaba; el guardado se borra al reanudar y se descarta con aviso si cambian las reglas. También hay «Salir sin guardar». No cambian las reglas ni las repeticiones (#48).
