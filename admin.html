@@ -21,13 +21,18 @@
       #msg { color: #7fe0a0; }
       #code { display: none; border: 1px solid #7fe0a0; padding: 10px 12px; border-radius: 6px; margin: 12px 0; }
       #code code { display: block; word-break: break-all; font-size: 16px; margin: 6px 0; user-select: all; }
+      .tabs button.on { background: #3a4375; }
+      #stats-out { overflow-x: auto; } #stats-out svg { min-width: 640px; }
+      [hidden] { display: none !important; }
+      .pos { color: #7fe0a0; } .bar { display: inline-block; height: 10px; background: #4a6cf0; vertical-align: middle; }
+      details { margin: 8px 0 24px; } summary { cursor: pointer; color: #9aa3c7; }
       td.acts { white-space: nowrap; }
     </style>
   </head>
   <body>
     <main>
       <h1>Administración del ranking</h1>
-      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); se guarda solo en esta pestaña. <a href="/stats.html">Estadísticas</a></p>
+      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); se guarda solo en esta pestaña.</p>
       <div class="row">
         <input id="token" type="password" placeholder="Clave" autocomplete="off" />
       </div>
@@ -39,6 +44,11 @@
         <button id="code-copy" type="button">Copiar</button> <button id="code-close" type="button">Cerrar</button>
       </div>
 
+      <div class="row tabs">
+        <button type="button" data-tab="ranking" class="on">Ranking</button>
+        <button type="button" data-tab="stats">Estadísticas</button>
+      </div>
+      <section id="tab-ranking">
       <h2>Tabla</h2>
       <form id="board-f">
         <select id="mode"></select>
@@ -56,6 +66,18 @@
       </form>
       <div id="players"></div>
       <div id="runs"></div>
+      </section>
+
+      <section id="tab-stats" hidden>
+      <h2>Estadísticas anónimas</h2>
+      <form id="stats-f">
+        <select id="days"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="400">Todo</option></select>
+        <select id="smode"></select>
+        <input id="rules" type="number" min="0" placeholder="Reglas (todas)" style="width: 9em" />
+        <button>Ver</button>
+      </form>
+      <div id="stats-out"></div>
+      </section>
     </main>
     <script type="module" src="/src/adminpage.ts"></script>
   </body>

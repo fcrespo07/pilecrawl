@@ -108,6 +108,11 @@ const server = createServer(async (req, res) => {
       res.writeHead(out.status).end(buf);
       return;
     }
+    // las estadísticas viven ahora dentro de la página de administración
+    if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/stats.html') {
+      res.writeHead(301, { location: '/admin.html' }).end();
+      return;
+    }
     if ((req.method === 'GET' || req.method === 'HEAD') && sendStatic(url.pathname, res)) return;
     res.writeHead(404, { 'content-type': 'text/plain' }).end('no existe');
   } catch (e) {
