@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.24.0 — 2026-10-13
 - (#49) Con apodo, la partida se publica sola al acabar en arcade, diario y contrarreloj; el servidor solo guarda las que mejoran tu marca. Si el envío falla, queda el botón para reintentar. No cambian las reglas ni las repeticiones.
 
 ## 0.23.0 — 2026-10-13
