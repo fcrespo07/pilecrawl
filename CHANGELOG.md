@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
-- Las hiperperks se ven de arcoíris que cambia por bloques de color: carta de oferta, nombre, indicador de la partida, lista de la pausa y catálogo. Con movimiento reducido quedan con el morado de base y franjas fijas. Solo cambia el aspecto, no las reglas.
+- (#52) Las hiperperks se ven de arcoíris que cambia por bloques de color: carta de oferta, nombre, indicador de la partida, lista de la pausa y catálogo. Con movimiento reducido quedan con el morado de base y franjas fijas. Solo cambia el aspecto, no las reglas.
 
 ## 0.24.1 — 2026-10-13
 - Los ojos del marcianito del logo de la portada siguen al cursor (o al último toque, y tras un momento vuelven a su posición de reposo). Pasos de un píxel, sin coste con la partida en marcha y quietos con movimiento reducido (#50).
