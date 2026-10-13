@@ -14,7 +14,7 @@ const WHITE = '#ffffff';
 const BLACK = '#05060f';
 // Zona muerta: el cursor tiene que salirse de la mitad central para que la pupila se desplace.
 const DEAD = 0.12;
-// Tras tocar, los ojos miran al toque un rato y luego vuelven al centro.
+// Tras tocar, los ojos miran al toque un rato y luego vuelven a su posición de reposo.
 const TOUCH_HOLD_MS = 1500;
 const REST = 2;
 
