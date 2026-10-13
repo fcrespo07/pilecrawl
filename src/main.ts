@@ -40,6 +40,16 @@ const renderer = new Renderer(game);
 const input = new Input(game);
 /** Tras acabar una partida, las teclas y el botón de reintentar esperan un rato sin pulsar. */
 const endLock = new EndLock(800);
+let lockFade = 0;
+/** Una pulsación que el freno ignora atenúa el botón de reintentar un momento, para que se vea por qué no responde. */
+function endPressBlocked(): boolean {
+  if (!endLock.blocks()) return false;
+  const retry = document.getElementById('retry-btn')!;
+  retry.classList.add('locked');
+  clearTimeout(lockFade);
+  lockFade = window.setTimeout(() => retry.classList.remove('locked'), 800);
+  return true;
+}
 const ui = new UI(game);
 const lab = new Lab(game);
 const settingsUI = new SettingsUI(() => renderKeyHints());
@@ -62,7 +72,7 @@ const rankingUI = new RankingUI(
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
   onPlay: () => void startRun(),
-  onRetry: () => { if (!endLock.blocks()) void startRun('tutorial'); },
+  onRetry: () => { if (!endPressBlocked()) void startRun('tutorial'); },
   onHome: () => {
     // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
     game.reset();
@@ -510,7 +520,7 @@ function onKeyDown(e: KeyboardEvent) {
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
-      if (st === 'over' && endLock.blocks()) return;
+      if (st === 'over' && endPressBlocked()) return;
       // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
       void startRun(st === 'over' && (game.mode === 'tutorial' || game.mode === 'expedition') ? game.mode : undefined);
     }
@@ -630,7 +640,7 @@ async function boot() {
   a.hidden = false;
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
   document.getElementById('retry-btn')!.addEventListener('click', () => {
-    if (endLock.blocks()) return;
+    if (endPressBlocked()) return;
     void startRun(game.mode === 'expedition' ? 'expedition' : undefined);
   });
 
