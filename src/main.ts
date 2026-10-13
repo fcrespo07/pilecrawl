@@ -204,7 +204,7 @@ function wireTouch() {
 }
 
 const home = document.getElementById('home')!;
-initLogoEyes(document.querySelector<HTMLCanvasElement>('.home-logo')!);
+initLogoEyes(document.querySelector<HTMLCanvasElement>('.home-logo')!, () => !home.classList.contains('hidden'));
 const TUTORIAL_SEED = 0x7a11;
 const catalog = document.getElementById('catalog')!;
 
