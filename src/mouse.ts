@@ -1,34 +1,52 @@
 import { COLS, ROWS, type Game } from './core/game';
+import { getKicks } from './core/pieces';
 import type { Input } from './input';
 import { mouseOn } from './settings';
 import type { GestureView } from './gestures';
 
-/** Dónde caería la pieza activa: posición `x` (de su origen), giro y la puntuación de la heurística. */
+const WHEEL_STEP = 60;
+const WHEEL_COOLDOWN_MS = 120;
+
+/** Dónde acabará la pieza activa: posición `x` de su origen y giro (tras girar y desplazar de verdad) y su puntuación. */
 export interface Placement {
   x: number;
   rot: number;
   score: number;
 }
 
-/** Posición `x` que deja el centro de la pieza (con el giro `rot`) en la columna `col`, la más cercana libre en su fila. */
-function xFor(game: Game, col: number, rot: number): number | null {
+/**
+ * Lo que de verdad pasa al pedir `rot` y `x`: gira con las patadas del juego desde donde está y se desplaza por la fila
+ * donde queda, parándose en el primer bloqueo. Es la misma secuencia que `commitPlacement`, sin tocar la partida.
+ */
+function reach(game: Game, rot: number, x: number): { x: number; y: number; rot: number } {
   const a = game.active!;
-  const xs = a.def.shapes[rot].map((c) => c[0]);
-  const centre = (Math.min(...xs) + Math.max(...xs)) / 2;
-  const want = Math.round(col - centre);
-  for (let d = 0; d < COLS; d++) {
-    for (const x of d === 0 ? [want] : [want - d, want + d]) {
-      // el hueco más cercano al deseado que quepa en la altura actual; no se aleja más de lo que cabe
-      if (!game.collides(a.def, x, a.y, rot)) return x;
+  let cx = a.x;
+  let cy = a.y;
+  let cr = a.rot;
+  const diff = (rot - a.rot + 4) % 4;
+  if (diff !== 0 && a.def.kicks !== 'O') {
+    const kicks = getKicks(a.def.kicks, a.rot, rot);
+    for (const [kx, ky] of kicks) {
+      if (!game.collides(a.def, a.x + kx, a.y + ky, rot)) {
+        cx = a.x + kx;
+        cy = a.y + ky;
+        cr = rot;
+        break;
+      }
     }
   }
-  return null;
+  for (let i = 0; i < COLS && cx !== x; i++) {
+    const dx = Math.sign(x - cx);
+    if (game.collides(a.def, cx + dx, cy, cr)) break;
+    cx += dx;
+  }
+  return { x: cx, y: cy, rot: cr };
 }
 
 /** Puntúa soltar la pieza ahí: líneas completas suben; huecos nuevos y altura final bajan. */
-function evaluate(game: Game, x: number, rot: number): number {
+function evaluate(game: Game, x: number, y0: number, rot: number): number {
   const a = game.active!;
-  let y = a.y;
+  let y = y0;
   while (!game.collides(a.def, x, y + 1, rot)) y++;
   const cells = a.def.shapes[rot].map(([cx, cy]) => [x + cx, y + cy] as const);
   const mine = new Set(cells.map(([cx, cy]) => cy * COLS + cx));
@@ -54,8 +72,8 @@ function evaluate(game: Game, x: number, rot: number): number {
 }
 
 /**
- * Colocación para la columna `col`. Con `forcedRot` (el jugador giró a mano) solo mira ese giro;
- * si no, prueba los cuatro y se queda con el mejor.
+ * Colocación para la columna `col`: solo ofrece lo alcanzable (lo que se ve es donde acaba la pieza al hacer clic).
+ * Con `forcedRot` (el jugador giró a mano) solo mira ese giro; si no, prueba los cuatro y se queda con el mejor.
  */
 export function bestPlacement(game: Game, col: number, forcedRot: number | null): Placement | null {
   const a = game.active;
@@ -63,12 +81,32 @@ export function bestPlacement(game: Game, col: number, forcedRot: number | null)
   const rots = forcedRot !== null ? [forcedRot] : a.def.kicks === 'O' ? [a.rot] : [0, 1, 2, 3];
   let best: Placement | null = null;
   for (const rot of rots) {
-    const x = xFor(game, col, rot);
-    if (x === null) continue;
-    const score = evaluate(game, x, rot);
-    if (!best || score > best.score + 1e-9) best = { x, rot, score };
+    const xs = a.def.shapes[rot].map((c) => c[0]);
+    const want = Math.round(col - (Math.min(...xs) + Math.max(...xs)) / 2);
+    const end = reach(game, rot, want);
+    // un giro que no se pudo hacer no cuenta como ese giro
+    if (end.rot !== rot) continue;
+    const score = evaluate(game, end.x, end.y, end.rot);
+    if (!best || score > best.score + 1e-9) best = { x: end.x, rot: end.rot, score };
   }
   return best;
+}
+
+/** Gira hasta el giro pedido y desplaza hasta la columna: las mismas acciones que el teclado. */
+export function steer(game: Game, p: Placement) {
+  const a = game.active!;
+  const diff = (p.rot - a.rot + 4) % 4;
+  if (diff === 1) game.rotate(1);
+  else if (diff === 2) game.rotate(2);
+  else if (diff === 3) game.rotate(-1);
+  // las patadas del giro pueden haber movido la pieza: se lleva hasta la columna pedida
+  for (let i = 0; i < COLS && a.x !== p.x; i++) if (!game.move(Math.sign(p.x - a.x))) break;
+}
+
+/** Lleva la pieza a la colocación y la suelta. */
+export function commitPlacement(game: Game, p: Placement) {
+  steer(game, p);
+  game.hardDrop();
 }
 
 /**
@@ -81,6 +119,8 @@ export class Mouse {
   preview: Placement | null = null;
   private col: number | null = null;
   private manual: number | null = null;
+  private wheelAcc = 0;
+  private wheelAt = 0;
   private piece: unknown = null;
 
   constructor(el: HTMLElement, private game: Game, private input: Input, private view: GestureView, private geom: { boardX: () => number }) {
@@ -96,6 +136,8 @@ export class Mouse {
     this.col = null;
     this.manual = null;
     this.preview = null;
+    this.wheelAcc = 0;
+    this.piece = null;
   }
 
   private logical(e: MouseEvent) {
@@ -123,9 +165,9 @@ export class Mouse {
       this.preview = null;
       return;
     }
-    // pieza nueva: se olvida el giro manual
-    if (g.active.def !== this.piece) {
-      this.piece = g.active.def;
+    // pieza nueva (también tras guardar): se olvida el giro manual
+    if (g.active !== this.piece) {
+      this.piece = g.active;
       this.manual = null;
     }
     this.preview = bestPlacement(g, this.col, this.manual);
@@ -138,32 +180,28 @@ export class Mouse {
     if (e.button !== 0) return;
     if (this.inHold(e)) return this.input.touchDown('hold');
     this.update();
-    if (this.preview) this.commit(this.preview);
+    if (this.preview) {
+      commitPlacement(this.game, this.preview);
+      this.manual = null;
+    }
   }
 
   private wheel(e: WheelEvent) {
     if (!mouseOn.value || this.game.state !== 'playing' || this.col === null) return;
     e.preventDefault();
-    this.turn(e.deltaY > 0 ? 1 : -1);
+    // trackpad o inercia lanzan decenas de eventos: se suma y se gira una vez por umbral, con una pausa entre giros
+    this.wheelAcc += e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+    if (Math.abs(this.wheelAcc) < WHEEL_STEP) return;
+    const dir = this.wheelAcc > 0 ? 1 : -1;
+    this.wheelAcc = 0;
+    if (e.timeStamp - this.wheelAt < WHEEL_COOLDOWN_MS) return;
+    this.wheelAt = e.timeStamp;
+    this.turn(dir);
   }
 
   private turn(dir: 1 | -1) {
     const a = this.game.active;
     if (!a || a.def.kicks === 'O') return;
-    this.manual = ((this.preview?.rot ?? a.rot) + dir + 4) % 4;
-  }
-
-  /** Gira hasta el giro pedido, desplaza hasta la columna y suelta: las mismas acciones que el teclado. */
-  private commit(p: Placement) {
-    const g = this.game;
-    const a = g.active!;
-    const diff = (p.rot - a.rot + 4) % 4;
-    if (diff === 1) g.rotate(1);
-    else if (diff === 2) g.rotate(2);
-    else if (diff === 3) g.rotate(-1);
-    // las patadas del giro pueden haber movido la pieza: se lleva hasta la columna pedida
-    for (let i = 0; i < COLS && a.x !== p.x; i++) if (!g.move(Math.sign(p.x - a.x))) break;
-    g.hardDrop();
-    this.manual = null;
+    this.manual = ((this.manual ?? this.preview?.rot ?? a.rot) + dir + 4) % 4;
   }
 }

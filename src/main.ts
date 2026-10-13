@@ -195,6 +195,7 @@ function wireTouch() {
       game.togglePause();
       input.releaseAll();
       gestures?.reset();
+  mouse?.hide();
       setPaused(game.state === 'paused');
     }
   };
@@ -370,6 +371,7 @@ function leaveRun() {
   currentRun = null;
   input.releaseAll();
   gestures?.reset();
+  mouse?.hide();
   ui.setPaused(false);
   disarmQuit();
   showHome(true);
@@ -389,6 +391,7 @@ function resumeRun() {
   audio.init();
   input.releaseAll();
   gestures?.reset();
+  mouse?.hide();
   hitstop = 0;
   stepAcc = 0;
   renderer.reset();
@@ -460,6 +463,7 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   audio.startMusic();
   input.releaseAll();
   gestures?.reset();
+  mouse?.hide();
   hitstop = 0;
   stepAcc = 0;
   renderer.reset();
@@ -661,6 +665,7 @@ async function boot() {
     if (game.state === 'choosing' && !ui.isChoosing) {
       input.releaseAll();
       gestures?.reset();
+  mouse?.hide();
       ui.openPerks();
     }
     input.update(dt);
