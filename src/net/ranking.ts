@@ -77,16 +77,25 @@ async function call<T>(method: string, path: string, body?: unknown, auth = fals
     if (!p) throw new RankingError('Primero crea un apodo.', 401);
     headers.authorization = `Bearer ${p.token}`;
   }
-  let res: Response;
-  try {
-    res = await fetch(`${BASE}${path}`, {
+  const send = () =>
+    fetch(`${BASE}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
+  let res: Response;
+  try {
+    try {
+      res = await send();
+    } catch (e) {
+      // una lectura se repite una vez (redes con filtros o QUIC que fallan de vez en cuando); lo que escribe, no: podría duplicarse
+      if (method !== 'GET') throw e;
+      await new Promise((r) => setTimeout(r, 700));
+      res = await send();
+    }
   } catch {
-    throw new RankingError('No hay conexión con el servidor del ranking.');
+    throw new RankingError('No hay conexión con el servidor del ranking. Si estás en una red de colegio o empresa, puede estar filtrándolo.');
   }
   const data = (await res.json().catch(() => ({}))) as { error?: string } & T;
   if (!res.ok) {
