@@ -15,14 +15,17 @@ function releaseNotesHtml(): string {
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
   const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
   const releases: { version: string; date: string; items: string[] }[] = [];
-  for (const line of md.split('\n')) {
+  for (const line of md.split(/\r?\n/)) {
     const head = /^## (\d+\.\d+\.\d+) — (.+)$/.exec(line);
     if (head) releases.push({ version: head[1], date: head[2], items: [] });
     else if (/^## /.test(line)) releases.push({ version: '', date: '', items: [] }); // «Sin publicar» u otra sección: no sale
     else if (/^- /.test(line) && releases.length) releases[releases.length - 1].items.push(line.slice(2));
   }
   const shown = releases.filter((r) => r.version && r.items.length);
-  if (!shown.length) return '<p class="note">Todavía no hay versiones publicadas.</p>';
+  if (!shown.length) {
+    console.warn('[pilecrawl] CHANGELOG.md no tiene versiones publicadas reconocibles: la página de novedades saldría vacía.');
+    return '<p class="note">Todavía no hay versiones publicadas.</p>';
+  }
   return shown
     .map((r) => {
       const items = r.items.map((i) => `<li>${inline(i.replace(/\(#\d+\)\s*/g, ''))}</li>`).join('');
@@ -50,7 +53,7 @@ function publishing(env: Record<string, string>): Plugin {
     transformIndexHtml(html) {
       const mail = email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : '(correo de contacto sin configurar)';
       let out = html.replaceAll('{{OWNER}}', esc(owner)).replaceAll('{{EMAIL}}', mail).replaceAll('{{VERSION}}', pkg.version);
-      if (out.includes('{{NOVEDADES}}')) out = out.replaceAll('{{NOVEDADES}}', releaseNotesHtml());
+      if (out.includes('{{NOVEDADES}}')) out = out.replaceAll('{{NOVEDADES}}', () => releaseNotesHtml());
       return client ? out.replace('</head>', `  <meta name="google-adsense-account" content="${client}" />\n  </head>`) : out;
     },
     generateBundle() {
