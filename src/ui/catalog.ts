@@ -110,7 +110,7 @@ const SCORE_ITEMS: { name: string; lines: string[] }[] = [
 const SCORE_EXAMPLE = [
   'Sin mejoras, en nivel 2: un cuádruple da 800 × 2 = <b>1600</b>.',
   'Si el siguiente también es cuádruple, va con back-to-back: 800 × 2 × 1,5 = 2400, más el combo 50 × 1 × 2 = 100.',
-  'Total: <b>2500</b>.',
+  'El segundo cuádruple da <b>2500</b>.',
 ];
 
 function scoreItem(it: { name: string; lines: string[] }): string {

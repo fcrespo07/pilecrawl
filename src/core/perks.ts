@@ -201,7 +201,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
-    pros: () => ['El hard drop da <b>×3</b> puntos por fila que cae (en vez de 2)'],
+    pros: () => ['El hard drop da el <b>triple</b> de puntos por fila (6 en vez de 2)'],
     cons: () => ['Bajar con soft drop <b>ya no suma puntos</b>'],
     apply: (m) => { m.hardDropMult *= 3; m.softDropPoints = false; },
   },
@@ -333,13 +333,13 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
-    pros: () => ['Cualquier pieza cuenta como <b>giro</b> si no puede moverse a izquierda, derecha ni arriba, y puntúa como uno'],
+    pros: () => ['Cualquier pieza que no sea el cuadrado cuenta como <b>giro</b> si, tras girarla, no puede moverse a izquierda, derecha ni arriba, y puntúa como uno'],
     cons: () => ['Los cuádruples dan un <b>25% menos</b>'],
     apply: (m) => { m.allSpin = true; m.quadMult *= 0.75; },
   },
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
-    pros: () => ['Encadenar cuádruples o giros (back-to-back) sube <b>+1</b> el bonus por copia, de base ×1,5'],
+    pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
     cons: () => ['El bonus de combo es un <b>30% menor</b>'],
     apply: (m) => { m.b2bMult += 1; m.comboMult = Math.max(0, m.comboMult - 0.3); },
   },
