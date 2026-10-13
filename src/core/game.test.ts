@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { runReplay } from './replay';
-import { COLS, Game, HYPER_STOP_GRACE, GARBAGE_MIN_INTERVAL, ROWS, STEP_MS } from './game';
+import { COLS, Game, HYPER_STOP_GRACE, GARBAGE_MIN_INTERVAL, ROWS, SOFT_DROP_MS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
 import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
@@ -85,10 +85,10 @@ describe('fracción de caída (solo dibujo)', () => {
     expect(g.dropFraction()).toBeLessThan(1);
     g.update(STEP_MS * 0); // sin tiempo transcurrido, sin paso
     g.softDropping = true;
-    g.update(12); // medio paso de la caída rápida (25 ms por celda)
-    expect(g.dropFraction()).toBeCloseTo(12 / 25, 5);
+    g.update(SOFT_DROP_MS / 2); // medio paso de la caída rápida
+    expect(g.dropFraction()).toBeCloseTo(0.5, 5);
     // al dar el paso, la fracción vuelve a empezar: el dibujo sigue continuo
-    g.update(13);
+    g.update(SOFT_DROP_MS / 2 + 1);
     expect(g.active!.y).toBe(1);
     expect(g.dropFraction()).toBeLessThan(0.1);
   });

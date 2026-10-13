@@ -106,8 +106,11 @@ export const HYPER_STOP_GRACE = 36;
 /** Cada cuántos niveles se regala un reroll (al llegar al 5, 10, 15…). */
 export const REROLL_EVERY_LEVELS = 5;
 
+/** Ritmo de la caída rápida (flecha abajo), en ms por celda. Antes 25 (40 celdas por segundo); ahora 40 (25 por segundo). */
+export const SOFT_DROP_MS = 40;
+
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 11;
+export const RULES_VERSION = 12;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -612,7 +615,7 @@ export class Game {
     if (this.state !== 'playing' || !this.active) return;
     this.time += dt;
     let ms = this.gravityMs();
-    if (this.softDropping) ms = Math.min(ms, 25);
+    if (this.softDropping) ms = Math.min(ms, SOFT_DROP_MS);
     this.gravityAcc += dt;
     while (this.gravityAcc >= ms) {
       this.gravityAcc -= ms;
@@ -637,7 +640,7 @@ export class Game {
   dropFraction(): number {
     if (!this.active || this.onGround()) return 0;
     let ms = this.gravityMs();
-    if (this.softDropping) ms = Math.min(ms, 25);
+    if (this.softDropping) ms = Math.min(ms, SOFT_DROP_MS);
     return Math.min(1, this.gravityAcc / ms);
   }
 
