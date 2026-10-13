@@ -4,6 +4,8 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+- (#64) Las cartas de mejora ya no cortan el texto: la marca (única, copias o usos) pasa a la franja de la rareza, el icono de escritorio es más pequeño y, en móvil, la carta crece con su texto. Las reglas no cambian.
+
 ## 0.26.0 — 2026-10-13
 - (#63) Control con ratón en escritorio: la pieza cae en la columna del cursor, con una sugerencia de giro que se cambia con la rueda o el clic derecho; clic para soltar y clic en la reserva para guardar. Se puede apagar en Ajustes. Usa las acciones de siempre, así que las repeticiones y el ranking no cambian.
 
