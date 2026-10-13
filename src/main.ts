@@ -245,7 +245,7 @@ function showHome(show: boolean) {
 }
 
 /** Partida en curso: lo que hace falta para publicarla al acabar. */
-let currentRun: { mode: ModeId; date: string; runId?: string; startedAt: number; exp?: { owned: Owned; unlocked: string[] }; unranked?: string } | null = null;
+let currentRun: { mode: ModeId; date: string; runId?: string; startedAt: number; exp?: { owned: Owned; unlocked: string[] }; unranked?: string; noRank?: boolean } | null = null;
 let starting = false;
 
 function offerPublish() {
@@ -253,6 +253,7 @@ function offerPublish() {
   // las partidas del laboratorio nunca puntúan (el servidor también las rechaza)
   const rankedMode = r?.mode === 'normal' || r?.mode === 'daily' || r?.mode === 'timed';
   if (!net.RANKING_ENABLED || !r || !rankedMode || game.sandbox) return rankingUI.offerPublish(null);
+  if (r.noRank) return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? '') : rankingUI.offerPublish(null);
   if (r.mode !== 'daily' && !r.runId) {
     // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
     return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? 'Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
@@ -383,15 +384,25 @@ function resumeRun() {
   // se borra al reanudar: así no se puede recargar para deshacer una mala decisión
   clearSave();
   saved = null;
-  // el servidor da por caducada una partida con ranking a las 6 h de pedirla
-  const stale = run.runId !== undefined && Date.now() - run.startedAt > RUN_TTL_MS - 10 * 60_000;
+  // el servidor da por caducada una partida con ranking a las 6 h de pedirla (hasta el envío, no hasta reanudarla):
+  // con menos de 1 h de margen no daría tiempo a jugar y publicar
+  const stale = run.runId !== undefined && Date.now() - run.startedAt > RUN_TTL_MS - 3_600_000;
+  // y el diario solo admite hoy y ayer
+  const dayAge = (Date.parse(net.dailyDate()) - Date.parse(run.date)) / 86_400_000;
+  const oldDaily = modeOf(run) === 'daily' && !(dayAge <= 1);
+  const unranked = stale
+    ? 'Esta partida se guardó hace demasiado tiempo: el servidor ya no la admite en el ranking.'
+    : oldDaily
+      ? 'El desafío diario de esta partida ya pasó: no cuenta para el ranking.'
+      : undefined;
   currentRun = {
     mode: modeOf(run),
     date: run.date,
     runId: stale ? undefined : run.runId,
     startedAt: run.startedAt,
     exp: run.upgrades ? { owned: run.upgrades, unlocked: run.unlocked ?? [] } : undefined,
-    unranked: stale ? 'Esta partida se guardó hace demasiado tiempo: el servidor ya no la admite en el ranking.' : undefined,
+    unranked,
+    noRank: oldDaily,
   };
   renderResume('');
   audio.setIntensity(game.level);

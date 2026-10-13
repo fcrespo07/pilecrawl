@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
-- Pantalla de Ajustes (desde la portada y la pausa): volumen general, de música y de efectos, efectos de pantalla, teclas reasignables (hasta tres por acción, con aviso si chocan) y manejo (espera y repetición). En la pausa, «Guardar y salir» guarda la partida en el navegador y «Continuar partida» en la portada la retoma exactamente donde estaba; el guardado se borra al reanudar y se descarta con aviso si cambian las reglas. También hay «Salir sin guardar». No cambian las reglas ni las repeticiones (PR pendiente de número).
+- Pantalla de Ajustes (desde la portada y la pausa): volumen general, de música y de efectos, efectos de pantalla, teclas reasignables (hasta tres por acción, con aviso si chocan) y manejo (espera y repetición). En la pausa, «Guardar y salir» guarda la partida en el navegador y «Continuar partida» en la portada la retoma exactamente donde estaba; el guardado se borra al reanudar y se descarta con aviso si cambian las reglas. También hay «Salir sin guardar». No cambian las reglas ni las repeticiones (#48).
 
 ## 0.21.1 — 2026-10-13
 - Frenesí dejaba el fondo casi negro: la piel neón tenía un degradado oscurísimo y ni estrellas ni colinas, así que el lienzo y la página parecían rotos. Ahora el fondo es violeta, con la misma sustancia visual que el resto de pieles. Solo cambia el aspecto, no las reglas (#46).
