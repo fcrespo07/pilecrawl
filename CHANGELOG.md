@@ -4,6 +4,10 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.24.4 — 2026-10-13
+- Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos, y por debajo de 1080 px bajan debajo del botón Jugar.
+- Primera visita: en un navegador sin partidas guardadas, el tutorial aparece primero en la lista de modos y marcado. Tras empezar cualquier partida, la portada vuelve a la de siempre.
+
 ## 0.24.3 — 2026-10-13
 - (#52) Las hiperperks se ven de arcoíris que cambia por bloques de color: carta de oferta, nombre, indicador de la partida, lista de la pausa y catálogo. Cambia a ritmo lento (unos 2,5 cambios por segundo, por debajo del límite de destellos). Con movimiento reducido quedan con el morado de base y franjas fijas. Solo cambia el aspecto, no las reglas.
 
