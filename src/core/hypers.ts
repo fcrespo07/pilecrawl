@@ -32,7 +32,7 @@ export const HYPERS: HyperDef[] = [
   },
   {
     id: 'sand', name: 'Arena', charge: 14, durationMs: 5_000, skin: 'terminal',
-    pros: () => ['Durante <b>5 s</b>, cada bloque que fijas se escurre hasta el <b>hueco libre más bajo</b> de su columna', 'Tapa <b>agujeros</b> aunque estén cubiertos', 'La pantalla pasa a <b>fósforo verde</b>'],
+    pros: () => ['Durante <b>5 s</b>, cada bloque que fijas cae hasta el <b>hueco libre más bajo</b> de su columna', 'Rellena <b>agujeros tapados</b>: caen aunque haya bloques encima', 'La pantalla pasa a <b>fósforo verde</b>'],
   },
   {
     id: 'barrage', name: 'Bombardeo', charge: 12, durationMs: 8_000, skin: 'apagon',
@@ -44,7 +44,7 @@ export const HYPERS: HyperDef[] = [
   },
   {
     id: 'gravity', name: 'Gravedad', charge: 16, durationMs: 6_000, skin: 'magma',
-    pros: () => ['Durante <b>6 s</b>, al fijar cada pieza <b>todo el tablero se compacta</b>', 'Se tapan <b>todos los agujeros</b> y salen líneas solas', 'La pantalla pasa a <b>magma</b>'],
+    pros: () => ['Durante <b>6 s</b>, al fijar cada pieza <b>todo el tablero se compacta</b>', 'Los <b>huecos</b> se cierran y salen líneas solas', 'La pantalla pasa a <b>magma</b>'],
   },
   {
     id: 'shield', name: 'Escudo', charge: 14, durationMs: 10_000, skin: 'oro',

@@ -166,9 +166,9 @@ export const GRAVITY_MS = [
   0.005006840207751825, 0.0026917271023923135, 0.0014230588699773597, 0.0007396636587124455,
 ];
 
-const LINE_SCORES = [0, 100, 300, 500, 800];
-const SPIN_SCORES = [400, 800, 1200, 1600];
-const MINI_SCORES = [100, 200, 400, 600];
+export const LINE_SCORES = [0, 100, 300, 500, 800];
+export const SPIN_SCORES = [400, 800, 1200, 1600];
+export const MINI_SCORES = [100, 200, 400, 600];
 
 export class Game {
   events = new Emitter<GameEvents>();
