@@ -20,6 +20,8 @@ const TOP = 50;
 const STATS_MAX_ROWS = 200_000;
 /** Puestos que se enseñan por encima y por debajo del jugador. */
 const NEAR = 2;
+/** Claves de administrador falladas por IP y 10 minutos antes de bloquear. */
+const ADMIN_MAX_FAILS = 10;
 
 interface PlayerRow {
   id: string;
@@ -40,6 +42,8 @@ const safeEq = (a: string, b: string) => {
   const y = Buffer.from(b);
   return x.length === y.length && timingSafeEqual(x, y);
 };
+/** Compara por hash: tiempo constante también en la longitud (no revela cuánto mide la clave). */
+const safeEqHashed = (a: string, b: string) => timingSafeEqual(createHash('sha256').update(a).digest(), createHash('sha256').update(b).digest());
 
 /** Lunes (UTC) de la semana de una fecha AAAA-MM-DD. */
 export function weekStart(date: string): string {
@@ -66,7 +70,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const runLimit = new RateLimiter(60, 3_600_000);
   /** Revalidar cuesta CPU en un único hilo: tope global, aunque falle el límite por IP. */
   const revalidations = new RateLimiter(30, 60_000);
-  const adminFails = new RateLimiter(10, 600_000);
+  const adminFails = new RateLimiter(ADMIN_MAX_FAILS, 600_000);
   const renameLimit = new RateLimiter(3, 86_400_000);
   const recoverLimit = new RateLimiter(10, 600_000);
   // estadísticas anónimas: tope por IP y tope global (la IP no se guarda, solo cuenta en memoria)
@@ -176,10 +180,16 @@ export function createApp(cfg: Config, db: DatabaseSync) {
 
   const needAdmin = (req: Request, ip: string, now: number) => {
     if (!cfg.adminToken) throw new ApiError(404, 'no existe');
-    if (!adminFails.allow(`a:${ip}`, now)) throw new ApiError(429, 'demasiados intentos');
+    // solo cuentan los fallos: la página de admin hace varias peticiones válidas seguidas
+    if (adminFails.count(`a:${ip}`, now) >= ADMIN_MAX_FAILS) throw new ApiError(429, 'demasiados intentos');
     const m = /^Bearer (.+)$/.exec(req.headers.get('authorization') ?? '');
-    if (!m || !safeEq(m[1], cfg.adminToken)) throw new ApiError(401, 'sin permiso');
+    if (!m || !safeEqHashed(m[1], cfg.adminToken)) {
+      adminFails.allow(`a:${ip}`, now);
+      throw new ApiError(401, 'sin permiso');
+    }
   };
+  /** Registro de lo que hace el administrador (nunca códigos ni claves). */
+  const audit = (action: string, detail: string) => console.log(`[admin] ${new Date(cfg.now()).toISOString()} ${action} ${detail}`);
 
   function cleanNickname(raw: unknown): string {
     if (typeof raw !== 'string') throw new ApiError(400, 'apodo no válido');
@@ -436,7 +446,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       return new Response(gunzipSync(row.data), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=300' } });
     }
 
-    if (method === 'GET' && path === '/api/admin/players') {
+    if (method === 'GET' && path === '/api/admin/players' && !url.searchParams.has('q')) {
       needAdmin(req, ip, now);
       const nick = url.searchParams.get('nickname') ?? '';
       const row = db.prepare('SELECT id, nickname, hidden, best_level FROM players WHERE nickname = ?').get(nick);
@@ -444,11 +454,90 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       return json(row);
     }
 
+    // lista de puestos de una tabla con ids para moderar (incluye ocultos): ?mode=&scope=weekly|all|daily&date=&q=
+    if (method === 'GET' && path === '/api/admin/board') {
+      needAdmin(req, ip, now);
+      const mode = url.searchParams.get('mode') ?? 'normal';
+      if (!isRankedMode(mode)) throw new ApiError(400, 'modo no válido');
+      const kind = url.searchParams.get('scope') ?? (mode === 'daily' ? 'daily' : 'weekly');
+      const dateParam = url.searchParams.get('date') ?? today;
+      if (!isDate(dateParam)) throw new ApiError(400, 'fecha no válida');
+      let scope: string;
+      if (mode === 'daily') scope = `d:${dateParam}`;
+      else if (kind === 'weekly') scope = `w:${weekStart(dateParam)}`;
+      else if (kind === 'all') scope = 'all';
+      else throw new ApiError(400, 'ámbito no válido');
+      const like = `%${(url.searchParams.get('q') ?? '').replace(/[\\%_]/g, '\\$&')}%`;
+      const rows = db
+        .prepare(
+          `SELECT p.id AS playerId, p.nickname, p.hidden, b.score, b.level, b.lines, b.run_id AS runId
+           FROM bests b JOIN players p ON p.id = b.player_id
+           WHERE b.mode = ? AND b.scope = ? AND p.nickname LIKE ? ESCAPE '\\'
+           ORDER BY b.score DESC, b.run_id ASC LIMIT 200`,
+        )
+        .all(mode, scope, like);
+      return json({ mode, scope, entries: rows });
+    }
+
+    // buscar jugadores por parte del apodo: ?q=
+    if (method === 'GET' && path === '/api/admin/players' && url.searchParams.has('q')) {
+      needAdmin(req, ip, now);
+      const like = `%${(url.searchParams.get('q') ?? '').replace(/[\\%_]/g, '\\$&')}%`;
+      const rows = db
+        .prepare(
+          `SELECT p.id, p.nickname, p.hidden, p.best_level AS bestLevel, p.created_at AS createdAt,
+                  (SELECT COUNT(*) FROM runs r WHERE r.player_id = p.id) AS runs
+           FROM players p WHERE p.nickname LIKE ? ESCAPE '\\' ORDER BY p.nickname LIMIT 50`,
+        )
+        .all(like);
+      return json({ players: rows });
+    }
+
+    // partidas aceptadas de un jugador, de la más reciente a la más antigua
+    const runsMatch = /^\/api\/admin\/players\/([0-9a-f]{24})\/runs$/.exec(path);
+    if (method === 'GET' && runsMatch) {
+      needAdmin(req, ip, now);
+      const rows = db
+        .prepare(
+          `SELECT id, mode, period, score, level, lines, created_at AS createdAt,
+                  EXISTS (SELECT 1 FROM bests b WHERE b.run_id = runs.id) AS onBoard
+           FROM runs WHERE player_id = ? ORDER BY id DESC LIMIT 200`,
+        )
+        .all(runsMatch[1]);
+      return json({ runs: rows });
+    }
+
+    // borrar todas las puntuaciones de un jugador (conserva la cuenta y el apodo)
+    const scoresMatch = /^\/api\/admin\/players\/([0-9a-f]{24})\/scores$/.exec(path);
+    if (method === 'DELETE' && scoresMatch) {
+      needAdmin(req, ip, now);
+      const info = q.player.get(scoresMatch[1]) as unknown as PlayerRow | undefined;
+      if (!info) throw new ApiError(404, 'no existe');
+      const deleted = Number(db.prepare('DELETE FROM runs WHERE player_id = ?').run(scoresMatch[1]).changes); // arrastra mejores y repeticiones
+      db.prepare('UPDATE players SET best_level = 0 WHERE id = ?').run(scoresMatch[1]);
+      audit('borrar-puntuaciones', `jugador=${info.id} apodo=${info.nickname} partidas=${deleted}`);
+      return json({ deleted });
+    }
+
+    // Código de recuperación: solo se guarda su hash, así que no se puede leer; se genera uno nuevo
+    // (el anterior deja de valer en todos los navegadores) y se muestra una sola vez.
+    const recoveryMatch = /^\/api\/admin\/players\/([0-9a-f]{24})\/recovery$/.exec(path);
+    if (method === 'POST' && recoveryMatch) {
+      needAdmin(req, ip, now);
+      const info = q.player.get(recoveryMatch[1]) as unknown as PlayerRow | undefined;
+      if (!info) throw new ApiError(404, 'no existe');
+      const secret = randomBytes(24).toString('base64url');
+      q.setSecret.run(sha256(secret), info.id);
+      audit('codigo-nuevo', `jugador=${info.id} apodo=${info.nickname}`);
+      return json({ id: info.id, nickname: info.nickname, token: `${info.id}.${secret}` });
+    }
+
     const hideMatch = /^\/api\/admin\/players\/([0-9a-f]{24})\/hide$/.exec(path);
     if (method === 'POST' && hideMatch) {
       needAdmin(req, ip, now);
       const body = await readJson(req);
       q.setHidden.run(body.hidden === false ? 0 : 1, hideMatch[1]);
+      audit(body.hidden === false ? 'mostrar' : 'ocultar', `jugador=${hideMatch[1]}`);
       return json({ ok: true });
     }
 
@@ -473,6 +562,7 @@ export function createApp(cfg: Config, db: DatabaseSync) {
         db.exec('ROLLBACK');
         throw e;
       }
+      audit('borrar-partida', `partida=${id} jugador=${own.player_id} modo=${own.mode} periodo=${own.period}`);
       return json({ ok: true });
     }
 

@@ -244,6 +244,59 @@ describe('moderación', () => {
   }, 30_000); // juega hasta dos partidas completas: en CI, con los demás tests en paralelo, pasa de los 5 s
 });
 
+describe('administración', () => {
+  const ADMIN = 'admin-secret-token';
+
+  it('ninguna ruta de admin responde sin la clave, y los fallos se bloquean', async () => {
+    const { call, register } = setup();
+    const id = (await register('Fer')).split('.')[0];
+    const routes: [string, string][] = [
+      ['GET', '/api/admin/board'],
+      ['GET', '/api/admin/players?q=f'],
+      ['GET', `/api/admin/players/${id}/runs`],
+      ['DELETE', `/api/admin/players/${id}/scores`],
+      ['POST', `/api/admin/players/${id}/recovery`],
+      ['DELETE', '/api/admin/runs/1'],
+    ];
+    for (const [m, p] of routes) {
+      expect((await call(m, p)).status).toBe(401);
+    }
+    for (let i = 0; i < 12; i++) await call('GET', '/api/admin/board', undefined, 'mala');
+    // bloqueada la IP, ni la clave buena pasa
+    expect((await call('GET', '/api/admin/board', undefined, ADMIN)).status).toBe(429);
+  });
+
+  it('las peticiones correctas no gastan el límite', async () => {
+    const { call } = setup();
+    for (let i = 0; i < 30; i++) expect((await call('GET', '/api/admin/board', undefined, ADMIN)).status).toBe(200);
+  });
+
+  it('busca, genera un código nuevo que sustituye al anterior y borra todas las puntuaciones', async () => {
+    const { call, register } = setup();
+    const old = await register('Fer');
+    const id = old.split('.')[0];
+    const start = (await call('POST', '/api/runs/start', { mode: 'normal' }, old)).body;
+    const g = playHuman(start.seed, 400_000, 'normal', start.bestLevel);
+    expect((await call('POST', '/api/runs', { runId: start.runId, replay: g.replay() }, old)).status).toBe(200);
+
+    expect((await call('GET', '/api/admin/players?q=fe', undefined, ADMIN)).body.players[0].runs).toBe(1);
+    const board = (await call('GET', '/api/admin/board?mode=normal&scope=all', undefined, ADMIN)).body;
+    expect(board.entries).toHaveLength(1);
+    expect(board.entries[0].playerId).toBe(id);
+    expect((await call('GET', `/api/admin/players/${id}/runs`, undefined, ADMIN)).body.runs[0].onBoard).toBe(1);
+
+    const fresh = (await call('POST', `/api/admin/players/${id}/recovery`, undefined, ADMIN)).body;
+    expect(fresh.token).not.toBe(old);
+    expect((await call('GET', '/api/players/me', undefined, old)).status).toBe(401);
+    expect((await call('POST', '/api/players/recover', { code: fresh.token })).body.nickname).toBe('Fer');
+
+    expect((await call('DELETE', `/api/admin/players/${id}/scores`, undefined, ADMIN)).body.deleted).toBe(1);
+    expect((await call('GET', '/api/leaderboard?mode=normal&scope=all')).body.entries).toHaveLength(0);
+    expect((await call('GET', '/api/players/me', undefined, fresh.token)).status).toBe(200);
+    expect((await call('POST', '/api/admin/players/aaaaaaaaaaaaaaaaaaaaaaaa/recovery', undefined, ADMIN)).status).toBe(404);
+  }, 30_000);
+});
+
 describe('modos sin ranking', () => {
   it('rechaza modos que no son de arcade', async () => {
     const { call, register } = setup();

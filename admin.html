@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Administración · Pilecrawl</title>
+    <link rel="stylesheet" href="/src/legal.css" />
+    <style>
+      main { max-width: 1000px; }
+      table { border-collapse: collapse; width: 100%; font-size: 15px; margin: 8px 0 24px; }
+      th, td { text-align: right; padding: 3px 8px; border-bottom: 1px solid #2a3157; }
+      th:first-child, td:first-child, td.l, th.l { text-align: left; }
+      th { color: #9aa3c7; font-weight: normal; }
+      form, .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+      input, select, button { font: inherit; padding: 4px 8px; background: #1c2240; color: inherit; border: 1px solid #3a4375; border-radius: 4px; }
+      button { cursor: pointer; }
+      button.danger { border-color: #a04a4a; color: #ff8f8f; }
+      .neg { color: #ff8f8f; }
+      #err { color: #ff8f8f; }
+      #msg { color: #7fe0a0; }
+      #code { display: none; border: 1px solid #7fe0a0; padding: 10px 12px; border-radius: 6px; margin: 12px 0; }
+      #code code { display: block; word-break: break-all; font-size: 16px; margin: 6px 0; user-select: all; }
+      td.acts { white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Administración del ranking</h1>
+      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); se guarda solo en esta pestaña. <a href="/stats.html">Estadísticas</a></p>
+      <div class="row">
+        <input id="token" type="password" placeholder="Clave" autocomplete="off" />
+      </div>
+      <p id="err"></p>
+      <p id="msg"></p>
+      <div id="code">
+        <b id="code-who"></b>: código nuevo de recuperación (se muestra solo ahora; el anterior ya no vale).
+        <code id="code-val"></code>
+        <button id="code-copy" type="button">Copiar</button> <button id="code-close" type="button">Cerrar</button>
+      </div>
+
+      <h2>Tabla</h2>
+      <form id="board-f">
+        <select id="mode"></select>
+        <select id="scope"><option value="weekly">Semanal</option><option value="all">Siempre</option></select>
+        <input id="date" type="date" title="Día (o semana que lo contiene)" />
+        <input id="bq" placeholder="Filtrar por apodo" />
+        <button>Ver</button>
+      </form>
+      <div id="board"></div>
+
+      <h2>Jugadores</h2>
+      <form id="players-f">
+        <input id="pq" placeholder="Buscar apodo" />
+        <button>Buscar</button>
+      </form>
+      <div id="players"></div>
+      <div id="runs"></div>
+    </main>
+    <script type="module" src="/src/adminpage.ts"></script>
+  </body>
+</html>

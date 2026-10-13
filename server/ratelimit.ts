@@ -16,6 +16,12 @@ export class RateLimiter {
     return h.n <= this.max;
   }
 
+  /** Cuántas peticiones lleva la clave en la ventana actual, sin contar una nueva. */
+  count(key: string, now: number): number {
+    const h = this.hits.get(key);
+    return h && now < h.reset ? h.n : 0;
+  }
+
   private sweep(now: number) {
     for (const [k, h] of this.hits) if (now >= h.reset) this.hits.delete(k);
   }

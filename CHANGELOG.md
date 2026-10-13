@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- Administración del ranking en `/admin.html` (con `ADMIN_TOKEN`): ver cada tabla, borrar una puntuación o todas las de un jugador, ocultar jugadores y generar un código de recuperación nuevo para quien perdió el suyo (el anterior deja de valer; el código no se puede leer porque solo se guarda su hash). Acciones registradas en el log del servidor. La clave se compara por hash y solo los intentos fallidos cuentan para el bloqueo por IP.
 
 ## 0.24.4 — 2026-10-13
 - Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos, y por debajo de 1080 px bajan debajo del botón Jugar.
