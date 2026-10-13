@@ -10,3 +10,11 @@ kbd { background: #1c2240; border: 1px solid #3a4375; border-radius: 4px; paddin
 .note { color: #9aa3c7; font-size: 15px; }
 
 h1 .logo { width: 40px; height: 40px; vertical-align: middle; margin-right: 10px; image-rendering: pixelated; }
+
+.btn { display: inline-block; background: #1c2240; border: 2px solid #8fd1ff; border-radius: 4px; padding: 10px 16px; color: #fff; text-decoration: none; }
+.btn:hover { background: #26305a; }
+.release { margin-top: 28px; }
+.release h2 { margin: 0 0 4px; }
+.release ul { padding-left: 22px; margin: 6px 0; }
+.release li { margin: 6px 0; }
+code { background: #1c2240; border-radius: 3px; padding: 0 4px; font-size: 16px; }
