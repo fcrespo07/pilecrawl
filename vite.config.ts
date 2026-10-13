@@ -7,6 +7,31 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const ADSENSE_CLIENT = /^ca-pub-\d{10,20}$/;
 
 /**
+ * Página de novedades: las versiones publicadas de CHANGELOG.md (de la más nueva a la más antigua).
+ * La sección «Sin publicar» no sale. Se quita el número de PR, que a un jugador no le dice nada.
+ */
+function releaseNotesHtml(): string {
+  const md = readFileSync(new URL('./CHANGELOG.md', import.meta.url), 'utf8');
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+  const inline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const releases: { version: string; date: string; items: string[] }[] = [];
+  for (const line of md.split('\n')) {
+    const head = /^## (\d+\.\d+\.\d+) — (.+)$/.exec(line);
+    if (head) releases.push({ version: head[1], date: head[2], items: [] });
+    else if (/^## /.test(line)) releases.push({ version: '', date: '', items: [] }); // «Sin publicar» u otra sección: no sale
+    else if (/^- /.test(line) && releases.length) releases[releases.length - 1].items.push(line.slice(2));
+  }
+  const shown = releases.filter((r) => r.version && r.items.length);
+  if (!shown.length) return '<p class="note">Todavía no hay versiones publicadas.</p>';
+  return shown
+    .map((r) => {
+      const items = r.items.map((i) => `<li>${inline(i.replace(/\(#\d+\)\s*/g, ''))}</li>`).join('');
+      return `<section class="release"><h2>${esc(r.version)} <span class="note">${esc(r.date)}</span></h2><ul>${items}</ul></section>`;
+    })
+    .join('\n');
+}
+
+/**
  * Cosas de publicación que dependen de variables del build (VITE_*), sin identificadores en el código:
  * - `ads.txt` con la línea de AdSense (si hay VITE_AD_CLIENT válido);
  * - la etiqueta `google-adsense-account` en todas las páginas (sirve para verificar el sitio sin cargar el script);
@@ -24,7 +49,8 @@ function publishing(env: Record<string, string>): Plugin {
     name: 'pilecrawl-publishing',
     transformIndexHtml(html) {
       const mail = email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : '(correo de contacto sin configurar)';
-      const out = html.replaceAll('{{OWNER}}', esc(owner)).replaceAll('{{EMAIL}}', mail);
+      let out = html.replaceAll('{{OWNER}}', esc(owner)).replaceAll('{{EMAIL}}', mail).replaceAll('{{VERSION}}', pkg.version);
+      if (out.includes('{{NOVEDADES}}')) out = out.replaceAll('{{NOVEDADES}}', releaseNotesHtml());
       return client ? out.replace('</head>', `  <meta name="google-adsense-account" content="${client}" />\n  </head>`) : out;
     },
     generateBundle() {
@@ -46,6 +72,8 @@ export default defineConfig(({ mode }) => ({
         acerca: resolve(__dirname, 'acerca.html'),
         stats: resolve(__dirname, 'stats.html'),
         admin: resolve(__dirname, 'admin.html'),
+        novedades: resolve(__dirname, 'novedades.html'),
+        reportar: resolve(__dirname, 'reportar.html'),
       },
     },
   },

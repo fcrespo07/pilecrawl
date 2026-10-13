@@ -1,0 +1,50 @@
+name: Reportar un fallo
+description: Algo se rompe o no hace lo que debería
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. No pegues tu código de recuperación del ranking ni datos personales: este informe es público.
+  - type: input
+    id: version
+    attributes:
+      label: Versión del juego
+      description: Está en el pie de la portada.
+    validations:
+      required: true
+  - type: input
+    id: navegador
+    attributes:
+      label: Navegador
+      placeholder: Chrome 130
+    validations:
+      required: true
+  - type: input
+    id: dispositivo
+    attributes:
+      label: Dispositivo y sistema
+      placeholder: Windows, portátil / Android, móvil
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Qué hiciste
+      description: Los pasos exactos para que pase.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué esperabas que pasara
+    validations:
+      required: true
+  - type: textarea
+    id: real
+    attributes:
+      label: Qué pasó
+      description: Describe el fallo. Una captura o un vídeo ayudan mucho.
+    validations:
+      required: true
