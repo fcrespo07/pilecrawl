@@ -9,6 +9,7 @@ import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { perkName } from '../core/expedition';
 import { loadBest, submitScore } from '../records';
+import { keyName } from '../settings';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 /** Las maldiciones llevan su propio color y etiqueta en vez de la rareza. */
@@ -345,9 +346,9 @@ export class UI {
     const text = !h
       ? 'Sale con la racha'
       : active
-        ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s · ${window.matchMedia('(pointer: coarse)').matches ? 'tócala para cortar' : 'D corta'}`
+        ? `Activa · ${Math.ceil((g.hyperLeft * STEP_MS) / 1000)} s · ${window.matchMedia('(pointer: coarse)').matches ? 'tócala para cortar' : `${keyName('hyper')} corta`}`
         : ready
-          ? (window.matchMedia('(pointer: coarse)').matches ? 'Lista: tócala' : 'Lista: pulsa D')
+          ? (window.matchMedia('(pointer: coarse)').matches ? 'Lista: tócala' : `Lista: pulsa ${keyName('hyper')}`)
           : `${g.hyperCharge}/${h.charge} líneas`;
     const key = `${h?.id ?? ''}|${state}|${text}`;
     $('hyper-fill').style.transform = `scaleX(${meter})`;
