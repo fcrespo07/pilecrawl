@@ -5,7 +5,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.24.3 — 2026-10-13
-- Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos.
+- Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos, y por debajo de 1080 px bajan debajo del botón Jugar.
 - Primera visita: en un navegador sin partidas guardadas, el tutorial aparece primero en la lista de modos y marcado. Tras empezar cualquier partida, la portada vuelve a la de siempre.
 
 ## 0.24.2 — 2026-10-13

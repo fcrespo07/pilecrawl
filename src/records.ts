@@ -79,7 +79,8 @@ export function loadTutorialDone(): boolean {
 
 const PLAYED_KEY = 'blockrogue.played';
 /** Claves que solo existen si ya se ha jugado en este navegador (guardar, récords, diario, tutorial). */
-const PROGRESS_KEYS = [PLAYED_KEY, ...Object.values(BEST_KEY), DAILY_KEY, TUTORIAL_KEY, 'blockrogue.save'];
+/** Apodo del ranking (`net/ranking.ts`) y Expedición (`expedition.ts`) también cuentan como progreso. */
+const PROGRESS_KEYS = [PLAYED_KEY, ...Object.values(BEST_KEY), DAILY_KEY, TUTORIAL_KEY, 'blockrogue.save', 'blockrogue.player', 'blockrogue.exp'];
 
 /** Primera visita: nunca se ha empezado una partida en este navegador. Entonces la portada enseña el tutorial. */
 export function isFirstVisit(): boolean {
