@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.24.5 — 2026-10-13
+- (#54) La tarjeta de cada hiperperk (oferta y catálogo) cambia el morado del borde por un arcoíris en diagonal que se desliza. El resto (indicador de la partida, pausa, texto y relleno) conserva su color. Con movimiento reducido el arcoíris queda quieto. Solo cambia el aspecto, no las reglas.
+
 ## 0.24.4 — 2026-10-13
 - Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos, y por debajo de 1080 px bajan debajo del botón Jugar.
 - Primera visita: en un navegador sin partidas guardadas, el tutorial aparece primero en la lista de modos y marcado. Tras empezar cualquier partida, la portada vuelve a la de siempre.
