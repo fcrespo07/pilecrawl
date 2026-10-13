@@ -4,7 +4,10 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
-- El catálogo (botón «Catálogo y puntuación» de la portada) tiene una sección «Puntuación» con cómo suman las líneas, giros, combos, back-to-back, bonus, caídas, nivel y multiplicadores, y un ejemplo con cuentas. Se reescriben a lenguaje claro las descripciones de mejoras, maldiciones e hiperperks que no se entendían (mismos efectos y cifras; no cambia `RULES_VERSION`).
+
+## 0.24.7 — 2026-10-13
+- (#57) El catálogo (botón «Catálogo y puntuación» de la portada) tiene una sección «Puntuación» con cómo suman las líneas, giros, combos, back-to-back, bonus, caídas, nivel y multiplicadores, y un ejemplo con cuentas. Se reescriben a lenguaje claro las descripciones de mejoras, maldiciones e hiperperks que no se entendían (mismos efectos y cifras; no cambia `RULES_VERSION`).
+
 ## 0.24.6 — 2026-10-13
 - (#55) Administración del ranking en `/admin.html` (con `ADMIN_TOKEN`): ver cada tabla, borrar una puntuación o todas las de un jugador, ocultar jugadores y generar un código de recuperación nuevo para quien perdió el suyo (el anterior deja de valer; el código no se puede leer porque solo se guarda su hash). Acciones registradas en el log del servidor. La clave se compara por hash y solo los intentos fallidos cuentan para el bloqueo por IP. La página lleva una política de seguridad estricta y el servidor avisa si la clave mide menos de 24 caracteres.
 
