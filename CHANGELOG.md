@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.24.5 — 2026-10-13
 - (#54) La tarjeta de cada hiperperk (oferta y catálogo) cambia el morado del borde por un arcoíris en diagonal que se desliza. El resto (indicador de la partida, pausa, texto y relleno) conserva su color. Con movimiento reducido el arcoíris queda quieto. Solo cambia el aspecto, no las reglas.
 
 ## 0.24.4 — 2026-10-13
