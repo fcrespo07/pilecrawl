@@ -105,7 +105,7 @@ export const STEP_MS = 1000 / 120;
 export const HYPER_STOP_GRACE = 36;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 9;
+export const RULES_VERSION = 10;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -186,6 +186,8 @@ export class Game {
   combo = -1;
   comboGraceLeft = 0;
   b2b = false;
+  /** Limpiezas difíciles seguidas (cuádruples o giros), para el calor legendario. */
+  hardChain = 0;
   piecesLocked = 0;
   generated = 0;
   garbageCounter = 0;
@@ -274,6 +276,7 @@ export class Game {
     this.combo = -1;
     this.comboGraceLeft = 0;
     this.b2b = false;
+    this.hardChain = 0;
     this.piecesLocked = 0;
     this.generated = 0;
     this.garbageCounter = 0;
@@ -771,8 +774,10 @@ export class Game {
           b2bApplied = true;
         }
         this.b2b = true;
+        this.hardChain++;
       } else {
         this.b2b = false;
+        this.hardChain = 0;
       }
       this.combo++;
       this.comboGraceLeft = this.mods.comboGrace;
@@ -802,7 +807,7 @@ export class Game {
     if (cascade === 0 && !blast) {
       const fast = this.time - this.pieceStart < STREAK_FAST_MS;
       this.addStreak(streakGain(lines, spin !== null, this.combo, perfect, fast));
-      const gain = heatGain(lines, spin !== null, this.combo, b2bApplied, perfect);
+      const gain = heatGain(lines, spin !== null, this.combo, b2bApplied, perfect, this.hardChain);
       for (const k of Object.keys(gain) as (keyof Heat)[]) this.heat[k] = Math.min(HEAT_MAX, this.heat[k] + gain[k]);
     }
     this.addLines(lines);

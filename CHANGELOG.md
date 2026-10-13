@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.22.0 — 2026-10-13
+- **Segunda vida** sale bastante menos: pesa un cuarto que el resto de legendarias dentro de su rareza y, cuando es la única desbloqueada (primeras partidas), la rareza legendaria entera sale un cuarto de veces. Los **combos pesan mucho más en la rareza de las ofertas**: un cuádruple o giro suma 10 de calor legendario aunque sea el primero y 50 de calor épico (antes 40); los seguidos (back-to-back) suman 30, 50, 70 y 90 de calor legendario según la cadena; los combos desde el tercer paso suman 6 por paso. Los multiplicadores a calor lleno suben (épica ×5, legendaria ×15) y el calor legendario baja más despacio (1 por pieza). `RULES_VERSION` sube a 10 (#47).
+
 ## 0.21.1 — 2026-10-13
 - Frenesí dejaba el fondo casi negro: la piel neón tenía un degradado oscurísimo y ni estrellas ni colinas, así que el lienzo y la página parecían rotos. Ahora el fondo es violeta, con la misma sustancia visual que el resto de pieles. Solo cambia el aspecto, no las reglas (#46).
 

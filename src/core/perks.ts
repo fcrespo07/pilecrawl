@@ -126,6 +126,8 @@ export interface PerkDef {
   apply: (m: Mods, g: Game) => void;
   /** Nivel de mejor marca para que salga; por defecto el de su rareza (`UNLOCK_LEVEL`). */
   unlock?: number;
+  /** Peso al sacar cartas dentro de su rareza (1 por defecto); menos de 1 la hace salir menos que sus hermanas. */
+  weight?: number;
   /** Maldición: solo sale en las ofertas malditas y no tiene ventaja (sus efectos van en `cons`). */
   curse?: boolean;
 }
@@ -143,7 +145,7 @@ export type Heat = Record<Exclude<Rarity, 'common'>, number>;
 export const NO_HEAT: Heat = { rare: 0, epic: 0, legendary: 0 };
 export const HEAT_MAX = 100;
 /** Cuánto multiplica el peso a calor lleno: ×(1 + K). */
-export const HEAT_BOOST: Heat = { rare: 1.2, epic: 3, legendary: 7 };
+export const HEAT_BOOST: Heat = { rare: 1.2, epic: 4, legendary: 14 };
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: 'Común',
   rare: 'Rara',
@@ -379,7 +381,7 @@ export const PERKS: PerkDef[] = [
   },
   // ───────── Legendarias ─────────
   {
-    id: 'life', name: 'Segunda vida', rarity: 'legendary', max: 2, unlock: 0, // la red de seguridad no se bloquea a quien empieza
+    id: 'life', name: 'Segunda vida', rarity: 'legendary', max: 2, unlock: 0, weight: 0.25, // la red de seguridad no se bloquea a quien empieza
     pros: () => ['<b>+1 vida</b>: al perder se vacía el tablero y sigues'],
     cons: () => ['<b>−15%</b> a toda la puntuación'],
     apply: (m, g) => { g.lives += 1; m.scoreMult *= 0.85; },
@@ -512,18 +514,27 @@ export function rollPerks(
 const RARITIES: Rarity[] = ['common', 'rare', 'epic', 'legendary'];
 
 /** Peso de una rareza en una oferta, con la suerte de Trébol y el calor de los combos. */
-function rarityWeight(r: Rarity, luck: number, heat: Heat): number {
-  const base = OFFER_WEIGHT[r];
+function rarityWeight(r: Rarity, luck: number, heat: Heat, cards: PerkDef[]): number {
+  // si las cartas disponibles de la rareza pesan menos que una normal (p. ej. solo Segunda vida), la rareza sale menos
+  const base = OFFER_WEIGHT[r] * Math.min(1, cards.reduce((t, p) => t + (p.weight ?? 1), 0));
   if (r === 'common') return base;
   const lucky = 1 + luck * (r === 'rare' ? 0.35 : r === 'epic' ? 0.7 : 1);
   return base * lucky * (1 + (HEAT_BOOST[r] * Math.max(0, Math.min(HEAT_MAX, heat[r]))) / HEAT_MAX);
 }
 
-/** Saca `n` cartas distintas de `pool` sin reponer, con igual probabilidad. */
+/** Saca `n` cartas distintas de `pool` sin reponer, con la probabilidad de su `weight` (1 por defecto). */
 function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] {
   const left = [...pool];
   const out: PerkDef[] = [];
-  while (out.length < n && left.length) out.push(left.splice(Math.floor(rand() * left.length), 1)[0]);
+  while (out.length < n && left.length) {
+    let x = rand() * left.reduce((t, p) => t + (p.weight ?? 1), 0);
+    let i = 0;
+    for (; i < left.length - 1; i++) {
+      x -= left[i].weight ?? 1;
+      if (x < 0) break;
+    }
+    out.push(left.splice(i, 1)[0]);
+  }
   return out;
 }
 
@@ -533,7 +544,7 @@ function offerRarities(owned: Map<string, number>, luck: number, bestLevel: numb
   const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
   let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
   if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
-  const weights = rarities.map((r) => rarityWeight(r, luck, heat));
+  const weights = rarities.map((r) => rarityWeight(r, luck, heat, byRarity(r)));
   return { rarities, weights, byRarity };
 }
 
