@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.24.9 — 2026-10-13
 - (#58) Dos páginas nuevas, enlazadas desde el pie de la portada y desde privacidad y acerca. «Novedades» (`/novedades.html`) recoge los cambios de cada versión y se genera sola del registro de cambios. «Reportar un bug» (`/reportar.html`) explica cómo avisar de un fallo y abre el formulario de GitHub con la versión y el navegador ya puestos; el formulario nuevo es `.github/ISSUE_TEMPLATE/bug_report.yml`. No cambian las reglas.
 
 ## 0.24.8 — 2026-10-13
