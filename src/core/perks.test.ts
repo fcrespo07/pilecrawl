@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { baseMods } from './perks';
+import { heatGain } from './streak';
 import { CURSES, isUnlocked, NO_HEAT, offerOdds, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
 import { makeRng } from './rng';
 import { Game } from './game';
@@ -80,6 +81,30 @@ describe('probabilidades de rareza', () => {
     }
     const legHot = offerOdds(new Map(), 0, Infinity, false, new Set(), { ...NO_HEAT, legendary: 100 });
     expect(legHot.legendary).toBeGreaterThan(0.28);
+  });
+
+  it('cuádruples seguidos hacen mucho más probable una legendaria', () => {
+    let heat = { ...NO_HEAT };
+    const odds: number[] = [];
+    for (let chain = 1; chain <= 3; chain++) {
+      const g = heatGain(4, false, chain - 1, chain > 1, false, chain);
+      heat = { rare: heat.rare + g.rare, epic: heat.epic + g.epic, legendary: Math.min(100, heat.legendary + g.legendary) };
+      odds.push(offerOdds(new Map(), 0, Infinity, false, new Set(), heat).legendary);
+    }
+    expect(odds[1]).toBeGreaterThan(odds[0] * 2);
+    expect(odds[2]).toBeGreaterThan(0.25);
+  });
+
+  it('Segunda vida sale mucho menos que sus hermanas legendarias', () => {
+    const r = makeRng(11);
+    let life = 0, quake = 0;
+    for (let i = 0; i < 4000; i++) {
+      const ids = rollOffer(new Map(), 0, 3, Infinity, r, false, new Set(), { ...NO_HEAT, legendary: 100 }).map((p) => p.id);
+      if (ids.includes('life')) life++;
+      if (ids.includes('quake')) quake++;
+    }
+    expect(life).toBeGreaterThan(0);
+    expect(life).toBeLessThan(quake * 0.4);
   });
 
   it('Segunda vida es legendaria pero no se bloquea a quien empieza', () => {

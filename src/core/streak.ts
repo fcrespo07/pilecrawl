@@ -41,20 +41,25 @@ export function streakGain(lines: number, spin: boolean, combo: number, perfect:
 // Calor por rareza: cada tipo de jugada calienta una rareza distinta y la hace más probable en la
 // siguiente oferta (multiplica su peso, ver `HEAT_BOOST` en perks.ts). Baja con cada pieza fijada.
 /** Lo que baja el calor de cada rareza por pieza. */
-export const HEAT_DECAY = { rare: 2, epic: 2, legendary: 1.5 };
+export const HEAT_DECAY = { rare: 2, epic: 2, legendary: 1 };
 /** Raras: dobles y triples, y cada paso de combo. */
 export const HEAT_RARE_LINES = [0, 0, 18, 30, 30];
 export const HEAT_RARE_COMBO = 5;
 /** Épicas: cuádruples y giros. */
-export const HEAT_EPIC_QUAD = 40;
+export const HEAT_EPIC_QUAD = 50;
 export const HEAT_EPIC_SPIN = 30;
 /** Legendarias: back-to-back, combos largos (desde el cuarto paso) y limpiar todo el tablero. */
-export const HEAT_LEG_B2B = 25;
-export const HEAT_LEG_COMBO = 8;
+export const HEAT_LEG_B2B = 30;
+/** Cada limpieza difícil seguida de la cadena (cuádruples o giros) suma más que la anterior, hasta `HEAT_LEG_CHAIN_CAP`. */
+export const HEAT_LEG_CHAIN = 20;
+export const HEAT_LEG_CHAIN_CAP = 5;
+/** Un cuádruple o un giro ya calienta algo la legendaria, aunque sea el primero. */
+export const HEAT_LEG_HARD = 10;
+export const HEAT_LEG_COMBO = 10;
 export const HEAT_LEG_PERFECT = 100;
 
 /** Lo que suma una limpieza normal a cada calor. */
-export function heatGain(lines: number, spin: boolean, combo: number, b2b: boolean, perfect: boolean) {
+export function heatGain(lines: number, spin: boolean, combo: number, b2b: boolean, perfect: boolean, chain = b2b ? 2 : 1) {
   if (lines <= 0) return { rare: 0, epic: 0, legendary: 0 };
   let rare = HEAT_RARE_LINES[Math.min(lines, 4)];
   if (combo > 0) rare += HEAT_RARE_COMBO * Math.min(combo, STREAK_COMBO_CAP);
@@ -62,8 +67,9 @@ export function heatGain(lines: number, spin: boolean, combo: number, b2b: boole
   if (lines >= 4) epic += HEAT_EPIC_QUAD;
   if (spin) epic += HEAT_EPIC_SPIN;
   let legendary = 0;
-  if (b2b) legendary += HEAT_LEG_B2B;
-  if (combo >= 4) legendary += HEAT_LEG_COMBO * (Math.min(combo, 8) - 3);
+  if (lines >= 4 || spin) legendary += HEAT_LEG_HARD;
+  if (b2b) legendary += HEAT_LEG_B2B + HEAT_LEG_CHAIN * (Math.min(Math.max(chain, 2), HEAT_LEG_CHAIN_CAP) - 2);
+  if (combo >= 3) legendary += HEAT_LEG_COMBO * (Math.min(combo, 8) - 2);
   if (perfect) legendary += HEAT_LEG_PERFECT;
   return { rare, epic, legendary };
 }

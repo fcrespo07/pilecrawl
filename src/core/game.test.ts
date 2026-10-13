@@ -403,7 +403,7 @@ describe('racha', () => {
     setActive(quad, PIECES.I, -2, 0, 1);
     quad.hardDrop();
     expect(quad.heat.epic).toBeGreaterThan(0);
-    expect(quad.heat.legendary).toBe(0);
+    expect(quad.heat.legendary).toBe(10); // un cuádruple suelto solo calienta un poco la legendaria
     const b2b = playing();
     b2b.b2b = true;
     for (let y = ROWS - 4; y < ROWS; y++) for (let x = 1; x < COLS; x++) b2b.board[y][x] = PIECES.T.id;
