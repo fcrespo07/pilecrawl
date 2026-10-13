@@ -631,6 +631,14 @@ export class Game {
     }
   }
 
+  /** Parte de celda que la pieza lleva caída hacia la siguiente. Solo para dibujar: la simulación no la usa. */
+  dropFraction(): number {
+    if (!this.active || this.onGround()) return 0;
+    let ms = this.gravityMs();
+    if (this.softDropping) ms = Math.min(ms, 25);
+    return Math.min(1, this.gravityAcc / ms);
+  }
+
   lockProgress(): number {
     if (!this.active || !this.onGround()) return 0;
     return Math.min(1, this.lockTimer / this.mods.lockDelay);

@@ -76,6 +76,35 @@ describe('niveles y gravedad', () => {
   });
 });
 
+describe('fracción de caída (solo dibujo)', () => {
+  it('es 0 sin pieza o con la pieza apoyada, y entre 0 y 1 mientras cae', () => {
+    const g = playing();
+    g.softDropping = false;
+    setActive(g, PIECES.T, 4, 0);
+    expect(g.dropFraction()).toBeGreaterThanOrEqual(0);
+    expect(g.dropFraction()).toBeLessThan(1);
+    g.update(STEP_MS * 0); // sin tiempo transcurrido, sin paso
+    g.softDropping = true;
+    g.update(12); // medio paso de la caída rápida (25 ms por celda)
+    expect(g.dropFraction()).toBeCloseTo(12 / 25, 5);
+    // al dar el paso, la fracción vuelve a empezar: el dibujo sigue continuo
+    g.update(13);
+    expect(g.active!.y).toBe(1);
+    expect(g.dropFraction()).toBeLessThan(0.1);
+  });
+
+  it('no cambia la simulación: misma altura tras leer la fracción', () => {
+    const g = playing();
+    setActive(g, PIECES.O, 4, 0);
+    g.softDropping = true;
+    g.update(10);
+    const y = g.active!.y;
+    const acc = g.dropFraction();
+    expect(acc).toBeGreaterThan(0);
+    expect(g.active!.y).toBe(y);
+  });
+});
+
 describe('colocación y líneas', () => {
   it('una I horizontal completa la fila de abajo y la limpia', () => {
     const g = playing();

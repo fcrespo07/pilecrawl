@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.24.8 — 2026-10-13
+- (#56) Al acabar la partida, Espacio, Enter y el botón de reintentar no arrancan otra hasta 0,8 s sin pulsar (cada pulsación alarga la espera), así que aporrear la tecla no encadena partidas. La caída rápida con la flecha abajo se dibuja entre celdas: se ve bajar, no teletransportarse. La caída normal también baja sin escalones. Una pulsación ignorada atenúa el botón «Otra partida» un momento. Solo cambia el dibujo; las reglas y las repeticiones no cambian.
+
 ## 0.24.7 — 2026-10-13
 - (#57) El catálogo (botón «Catálogo y puntuación» de la portada) tiene una sección «Puntuación» con cómo suman las líneas, giros, combos, back-to-back, bonus, caídas, nivel y multiplicadores, y un ejemplo con cuentas. Se reescriben a lenguaje claro las descripciones de mejoras, maldiciones e hiperperks que no se entendían (mismos efectos y cifras; no cambia `RULES_VERSION`).
 

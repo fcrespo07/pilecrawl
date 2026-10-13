@@ -993,11 +993,13 @@ export class Renderer {
       this.snapPiece = false;
     }
     const k = 1 - Math.exp(-sec * 45);
+    // la caída se dibuja con la fracción de celda que lleva: con la flecha abajo se ve bajar, no saltar
+    const targetY = a.y + g.dropFraction();
     this.visX += (a.x - this.visX) * k;
-    this.visY += (a.y - this.visY) * k;
+    this.visY += (targetY - this.visY) * (g.softDropping ? 1 : k);
     if (Math.abs(a.x - this.visX) > 3 || Math.abs(a.y - this.visY) > 4) {
       this.visX = a.x;
-      this.visY = a.y;
+      this.visY = targetY;
     }
 
     const shape = a.def.shapes[a.rot];

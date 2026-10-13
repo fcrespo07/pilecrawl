@@ -1387,3 +1387,7 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .card.r-hyper .card-front::before, .cat-item.r-hyper::before { animation: none; }
 }
+
+#retry-btn.locked {
+  opacity: 0.45;
+}
