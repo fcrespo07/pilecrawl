@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.25.3 — 2026-10-13
+- (#62) La caída rápida con la flecha abajo baja a 25 celdas por segundo (antes 40), así que se ve bajar en vez de teletransportarse. La caída normal no cambia. Como la velocidad de la caída rápida forma parte de la partida, `RULES_VERSION` pasa a 12: las repeticiones anteriores dejan de valer para el ranking.
+
 ## 0.25.1 — 2026-10-13
 - [interno] (#61) El repositorio pasa a llamarse pilecrawl: la imagen de los manifiestos de k8s (`ghcr.io/fcrespo07/pilecrawl`), el enlace de reportar bugs y las guías de despliegue usan el nombre nuevo.
 

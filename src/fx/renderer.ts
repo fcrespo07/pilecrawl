@@ -993,8 +993,8 @@ export class Renderer {
       this.snapPiece = false;
     }
     const k = 1 - Math.exp(-sec * 45);
-    // la caída se dibuja con la fracción de celda que lleva: con la flecha abajo se ve bajar, no saltar
-    const targetY = a.y + g.dropFraction();
+    // con la flecha abajo la pieza se dibuja con la fracción de celda que lleva: se ve bajar, no saltar
+    const targetY = a.y + (g.softDropping ? g.dropFraction() : 0);
     this.visX += (a.x - this.visX) * k;
     this.visY += (targetY - this.visY) * (g.softDropping ? 1 : k);
     if (Math.abs(a.x - this.visX) > 3 || Math.abs(a.y - this.visY) > 4) {
