@@ -2,8 +2,9 @@ import './style.css';
 import './storage';
 import { Game, RULES_VERSION, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
-import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, setLayout } from './fx/layout';
+import { BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, setLayout } from './fx/layout';
 import { Gestures } from './gestures';
+import { Mouse } from './mouse';
 import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
 import { dailySeed, MODES, msToNextDaily, type ModeId } from './core/modes';
@@ -186,6 +187,7 @@ function wireAudioAndFeel() {
 
 /** Pausa y hiperperk táctiles: reutilizan la misma lógica que su tecla. El resto va por gestos sobre el tablero. */
 let gestures: Gestures | null = null;
+let mouse: Mouse | null = null;
 
 function wireTouch() {
   const togglePause = () => {
@@ -208,13 +210,16 @@ function wireTouch() {
     e.preventDefault();
     input.touchDown('hyper');
   });
-  gestures = new Gestures(canvas, game, input, {
+  const view = {
     rect: () => canvas.getBoundingClientRect(),
     logicalW: () => W,
     cell: () => CELL,
     // la reserva y un poco de margen alrededor
     holdBox: () => ({ x: HOLD_X - 12, y: HOLD_Y - 12, w: HOLD_W + 24, h: (PORTRAIT ? BOARD_Y - HOLD_Y : 140) + 12 }),
-  });
+  };
+  gestures = new Gestures(canvas, game, input, view);
+  // el ratón solo en escritorio: en táctil mandan los gestos
+  mouse = new Mouse(canvas, game, input, view, { boardX: () => BOARD_X });
 }
 
 const home = document.getElementById('home')!;
@@ -548,7 +553,10 @@ function onKeyDown(e: KeyboardEvent) {
     return;
   }
 
-  if (st === 'playing' && input.keyDown(e)) e.preventDefault();
+  if (st === 'playing' && input.keyDown(e)) {
+    mouse?.hide();
+    e.preventDefault();
+  }
 }
 
 async function boot() {
@@ -656,6 +664,8 @@ async function boot() {
       ui.openPerks();
     }
     input.update(dt);
+    mouse?.update();
+    renderer.preview = mouse?.preview ?? null;
     if (hitstop > 0) hitstop -= dt;
     else {
       // la partida avanza a paso fijo para que se pueda rejugar igual en cualquier equipo

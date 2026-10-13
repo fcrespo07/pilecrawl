@@ -49,6 +49,16 @@ export const ARR_RANGE = { min: 0, max: 80, step: 5 };
 
 const KEYS_KEY = 'blockrogue.keys';
 const HANDLING_KEY = 'blockrogue.handling';
+const MOUSE_KEY = 'blockrogue.mouse';
+
+/** Control con ratón en escritorio (objeto vivo; activado por defecto). */
+export const mouseOn = { value: true };
+
+export function setMouse(on: boolean) {
+  mouseOn.value = on;
+  write(MOUSE_KEY, on);
+}
+
 
 const copy = (k: Readonly<Keymap>): Keymap => Object.fromEntries(ACTIONS.map((a) => [a, [...k[a]]])) as Keymap;
 
@@ -95,6 +105,7 @@ export function loadSettings() {
     }
   }
   for (const a of ACTIONS) keymap[a] = next[a];
+  mouseOn.value = read(MOUSE_KEY) !== false;
   const h = read(HANDLING_KEY) as Partial<Handling> | null;
   handling.das = clampTo(h?.das, DAS_RANGE, DEFAULT_HANDLING.das);
   handling.arr = clampTo(h?.arr, ARR_RANGE, DEFAULT_HANDLING.arr);
