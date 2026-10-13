@@ -99,7 +99,10 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     insertRun: db.prepare(
       'INSERT INTO runs (player_id, mode, period, seed, version, score, level, lines, steps, hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     ),
-    getBest: db.prepare('SELECT score FROM bests WHERE player_id = ? AND mode = ? AND scope = ?'),
+    // las tablas solo cuentan partidas con las reglas actuales: subir `RULES_VERSION` las deja a cero sin borrar nada
+    getBest: db.prepare(
+      `SELECT b.score FROM bests b JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION} WHERE b.player_id = ? AND b.mode = ? AND b.scope = ?`,
+    ),
     upsertBest: db.prepare(
       `INSERT INTO bests (player_id, mode, scope, score, level, lines, run_id) VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (player_id, mode, scope) DO UPDATE SET score = excluded.score, level = excluded.level, lines = excluded.lines, run_id = excluded.run_id`,
@@ -118,22 +121,27 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     top: db.prepare(
       `SELECT p.nickname, b.score, b.level, b.lines, b.run_id, p.id AS player_id
        FROM bests b JOIN players p ON p.id = b.player_id
+       JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION}
        WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0
        ORDER BY b.score DESC, b.run_id ASC LIMIT ?`,
     ),
     slice: db.prepare(
       `SELECT p.nickname, b.score, b.level, b.lines, b.run_id, p.id AS player_id
        FROM bests b JOIN players p ON p.id = b.player_id
+       JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION}
        WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0
        ORDER BY b.score DESC, b.run_id ASC LIMIT ? OFFSET ?`,
     ),
-    mine: db.prepare('SELECT score, level, lines, run_id FROM bests WHERE player_id = ? AND mode = ? AND scope = ?'),
+    mine: db.prepare(
+      `SELECT b.score, b.level, b.lines, b.run_id FROM bests b JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION} WHERE b.player_id = ? AND b.mode = ? AND b.scope = ?`,
+    ),
     above: db.prepare(
       `SELECT COUNT(*) AS n FROM bests b JOIN players p ON p.id = b.player_id
+       JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION}
        WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0 AND (b.score > ? OR (b.score = ? AND b.run_id < ?))`,
     ),
     total: db.prepare(
-      'SELECT COUNT(*) AS n FROM bests b JOIN players p ON p.id = b.player_id WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0',
+      `SELECT COUNT(*) AS n FROM bests b JOIN players p ON p.id = b.player_id JOIN runs r ON r.id = b.run_id AND r.version = ${RULES_VERSION} WHERE b.mode = ? AND b.scope = ? AND p.hidden = 0`,
     ),
     dupHash: db.prepare('SELECT 1 FROM runs WHERE mode = ? AND period = ? AND hash = ? LIMIT 1'),
     replayInfo: db.prepare('SELECT r.mode, r.period FROM runs r WHERE r.id = ?'),
