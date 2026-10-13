@@ -49,7 +49,7 @@ openssl rand -hex 32                            # pégalo como admin-token
 
 | Variable | Qué hace | Por defecto en la imagen |
 |---|---|---|
-| `ADMIN_TOKEN` | Clave para ocultar jugadores, borrar partidas y generar códigos de recuperación (página `/admin.html`). Vacía: moderación desactivada. | (Secret) |
+| `ADMIN_TOKEN` | Clave para ocultar jugadores, borrar partidas y generar códigos de recuperación (página `/admin.html`, con CSP estricta). Genérala larga: `openssl rand -base64 32`; el servidor avisa al arrancar si mide menos de 24 caracteres. Sin `trust-proxy: cloudflare` todos comparten IP y diez fallos de cualquiera bloquean el admin 10 minutos. Vacía: moderación desactivada. | (Secret) |
 | `NICK_BLOCKLIST` | Palabras prohibidas en apodos, separadas por comas. | vacía: ponla tú |
 | `CORS_ORIGINS` | Solo si el juego se sirve desde otro dominio. | vacía |
 | `TRUST_PROXY` | De dónde sale la IP del cliente para los límites: `cloudflare` (Cloudflare Tunnel, usa `CF-Connecting-IP`), `proxy` (un solo proxy delante, p. ej. Traefik: último valor de `X-Forwarded-For`) o `none` (la del socket). | `none` |
