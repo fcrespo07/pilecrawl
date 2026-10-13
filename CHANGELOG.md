@@ -1,6 +1,6 @@
 # Registro de cambios
 
-Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
+Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
 
@@ -14,7 +14,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 - (#57) El catálogo (botón «Catálogo y puntuación» de la portada) tiene una sección «Puntuación» con cómo suman las líneas, giros, combos, back-to-back, bonus, caídas, nivel y multiplicadores, y un ejemplo con cuentas. Se reescriben a lenguaje claro las descripciones de mejoras, maldiciones e hiperperks que no se entendían (mismos efectos y cifras; no cambia `RULES_VERSION`).
 
 ## 0.24.6 — 2026-10-13
-- (#55) Administración del ranking en `/admin.html` (con `ADMIN_TOKEN`): ver cada tabla, borrar una puntuación o todas las de un jugador, ocultar jugadores y generar un código de recuperación nuevo para quien perdió el suyo (el anterior deja de valer; el código no se puede leer porque solo se guarda su hash). Acciones registradas en el log del servidor. La clave se compara por hash y solo los intentos fallidos cuentan para el bloqueo por IP. La página lleva una política de seguridad estricta y el servidor avisa si la clave mide menos de 24 caracteres.
+- [interno] (#55) Administración del ranking en `/admin.html` (con `ADMIN_TOKEN`): ver cada tabla, borrar una puntuación o todas las de un jugador, ocultar jugadores y generar un código de recuperación nuevo para quien perdió el suyo (el anterior deja de valer; el código no se puede leer porque solo se guarda su hash). Acciones registradas en el log del servidor. La clave se compara por hash y solo los intentos fallidos cuentan para el bloqueo por IP. La página lleva una política de seguridad estricta y el servidor avisa si la clave mide menos de 24 caracteres.
 
 ## 0.24.5 — 2026-10-13
 - (#54) La tarjeta de cada hiperperk (oferta y catálogo) cambia el morado del borde por un arcoíris en diagonal que se desliza. El resto (indicador de la partida, pausa, texto y relleno) conserva su color. Con movimiento reducido el arcoíris queda quieto. Solo cambia el aspecto, no las reglas.
@@ -51,10 +51,10 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 - Arcade más loco y con legendarias de verdad. Las legendarias salían en menos de 1 de cada 200 ofertas (el peso iba por carta y había 24 comunes por 3 legendarias, además de pedir el nivel 7); ahora el peso va por rareza (común 52, rara 30, épica 13, legendaria 5) y epicas/legendarias se desbloquean en los niveles 3 y 5. Los combos influyen mucho más: un calor por rareza que suben jugadas distintas (dobles, triples y combos → rara; cuádruples y giros → épica; back-to-back, combos largos y tablero limpio → legendaria), visible en el panel de racha. Segunda vida pasa a legendaria (máx. 2) pero sigue disponible desde la primera partida. Tres legendarias nuevas: Furia, Eco y Casino. Abanico ahora suma +1 carta en vez de fijar 4; Casino no recorta las ofertas de hiperperk. Sube `RULES_VERSION` a 8 (#43).
 
 ## 0.19.9 — 2026-10-11
-- Estadísticas anónimas de partidas para equilibrar con datos reales: al acabar o abandonar una partida el cliente envía un resumen sin identificadores (`POST /api/stats`), con casilla para apagarlas en la página de privacidad; el responsable las lee en `/stats.html` o en `/api/admin/stats` con `ADMIN_TOKEN`. El juego emite un evento `offer` nuevo (solo informa, sin cambio de reglas) (#45).
+- [interno] Estadísticas anónimas de partidas para equilibrar con datos reales: al acabar o abandonar una partida el cliente envía un resumen sin identificadores (`POST /api/stats`), con casilla para apagarlas en la página de privacidad; el responsable las lee en `/stats.html` o en `/api/admin/stats` con `ADMIN_TOKEN`. El juego emite un evento `offer` nuevo (solo informa, sin cambio de reglas) (#45).
 
 ## 0.19.8 — 2026-10-11
-- Cada PR despliega una vista previa del cliente en Cloudflare Pages (sin ranking ni anuncios) y comenta la URL; la guía incluye el aviso de caídas con `/api/health` (#44).
+- [interno] Cada PR despliega una vista previa del cliente en Cloudflare Pages (sin ranking ni anuncios) y comenta la URL; la guía incluye el aviso de caídas con `/api/health` (#44).
 
 ## 0.19.7 — 2026-10-11
 - La versión que sirve la página también aparece en el menú de pausa, además del pie de la portada, para saber qué build tienes delante (#41).
@@ -69,13 +69,13 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 - El logo (la criatura sobre la pila) sale en la portada, sobre el título, y en las cabeceras de las páginas de privacidad y contacto. Al compartir el enlace se ve con una imagen de vista previa (`og:image`) (#37).
 
 ## 0.19.4 — 2026-10-11
-- Despliegue: actualización automática en la Pi. `k8s/updater.yaml` añade un CronJob que cada 5 minutos mira el digest de la imagen `latest` en GHCR (la que ya construye el workflow `Imagen`) y reinicia el juego si cambió; si la imagen nueva no arranca en 5 minutos, vuelve a la última buena y no la repite; solo conexiones de salida, sin secretos (#36).
+- [interno] Despliegue: actualización automática en la Pi. `k8s/updater.yaml` añade un CronJob que cada 5 minutos mira el digest de la imagen `latest` en GHCR (la que ya construye el workflow `Imagen`) y reinicia el juego si cambió; si la imagen nueva no arranca en 5 minutos, vuelve a la última buena y no la repite; solo conexiones de salida, sin secretos (#36).
 
 ## 0.19.3 — 2026-10-11
 - Logo y favicon de Pilecrawl: una criatura sobre una pila de bloques, en píxel art (SVG, PNG y apple-touch-icon), como icono de la pestaña (portada y páginas de privacidad y contacto) (#35).
 
 ## 0.19.2 — 2026-10-11
-- Anuncios: la web trae sus páginas de privacidad y de contacto (`/privacidad.html`, `/acerca.html`, con enlaces en el pie de la portada), `ads.txt` y la etiqueta de verificación de AdSense se generan solos en el build desde las variables, y con `VITE_AD_CONSENT=none` el enlace «Preferencias de anuncios» reabre el mensaje de consentimiento de Google. Variables nuevas: `VITE_CONTACT_EMAIL`, `VITE_SITE_OWNER` (#34).
+- [interno] Anuncios: la web trae sus páginas de privacidad y de contacto (`/privacidad.html`, `/acerca.html`, con enlaces en el pie de la portada), `ads.txt` y la etiqueta de verificación de AdSense se generan solos en el build desde las variables, y con `VITE_AD_CONSENT=none` el enlace «Preferencias de anuncios» reabre el mensaje de consentimiento de Google. Variables nuevas: `VITE_CONTACT_EMAIL`, `VITE_SITE_OWNER` (#34).
 
 ## 0.19.1 — 2026-10-11
 - La Expedición se marca como **beta** (etiqueta en el botón de la portada, en su tarjeta y en su pantalla): costes, fragmentos y retos están sin equilibrar (#33).
@@ -97,10 +97,10 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 - **Móvil en vertical y con gestos**: en el móvil de pie el juego pasa a una disposición vertical centrada en el tablero (marcador arriba, reserva y siguientes sobre el tablero, hiperperk y racha debajo; las cartas se apilan). Los botones táctiles se sustituyen por gestos: arrastrar mueve, tocar gira, deslizar hacia arriba guarda, un tirón rápido hacia abajo suelta y arrastrar despacio baja; quedan el botón de pausa y la tarjeta Hiper. En horizontal sigue como antes (#28).
 
 ## 0.15.1 — 2026-10-10
-- Despliegue: el namespace se crea antes de la configuración (si no, `kubectl apply -f k8s/config.yaml` fallaba) y el Ingress de Traefik pasa a ser opcional (`k8s/ingress.example.yaml`), porque la vía recomendada es Cloudflare Tunnel. Nueva guía para que un agente despliegue por ti (#27).
+- [interno] Despliegue: el namespace se crea antes de la configuración (si no, `kubectl apply -f k8s/config.yaml` fallaba) y el Ingress de Traefik pasa a ser opcional (`k8s/ingress.example.yaml`), porque la vía recomendada es Cloudflare Tunnel. Nueva guía para que un agente despliegue por ti (#27).
 
 ## 0.15.0 — 2026-10-10
-- **Ranking en línea y despliegue**: servidor propio (`server/`, Node 22 + SQLite) que vuelve a jugar cada repetición con el motor del juego y calcula él la puntuación (desafío diario con semilla del día; partida libre y contrarreloj con semilla del servidor, de un solo uso). Tablas diaria, semanal y de siempre; apodo anónimo y borrado de datos; moderación por clave. En el juego: botón «Rankings» en la portada y «Publicar puntuación» al acabar (solo con `VITE_RANKING=1`). Imagen Docker arm64, manifiestos para k3s (`k8s/`), workflow de imagen y guías en `docs/` (despliegue en la Raspberry, anuncios). Adaptador de anuncios AdSense sin identificadores en el código y con aviso de consentimiento propio (#26).
+- [interno] **Ranking en línea y despliegue**: servidor propio (`server/`, Node 22 + SQLite) que vuelve a jugar cada repetición con el motor del juego y calcula él la puntuación (desafío diario con semilla del día; partida libre y contrarreloj con semilla del servidor, de un solo uso). Tablas diaria, semanal y de siempre; apodo anónimo y borrado de datos; moderación por clave. En el juego: botón «Rankings» en la portada y «Publicar puntuación» al acabar (solo con `VITE_RANKING=1`). Imagen Docker arm64, manifiestos para k3s (`k8s/`), workflow de imagen y guías en `docs/` (despliegue en la Raspberry, anuncios). Adaptador de anuncios AdSense sin identificadores en el código y con aviso de consentimiento propio (#26).
 
 ## 0.14.1 — 2026-10-10
 - Nuevo nombre: **Pilecrawl** (antes Block Rogue). Cambian títulos, portada, paquete y textos de los scripts. Las claves guardadas no cambian, así que los récords, ajustes y el reto diario se conservan (#25).

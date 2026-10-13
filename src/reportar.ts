@@ -30,5 +30,5 @@ const params = new URLSearchParams({
   navegador,
   dispositivo,
 });
-link.href = `https://github.com/fcrespo07/tetris-roguelite/issues/new?${params.toString()}`;
+link.href = `${__REPO_URL__}/issues/new?${params.toString()}`;
 info.textContent = `El formulario llevará: versión ${version}, navegador ${navegador}, sistema ${dispositivo}.`;
