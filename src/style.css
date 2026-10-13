@@ -1138,6 +1138,13 @@ body.tutorial #perk-list .empty { display: none; }
 .cat-item .fx li { font-size: 15px; }
 .cat-lock { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
 .cat-exp { color: var(--hot); }
+.cat-item.r-score { --c: var(--ink); }
+.cat-item.r-score .b-name { color: var(--c); }
+.score-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.score-list li { position: relative; padding-left: 14px; font-size: 15px; line-height: 1.3; color: var(--muted); }
+.score-list li::before { content: '▸'; position: absolute; left: 0; color: var(--c); }
+.score-list b { color: var(--ink); font-weight: 400; }
+.cat-example { grid-column: 1 / -1; }
 
 .lab-badge {
   position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 20;
