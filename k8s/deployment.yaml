@@ -24,8 +24,8 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: blockrogue
-          # cambia el nombre si renombras el repositorio (ver docs/despliegue.md)
-          image: ghcr.io/fcrespo07/tetris-roguelite:latest
+          # debe coincidir con el paquete que publica el workflow Imagen (ghcr.io/<usuario>/<repo>)
+          image: ghcr.io/fcrespo07/pilecrawl:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8787

@@ -7,7 +7,7 @@ const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 
 const ADSENSE_CLIENT = /^ca-pub-\d{10,20}$/;
 
 /** Repositorio público: enlace del formulario de bugs. Cambiar VITE_REPO_URL si se renombra. */
-const REPO_URL_DEFAULT = 'https://github.com/fcrespo07/tetris-roguelite';
+const REPO_URL_DEFAULT = 'https://github.com/fcrespo07/pilecrawl';
 
 /**
  * Página de novedades: las versiones publicadas de CHANGELOG.md (de la más nueva a la más antigua).

@@ -4,8 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
-## 0.25.1 — 2026-10-13
+## 0.25.2 — 2026-10-13
 - [interno] (#60) Las estadísticas anónimas pasan a la pestaña «Estadísticas» de `/admin.html`, con gráficas (partidas por día, nivel en el que acaban, cómo acaban por modo, elección de cada carta y diferencia de nivel) dibujadas a mano en SVG, sin librerías ni nada de fuera. `/stats.html` redirige a la página de administración. Las tablas siguen disponibles en un desplegable.
+
+## 0.25.1 — 2026-10-13
+- [interno] (#61) El repositorio pasa a llamarse pilecrawl: la imagen de los manifiestos de k8s (`ghcr.io/fcrespo07/pilecrawl`), el enlace de reportar bugs y las guías de despliegue usan el nombre nuevo.
 
 ## 0.25.0 — 2026-10-13
 - (#59) Equilibrio de rarezas (RULES_VERSION 11: las partidas guardadas con reglas viejas se descartan y el ranking empieza de cero: el servidor solo cuenta partidas con las reglas actuales, sin borrar nada). Respiro, Dominó y Barra corta pasan a rara; Dique da 3 piezas por copia (antes 4); Martillo suma +2 al multiplicador por copia (×3, ×5, ×7; antes se multiplicaba y llegaba a ×27); Codicia llega a 3 copias (antes 5); Fiebre del oro da +150 × nivel por bloque (antes 300) y llega a 3 copias; Cruz es épica con líneas ×5 (antes ×3); Fuego cruzado ya no recorta los combos; Coleccionista suma +8% por mejora (antes +6%); Furia baja la racha 1,5× más rápido (antes 2×); Terremoto adelanta la basura 2 piezas (antes 3). Además, reroll gratis al llegar a los niveles 5, 10, 15… (se suma a Dados, Cosecha y Casino).

@@ -62,8 +62,8 @@ spec:
             seccompProfile: { type: RuntimeDefault }
           containers:
             - name: updater
-              # la misma imagen que el juego (lleva updater.mjs); cambia el nombre si renombras el repositorio
-              image: ghcr.io/fcrespo07/tetris-roguelite:latest
+              # la misma imagen que el juego (lleva updater.mjs)
+              image: ghcr.io/fcrespo07/pilecrawl:latest
               imagePullPolicy: Always
               command: ["node", "--disable-warning=ExperimentalWarning", "updater.mjs"]
               env:
