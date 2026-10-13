@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- Frenesí dejaba el fondo casi negro: la piel neón tenía un degradado oscurísimo y ni estrellas ni colinas, así que el lienzo y la página parecían rotos. Ahora el fondo es violeta, con la misma sustancia visual que el resto de pieles. Solo cambia el aspecto, no las reglas.
 
 ## 0.21.0 — 2026-10-11
 - Las hiperperks con duración se pueden cortar: volver a pulsar D (o tocar la tarjeta Hiper) las termina al momento, sin devolver la carga (los primeros 0,3 s no cuentan, para evitar dobles toques). Tres hiperperks nuevas, cada una con su piel: **Diluvio** (todas las piezas son barras I, 10 s), **Gravedad** (el tablero se compacta al fijar cada pieza, 6 s) y **Escudo** (no puedes perder: si te desbordas se vacía el tablero salvo 5 filas, 10 s). `RULES_VERSION` sube a 8 (#42).
