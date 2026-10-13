@@ -228,12 +228,14 @@ describe('moderación', () => {
     const { call, register } = setup();
     const token = await register('Fer');
     const runs: { id: number; score: number }[] = [];
-    for (const seedHint of [1, 2]) {
+    // algunas semillas dan una partida que el bot no pierde nunca y el servidor rechaza por larga: se prueba con otra
+    for (let tries = 0; runs.length < 2 && tries < 8; tries++) {
       const start = (await call('POST', '/api/runs/start', { mode: 'normal' }, token)).body;
-      const g = playHuman(start.seed + seedHint * 0, 400_000, 'normal', start.bestLevel);
+      const g = playHuman(start.seed, 120_000, 'normal', start.bestLevel);
       const r = await call('POST', '/api/runs', { runId: start.runId, replay: g.replay() }, token);
-      runs.push({ id: r.body.runId, score: r.body.score });
+      if (r.status === 200) runs.push({ id: r.body.runId, score: r.body.score });
     }
+    expect(runs).toHaveLength(2);
     const best = runs.reduce((a, b) => (b.score > a.score ? b : a));
     const other = runs.find((r) => r !== best)!;
     expect((await call('DELETE', `/api/admin/runs/${best.id}`, undefined, 'admin-secret-token')).status).toBe(200);

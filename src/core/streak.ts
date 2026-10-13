@@ -55,7 +55,7 @@ export const HEAT_LEG_CHAIN = 20;
 export const HEAT_LEG_CHAIN_CAP = 5;
 /** Un cuádruple o un giro ya calienta algo la legendaria, aunque sea el primero. */
 export const HEAT_LEG_HARD = 10;
-export const HEAT_LEG_COMBO = 10;
+export const HEAT_LEG_COMBO = 6;
 export const HEAT_LEG_PERFECT = 100;
 
 /** Lo que suma una limpieza normal a cada calor. */

@@ -107,6 +107,12 @@ describe('probabilidades de rareza', () => {
     expect(life).toBeLessThan(quake * 0.4);
   });
 
+  it('con solo Segunda vida desbloqueada, la legendaria sale menos que con todas', () => {
+    const early = offerOdds(new Map(), 0, 0).legendary; // mejor nivel 0: solo Segunda vida
+    const full = offerOdds(new Map(), 0).legendary;
+    expect(early).toBeLessThan(full * 0.4);
+  });
+
   it('Segunda vida es legendaria pero no se bloquea a quien empieza', () => {
     expect(PERK_BY_ID.life.rarity).toBe('legendary');
     expect(isUnlocked(PERK_BY_ID.life, 0)).toBe(true);
