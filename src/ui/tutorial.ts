@@ -1,6 +1,7 @@
 // Entrenador del tutorial: una partida real del modo `tutorial` (ver `modes.ts`) con un cuadro de
 // consejos que avanza según lo que haces. No toca las reglas: solo escucha los eventos del juego.
 import { Game, TUTORIAL_HYPER_CHARGE, TUTORIAL_LINES } from '../core/game';
+import { keyLabels, type Action } from '../settings';
 
 interface Progress {
   moves: number;
@@ -32,15 +33,17 @@ interface Texts {
 }
 
 const kbd = (s: string) => `<kbd>${s}</kbd>`;
-const DESKTOP: Texts = {
-  move: 'con ' + kbd('←') + kbd('→'),
-  drop: kbd('Espacio'),
-  turn: kbd('↑') + ' o ' + kbd('X'),
-  turnBack: kbd('Z'),
-  hold: kbd('C'),
+const k = (a: Action, max = 1) => keyLabels(a, max).map(kbd).join(' o ') || kbd('–');
+/** Textos con las teclas que tenga el jugador ahora (se pueden cambiar en Ajustes). */
+const desktop = (): Texts => ({
+  move: 'con ' + kbd(keyLabels('left')[0] ?? '–') + kbd(keyLabels('right')[0] ?? '–'),
+  drop: k('hard'),
+  turn: k('cw', 2),
+  turnBack: k('ccw'),
+  hold: k('hold'),
   reroll: kbd('R'),
-  hyper: kbd('D'),
-};
+  hyper: k('hyper'),
+});
 const TOUCH: Texts = {
   move: 'arrastrando el dedo a los lados',
   drop: 'un tirón rápido hacia abajo (arrastrar despacio la baja poco a poco)',
@@ -70,7 +73,7 @@ const STEPS: Step[] = [
   {
     title: 'Líneas',
     text: (t, g) =>
-      `Completa filas para subir de nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>. Varias a la vez puntúan mucho más. ${t.hold === DESKTOP.hold ? `${t.hold} guarda una pieza en la reserva.` : t.hold}`,
+      `Completa filas para subir de nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>. Varias a la vez puntúan mucho más. ${t === TOUCH ? t.hold : `${t.hold} guarda una pieza en la reserva.`}`,
     done: (p) => p.levelups >= 1,
   },
   {
@@ -215,7 +218,7 @@ export class Tutorial {
         title = `${i + 1}/${STEPS.length} · ${extraOffer ? 'Mejoras' : STEPS[i].title}`;
         body = extraOffer
           ? 'Otro nivel, otra mejora: cada elección cambia lo que te conviene después.'
-          : STEPS[i].text(touch ? TOUCH : DESKTOP, g);
+          : STEPS[i].text(touch ? TOUCH : desktop(), g);
         actions = '<button type="button" class="coach-skip" data-coach="skip">Salir</button>';
       }
     }

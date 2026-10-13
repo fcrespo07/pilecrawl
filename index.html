@@ -42,9 +42,15 @@
               </header>
               <h2 id="h-arcade" class="home-mode-label">Arcade</h2>
               <div id="mode-select" class="mode-select"></div>
+              <div id="home-resume-box" class="resume-box" hidden>
+                <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text">Continuar partida</span></button>
+                <button id="home-resume-drop" class="rank-link" type="button">Descartar partida guardada</button>
+              </div>
+              <p id="home-save-note" class="home-note save-note" role="status" hidden></p>
               <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
               <button id="home-exp" class="home-btn ghost" type="button">Expedición<i class="new-tag">Beta</i></button>
               <button id="catalog-open" class="home-btn home-link ghost" type="button">Catálogo de mejoras</button>
+              <button id="settings-open-home" class="home-btn home-link ghost" type="button">Ajustes</button>
               <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
                    Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
               <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
@@ -92,17 +98,17 @@
         <section class="home-card" aria-labelledby="h-keys">
           <h2 id="h-keys">Controles</h2>
           <ul class="home-keys">
-            <li><span><kbd>←</kbd><kbd>→</kbd></span>mover</li>
-            <li><span><kbd>↓</kbd></span>bajar</li>
-            <li><span><kbd>Espacio</kbd></span>soltar</li>
-            <li><span><kbd>↑</kbd><kbd>X</kbd></span>girar</li>
-            <li><span><kbd>Z</kbd></span>girar al revés</li>
-            <li><span><kbd>A</kbd></span>180°</li>
-            <li><span><kbd>C</kbd></span>reserva</li>
-            <li><span><kbd>D</kbd></span>hiperperk</li>
+            <li><span data-keys="left right"></span>mover</li>
+            <li><span data-keys="down"></span>bajar</li>
+            <li><span data-keys="hard"></span>soltar</li>
+            <li><span data-keys="cw" data-max="2"></span>girar</li>
+            <li><span data-keys="ccw"></span>girar al revés</li>
+            <li><span data-keys="r180"></span>180°</li>
+            <li><span data-keys="hold"></span>reserva</li>
+            <li><span data-keys="hyper"></span>hiperperk</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
-          <p class="home-note">Ajustes en partida: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
+          <p class="home-note">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
         <footer class="home-foot">Pilecrawl · versión <span data-version></span> <a class="rank-link" href="/privacidad.html">Privacidad</a> · <a class="rank-link" href="/acerca.html">Contacto</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
@@ -171,7 +177,7 @@
         </section>
 
         <section class="panel p-hyper" id="hyper-box" data-state="none">
-          <header>Hiper <kbd>D</kbd></header>
+          <header>Hiper <kbd data-keys="hyper"></kbd></header>
           <div class="hy-row"><div id="hyper-ico" class="hy-ico"></div><div id="hyper-name" class="hy-name">Hiperperk</div></div>
           <div class="hy-bar"><i id="hyper-fill"></i></div>
           <div id="hyper-state" class="hy-state"></div>
@@ -186,14 +192,14 @@
         <section class="panel p-controls">
           <header>Controles</header>
           <ul class="keys">
-            <li><span><kbd>←</kbd><kbd>→</kbd></span>mover</li>
-            <li><span><kbd>↓</kbd></span>bajar</li>
-            <li><span><kbd>Espacio</kbd></span>soltar</li>
-            <li><span><kbd>↑</kbd><kbd>X</kbd></span>girar</li>
-            <li><span><kbd>Z</kbd></span>girar ↺</li>
-            <li><span><kbd>A</kbd></span>180°</li>
-            <li><span><kbd>C</kbd></span>hold</li>
-            <li><span><kbd>D</kbd></span>hiper</li>
+            <li><span data-keys="left right"></span>mover</li>
+            <li><span data-keys="down"></span>bajar</li>
+            <li><span data-keys="hard"></span>soltar</li>
+            <li><span data-keys="cw" data-max="2"></span>girar</li>
+            <li><span data-keys="ccw"></span>girar ↺</li>
+            <li><span data-keys="r180"></span>180°</li>
+            <li><span data-keys="hold"></span>hold</li>
+            <li><span data-keys="hyper"></span>hiper</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
           <ul class="keys toggles">
@@ -230,9 +236,14 @@
           <header>Tu build</header>
           <div id="build-list"></div>
         </div>
-        <button id="fx-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Efectos: sí</span><kbd>F</kbd></button>
-        <button id="lab-open" class="btn ghost small" type="button" hidden><span>Laboratorio</span></button>
-        <button id="resume-btn" class="btn ghost small touch-only" type="button"><span>Continuar</span></button>
+        <div class="pause-actions">
+          <button id="settings-open" class="btn ghost small" type="button"><span>Ajustes</span></button>
+          <button id="save-exit" class="btn ghost small" type="button"><span>Guardar y salir</span></button>
+          <button id="quit-btn" class="btn ghost small" type="button"><span>Salir sin guardar</span></button>
+          <button id="lab-open" class="btn ghost small" type="button" hidden><span>Laboratorio</span></button>
+          <button id="resume-btn" class="btn ghost small touch-only" type="button"><span>Continuar</span></button>
+        </div>
+        <p id="pause-msg" class="hint pause-msg" role="status" hidden></p>
         <p class="hint">Pulsa <kbd>Esc</kbd> para continuar</p>
         <p class="hint">Pilecrawl · versión <span data-version></span></p>
       </div>
@@ -319,6 +330,44 @@
         <p id="ranking-msg2" class="rank-msg" role="status"></p>
         <p class="rank-fine">Se guardan tu apodo, un identificador anónimo y tus partidas publicadas. Nada más.
           <a id="privacy-link" href="#" target="_blank" rel="noopener" hidden>Privacidad</a></p>
+      </div>
+    </div>
+    <!-- ═════════════ Ajustes (desde la portada y la pausa) ═════════════ -->
+    <div id="settings" class="rank-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+      <div class="rank-panel settings-panel">
+        <header>
+          <h2 id="settings-title">Ajustes</h2>
+          <button id="settings-close" class="rank-x" type="button" aria-label="Cerrar">X</button>
+        </header>
+
+        <section class="set-sec" aria-labelledby="set-sound">
+          <h3 id="set-sound">Sonido</h3>
+          <label class="set-row"><span>General</span><input id="vol-master" type="range" min="0" max="100" step="5" /><output id="vol-master-n"></output></label>
+          <label class="set-row"><span>Música</span><input id="vol-music" type="range" min="0" max="100" step="5" /><output id="vol-music-n"></output></label>
+          <label class="set-row"><span>Efectos</span><input id="vol-sfx" type="range" min="0" max="100" step="5" /><output id="vol-sfx-n"></output></label>
+          <div class="set-toggles">
+            <button id="set-music" class="btn ghost small" type="button" aria-pressed="true"><span>Música: sí</span><kbd>M</kbd></button>
+            <button id="set-mute" class="btn ghost small" type="button" aria-pressed="false"><span>Sonido: sí</span><kbd>N</kbd></button>
+          </div>
+        </section>
+
+        <section class="set-sec" aria-labelledby="set-screen">
+          <h3 id="set-screen">Pantalla</h3>
+          <div class="set-toggles">
+            <button id="fx-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Efectos: sí</span><kbd>F</kbd></button>
+          </div>
+        </section>
+
+        <section class="set-sec set-keys-sec" aria-labelledby="set-keys">
+          <h3 id="set-keys">Controles</h3>
+          <p class="set-hint">Elige un hueco y pulsa la tecla nueva. <kbd>Esc</kbd> cancela y <kbd>Supr</kbd> vacía el hueco. Si la tecla ya hacía otra cosa, se la quita.</p>
+          <div id="set-keylist" class="set-keylist"></div>
+          <p id="set-keymsg" class="set-hint set-keymsg" role="status"></p>
+          <label class="set-row"><span>Espera (DAS)</span><input id="set-das" type="range" /><output id="set-das-n"></output></label>
+          <label class="set-row"><span>Repetición (ARR)</span><input id="set-arr" type="range" /><output id="set-arr-n"></output></label>
+          <p class="set-hint">Espera: lo que tarda en repetirse el movimiento al mantener la tecla. Repetición: el tiempo entre pasos (0 es instantáneo).</p>
+          <button id="set-keys-reset" class="btn ghost small" type="button"><span>Restablecer controles</span></button>
+        </section>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

@@ -7,21 +7,35 @@ const noteInScale = (root: number, degree: number) =>
 
 const PREFS_KEY = 'blockrogue.audio';
 
+/** Volúmenes de 0 a 1 que elige el jugador; 1 es el nivel de siempre. */
+export interface Volumes {
+  master: number;
+  music: number;
+  sfx: number;
+}
+
+interface AudioPrefs extends Volumes {
+  muted: boolean;
+  musicOn: boolean;
+}
+
+const vol = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 1);
+
 /** Preferencias de sonido guardadas por el jugador. Sin almacenamiento disponible, valores por defecto. */
-function loadAudioPrefs(): { muted: boolean; musicOn: boolean } {
+function loadAudioPrefs(): AudioPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (raw) {
-      const p = JSON.parse(raw) as Partial<{ muted: boolean; musicOn: boolean }>;
-      return { muted: p.muted === true, musicOn: p.musicOn !== false };
+      const p = JSON.parse(raw) as Partial<AudioPrefs>;
+      return { muted: p.muted === true, musicOn: p.musicOn !== false, master: vol(p.master), music: vol(p.music), sfx: vol(p.sfx) };
     }
   } catch {
     /* sin almacenamiento o JSON roto: se usan los valores por defecto */
   }
-  return { muted: false, musicOn: true };
+  return { muted: false, musicOn: true, master: 1, music: 1, sfx: 1 };
 }
 
-function saveAudioPrefs(prefs: { muted: boolean; musicOn: boolean }) {
+function saveAudioPrefs(prefs: AudioPrefs) {
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {
@@ -39,6 +53,7 @@ export class SoundEngine {
   private noiseBuf!: AudioBuffer;
   musicOn: boolean;
   muted: boolean;
+  volumes: Volumes;
 
   // secuenciador
   private nextStepTime = 0;
@@ -51,6 +66,26 @@ export class SoundEngine {
     const prefs = loadAudioPrefs();
     this.muted = prefs.muted;
     this.musicOn = prefs.musicOn;
+    this.volumes = { master: prefs.master, music: prefs.music, sfx: prefs.sfx };
+  }
+
+  private save() {
+    saveAudioPrefs({ muted: this.muted, musicOn: this.musicOn, ...this.volumes });
+  }
+
+  /** Ganancias de cada bus según silencio, música y volúmenes. Los máximos son los niveles de siempre. */
+  private applyGains(tc = 0.05) {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    this.master.gain.setTargetAtTime(this.muted ? 0 : 0.8 * this.volumes.master, ctx.currentTime, tc);
+    this.sfxBus.gain.setTargetAtTime(0.9 * this.volumes.sfx, ctx.currentTime, tc);
+    this.musicBus.gain.setTargetAtTime(this.musicOn ? 0.32 * this.volumes.music : 0, ctx.currentTime, 0.1);
+  }
+
+  setVolume(kind: keyof Volumes, v: number) {
+    this.volumes[kind] = vol(v);
+    this.save();
+    this.applyGains();
   }
 
   init() {
@@ -65,13 +100,13 @@ export class SoundEngine {
     comp.ratio.value = 4;
     comp.connect(ctx.destination);
     this.master = ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.8;
+    this.master.gain.value = this.muted ? 0 : 0.8 * this.volumes.master;
     this.master.connect(comp);
     this.sfxBus = ctx.createGain();
-    this.sfxBus.gain.value = 0.9;
+    this.sfxBus.gain.value = 0.9 * this.volumes.sfx;
     this.sfxBus.connect(this.master);
     this.musicBus = ctx.createGain();
-    this.musicBus.gain.value = this.musicOn ? 0.32 : 0;
+    this.musicBus.gain.value = this.musicOn ? 0.32 * this.volumes.music : 0;
     this.musicBus.connect(this.master);
 
     // eco suave: uno para los efectos y otro para la música, que sale por su bus
@@ -103,14 +138,14 @@ export class SoundEngine {
 
   toggleMute() {
     this.muted = !this.muted;
-    saveAudioPrefs({ muted: this.muted, musicOn: this.musicOn });
-    if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.8, this.ctx.currentTime, 0.05);
+    this.save();
+    this.applyGains();
   }
 
   toggleMusic() {
     this.musicOn = !this.musicOn;
-    saveAudioPrefs({ muted: this.muted, musicOn: this.musicOn });
-    if (this.ctx) this.musicBus.gain.setTargetAtTime(this.musicOn ? 0.32 : 0, this.ctx.currentTime, 0.1);
+    this.save();
+    this.applyGains();
   }
 
   // ───────────── primitivas ─────────────

@@ -44,7 +44,7 @@ export function renderCatalog(root: HTMLElement) {
   const curses = section('Maldiciones', 'Solo salen en las ofertas malditas (desde el nivel 5): no tienen ventaja, y la oferta siguiente es rara o mejor.', CURSES.map(perkItem));
   const hypers = section(
     'Hiperperks',
-    'Habilidades activas, una por partida. Salen con la racha, seguras en el nivel 8. Se cargan limpiando líneas y se sueltan con D.',
+    'Habilidades activas, una por partida. Salen con la racha, seguras en el nivel 8. Se cargan limpiando líneas y se sueltan con su tecla (D por defecto).',
     HYPERS.map(
       (h) => `<article class="cat-item r-hyper">
         <div class="b-ico">${perkIcon(h.id)}</div>

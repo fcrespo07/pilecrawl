@@ -65,6 +65,13 @@ export class StatsCollector {
     this.open = true;
   }
 
+  /** Olvida la partida sin enviarla (se guardó para seguirla más tarde). */
+  discard() {
+    this.open = false;
+    this.picks = [];
+    this.revives = 0;
+  }
+
   /** Cierra la partida y la envía (una vez). `quit`: se dejó a medias. */
   finish(end: StatsEnd) {
     if (!this.open) return;

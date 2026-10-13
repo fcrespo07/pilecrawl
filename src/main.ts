@@ -1,6 +1,6 @@
 import './style.css';
 import './storage';
-import { Game, STEP_MS } from './core/game';
+import { Game, RULES_VERSION, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
 import { BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, setLayout } from './fx/layout';
 import { Gestures } from './gestures';
@@ -15,6 +15,10 @@ import { mountAd } from './ui/adSlot';
 import { adCmpManaged, adConsentManaged, adProviderFromEnv, openAdCmp, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
 import { Input } from './input';
+import { renderKeyHints, SettingsUI } from './ui/settings';
+import { replayInto } from './core/replay';
+import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } from './savedrun';
+import type { Owned } from './core/expedition';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
@@ -34,6 +38,7 @@ const renderer = new Renderer(game);
 const input = new Input(game);
 const ui = new UI(game);
 const lab = new Lab(game);
+const settingsUI = new SettingsUI(() => renderKeyHints());
 
 const stage = document.getElementById('stage')!;
 mountAd(document.getElementById('ad-slot')!, adProviderFromEnv());
@@ -173,7 +178,7 @@ function wireTouch() {
       game.togglePause();
       input.releaseAll();
       gestures?.reset();
-      ui.setPaused(game.state === 'paused');
+      setPaused(game.state === 'paused');
     }
   };
   document.getElementById('resume-btn')!.addEventListener('click', togglePause);
@@ -240,7 +245,7 @@ function showHome(show: boolean) {
 }
 
 /** Partida en curso: lo que hace falta para publicarla al acabar. */
-let currentRun: { mode: ModeId; date: string; runId?: string } | null = null;
+let currentRun: { mode: ModeId; date: string; runId?: string; startedAt: number; exp?: { owned: Owned; unlocked: string[] }; unranked?: string; noRank?: boolean } | null = null;
 let starting = false;
 
 function offerPublish() {
@@ -248,12 +253,162 @@ function offerPublish() {
   // las partidas del laboratorio nunca puntúan (el servidor también las rechaza)
   const rankedMode = r?.mode === 'normal' || r?.mode === 'daily' || r?.mode === 'timed';
   if (!net.RANKING_ENABLED || !r || !rankedMode || game.sandbox) return rankingUI.offerPublish(null);
+  if (r.noRank) return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? '') : rankingUI.offerPublish(null);
   if (r.mode !== 'daily' && !r.runId) {
     // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
-    return net.loadPlayer() ? rankingUI.offerUnavailable('Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
+    return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? 'Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
   }
   const done: FinishedRun = { replay: game.replay(), score: game.score, mode: r.mode, date: r.date, runId: r.runId };
   rankingUI.offerPublish(done);
+}
+
+const fmtNum = (n: number) => Math.round(n).toLocaleString('es-ES');
+const pauseMsg = document.getElementById('pause-msg')!;
+const saveExitBtn = document.getElementById('save-exit')!;
+const quitBtn = document.getElementById('quit-btn')!;
+const QUIT_LABEL = 'Salir sin guardar';
+let quitTimer = 0;
+
+function disarmQuit() {
+  window.clearTimeout(quitTimer);
+  quitBtn.querySelector('span')!.textContent = QUIT_LABEL;
+  delete quitBtn.dataset.armed;
+}
+
+/** Se puede guardar y reanudar una partida normal, diaria, contrarreloj o de Expedición (no el tutorial ni el laboratorio). */
+const canSave = () => currentRun !== null && !game.sandbox && game.mode !== 'tutorial';
+
+function setPaused(p: boolean) {
+  ui.setPaused(p);
+  disarmQuit();
+  pauseMsg.hidden = true;
+  if (p) saveExitBtn.hidden = !canSave();
+}
+
+/** Partida guardada que espera en la portada (null si no hay). */
+let saved: SavedRun | null = null;
+const saveNote = document.getElementById('home-save-note')!;
+const resumeBox = document.getElementById('home-resume-box')!;
+
+function renderResume(note?: string) {
+  resumeBox.hidden = !saved;
+  if (saved) {
+    document.getElementById('home-resume-text')!.innerHTML =
+      `Continuar partida<small>${MODES[modeOf(saved)].name} · nivel ${saved.level} · ${fmtNum(saved.score)} puntos</small>`;
+  }
+  if (note !== undefined) {
+    saveNote.textContent = note;
+    saveNote.hidden = !note;
+  }
+}
+
+function reloadSave() {
+  const l = loadSave();
+  saved = l.run;
+  renderResume(l.discarded ?? '');
+}
+
+/** Pausa → guardar la partida y volver a la portada. */
+function saveAndExit() {
+  if (game.state !== 'paused' || !currentRun || !canSave()) return;
+  const r = currentRun;
+  const run: SavedRun = {
+    v: 1,
+    rules: RULES_VERSION,
+    replay: game.replay(),
+    date: r.date,
+    runId: r.runId,
+    upgrades: r.exp?.owned,
+    unlocked: r.exp?.unlocked,
+    startedAt: r.startedAt,
+    savedAt: Date.now(),
+    score: game.score,
+    level: game.level,
+  };
+  if (!writeSave(run)) {
+    pauseMsg.textContent = 'No se ha podido guardar: el navegador no deja escribir (¿sin espacio o en modo privado?). La partida sigue aquí.';
+    pauseMsg.hidden = false;
+    return;
+  }
+  // la partida sigue viva en el guardado: no cuenta como abandonada ni se envían sus estadísticas
+  stats.discard();
+  leaveRun();
+  reloadSave();
+}
+
+/** Pausa → salir a la portada tirando la partida. */
+function quitRun() {
+  stats.finish('quit');
+  leaveRun();
+  renderResume();
+}
+
+function leaveRun() {
+  settingsUI.close();
+  game.reset();
+  currentRun = null;
+  input.releaseAll();
+  gestures?.reset();
+  ui.setPaused(false);
+  disarmQuit();
+  showHome(true);
+}
+
+/** Retoma la partida guardada: la vuelve a simular hasta donde se dejó y la deja en pausa. */
+function resumeRun() {
+  if (starting) return;
+  // otra pestaña pudo cambiar o gastar el guardado
+  const l = loadSave();
+  saved = l.run;
+  if (!l.run) return renderResume(l.discarded ?? 'Ya no hay partida guardada.');
+  const run = l.run;
+  lab.close();
+  tutorial.stop();
+  showHome(false);
+  audio.init();
+  input.releaseAll();
+  gestures?.reset();
+  hitstop = 0;
+  stepAcc = 0;
+  renderer.reset();
+  stats.discard();
+  ui.startGame(run.date);
+  const res = replayInto(game, run.replay, run.upgrades ?? {}, run.unlocked ?? []);
+  if (!res.ok) {
+    clearSave();
+    game.reset();
+    showHome(true);
+    saved = null;
+    return renderResume(`No se ha podido reanudar la partida guardada (${res.reason}). Se ha descartado.`);
+  }
+  // se borra al reanudar: así no se puede recargar para deshacer una mala decisión
+  clearSave();
+  saved = null;
+  // el servidor da por caducada una partida con ranking a las 6 h de pedirla (hasta el envío, no hasta reanudarla):
+  // con menos de 1 h de margen no daría tiempo a jugar y publicar
+  const stale = run.runId !== undefined && Date.now() - run.startedAt > RUN_TTL_MS - 3_600_000;
+  // y el diario solo admite hoy y ayer
+  const dayAge = (Date.parse(net.dailyDate()) - Date.parse(run.date)) / 86_400_000;
+  const oldDaily = modeOf(run) === 'daily' && !(dayAge <= 1);
+  const unranked = stale
+    ? 'Esta partida se guardó hace demasiado tiempo: el servidor ya no la admite en el ranking.'
+    : oldDaily
+      ? 'El desafío diario de esta partida ya pasó: no cuenta para el ranking.'
+      : undefined;
+  currentRun = {
+    mode: modeOf(run),
+    date: run.date,
+    runId: stale ? undefined : run.runId,
+    startedAt: run.startedAt,
+    exp: run.upgrades ? { owned: run.upgrades, unlocked: run.unlocked ?? [] } : undefined,
+    unranked,
+    noRank: oldDaily,
+  };
+  renderResume('');
+  audio.setIntensity(game.level);
+  audio.startMusic();
+  game.togglePause();
+  setPaused(true);
 }
 
 async function startRun(forced?: 'tutorial' | 'expedition') {
@@ -291,7 +446,7 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   const exp = mode === 'expedition' ? loadExpedition() : null;
   stats.begin();
   game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? []);
-  currentRun = { mode, date, runId: ranked?.runId };
+  currentRun = { mode, date, runId: ranked?.runId, startedAt: Date.now(), exp: exp ? { owned: exp.owned, unlocked: [...exp.unlocked] } : undefined };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
 }
@@ -310,6 +465,12 @@ function setEffects(on: boolean, save = true) {
 
 function onKeyDown(e: KeyboardEvent) {
   const st = game.state;
+
+  // los ajustes abiertos se quedan con el teclado (las teclas del juego no cuentan); Esc los cierra
+  if (settingsUI.isOpen) {
+    if (e.code === 'Escape' && !e.repeat) settingsUI.escape();
+    return;
+  }
 
   // escribiendo en el buscador del laboratorio las teclas del juego no cuentan
   if (lab.isOpen && (e.target as HTMLElement | null)?.closest('input, select') && e.code !== 'Escape') return;
@@ -352,7 +513,7 @@ function onKeyDown(e: KeyboardEvent) {
     if (st === 'playing' || st === 'paused') {
       game.togglePause();
       input.releaseAll();
-      ui.setPaused(game.state === 'paused');
+      setPaused(game.state === 'paused');
     }
     return;
   }
@@ -398,10 +559,39 @@ async function boot() {
     input.releaseAll();
     if (game.state === 'playing') {
       game.togglePause();
-      ui.setPaused(true);
+      setPaused(true);
     }
   });
   renderCatalog(catalog);
+  renderKeyHints();
+  reloadSave();
+  document.getElementById('settings-open')!.addEventListener('click', (e) => settingsUI.open(e.currentTarget as HTMLElement));
+  document.getElementById('settings-open-home')!.addEventListener('click', (e) => settingsUI.open(e.currentTarget as HTMLElement));
+  saveExitBtn.addEventListener('click', saveAndExit);
+  quitBtn.addEventListener('click', () => {
+    // dos pasos: tirar la partida no se puede deshacer
+    if (quitBtn.dataset.armed) return quitRun();
+    quitBtn.dataset.armed = '1';
+    quitBtn.querySelector('span')!.textContent = '¿Seguro? Se pierde';
+    quitTimer = window.setTimeout(disarmQuit, 4000);
+  });
+  document.getElementById('home-resume')!.addEventListener('click', resumeRun);
+  const drop = document.getElementById('home-resume-drop')!;
+  drop.addEventListener('click', () => {
+    if (drop.dataset.armed) {
+      clearSave();
+      saved = null;
+      delete drop.dataset.armed;
+      drop.textContent = 'Descartar partida guardada';
+      return renderResume('');
+    }
+    drop.dataset.armed = '1';
+    drop.textContent = '¿Seguro? Pulsa otra vez para descartarla';
+    window.setTimeout(() => {
+      delete drop.dataset.armed;
+      drop.textContent = 'Descartar partida guardada';
+    }, 4000);
+  });
   document.getElementById('catalog-open')!.addEventListener('click', () => showCatalog(true));
   document.getElementById('catalog-back')!.addEventListener('click', () => showCatalog(false));
   wireExpedition(expScreen);
