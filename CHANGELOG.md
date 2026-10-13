@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- (PR) Equilibrio de rarezas (RULES_VERSION 11, el ranking vuelve a empezar). Respiro, Dominó y Barra corta pasan a rara; Dique da 3 piezas por copia (antes 4); Martillo suma +2 al multiplicador por copia (×3, ×5, ×7; antes se multiplicaba y llegaba a ×27); Codicia llega a 3 copias (antes 5); Fiebre del oro da +150 × nivel por bloque (antes 300) y llega a 3 copias; Cruz es épica con líneas ×5 (antes ×3); Fuego cruzado ya no recorta los combos; Coleccionista suma +8% por mejora (antes +6%); Furia baja la racha 1,5× más rápido (antes 2×); Terremoto adelanta la basura 2 piezas (antes 3). Además, reroll gratis al llegar a los niveles 5, 10, 15… (se suma a Dados, Cosecha y Casino).
 
 ## 0.24.8 — 2026-10-13
 - (#56) Al acabar la partida, Espacio, Enter y el botón de reintentar no arrancan otra hasta 0,8 s sin pulsar (cada pulsación alarga la espera), así que aporrear la tecla no encadena partidas. La caída rápida con la flecha abajo se dibuja entre celdas: se ve bajar, no teletransportarse. La caída normal también baja sin escalones. Una pulsación ignorada atenúa el botón «Otra partida» un momento. Solo cambia el dibujo; las reglas y las repeticiones no cambian.

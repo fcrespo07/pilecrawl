@@ -79,7 +79,7 @@ const STEPS: Step[] = [
   {
     title: 'Mejoras',
     text: (t) =>
-      `Eliges <b>1 de 3 mejoras</b>: verde es la ventaja y rojo, su precio. Se acumulan y se combinan. ${t.reroll} cambia las cartas (1 gratis).`,
+      `Eliges <b>1 de 3 mejoras</b>: verde es la ventaja y rojo, su precio. Se acumulan y se combinan. ${t.reroll} cambia las cartas (1 gratis, y otro más cada 5 niveles).`,
     done: (p) => p.perks >= 1,
   },
   {

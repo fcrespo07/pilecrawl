@@ -173,7 +173,7 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.lockDelay += 150; },
   },
   {
-    id: 'greed', name: 'Codicia', rarity: 'common', max: 5,
+    id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
     pros: () => ['<b>+30%</b> a toda la puntuación'],
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.scoreMult *= 1.3; m.linesReduction -= 1; },
@@ -191,8 +191,8 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
-    pros: () => ['La basura tarda <b>4 piezas más</b> en subir'],
-    apply: (m) => { m.garbageDelay += 4; },
+    pros: () => ['La basura tarda <b>3 piezas más</b> en subir'],
+    apply: (m) => { m.garbageDelay += 3; },
   },
   {
     id: 'dice', name: 'Dados', rarity: 'common', max: 99,
@@ -201,30 +201,14 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
-    pros: () => ['El hard drop da el <b>triple</b> de puntos por fila (6 en vez de 2)'],
+    pros: (s) => [`El hard drop da <b>×${1 + s * 2}</b> de puntos por fila (${2 + s * 4} en vez de 2)`],
     cons: () => ['Bajar con soft drop <b>ya no suma puntos</b>'],
-    apply: (m) => { m.hardDropMult *= 3; m.softDropPoints = false; },
-  },
-  {
-    id: 'domino', name: 'Dominó', rarity: 'common', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
-    apply: (m) => { m.extraPieces.push('D2'); },
+    apply: (m) => { m.hardDropMult += 2; m.softDropPoints = false; },
   },
   {
     id: 'corner', name: 'Esquina', rarity: 'common', max: 2,
     pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 esquinas</b>' : 'una <b>esquina</b>'} (3 bloques en L)`],
     apply: (m) => { m.extraPieces.push('V3'); },
-  },
-  {
-    id: 'shortbar', name: 'Barra corta', rarity: 'common', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
-    apply: (m) => { m.extraPieces.push('I3'); },
-  },
-  {
-    id: 'breather', name: 'Respiro', rarity: 'common', max: 2,
-    pros: (s) => [`Al subir de nivel se quitan las <b>${s * 3} filas</b> de abajo del tablero`],
-    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
-    apply: (m) => { m.levelClearRows += 3; m.linesReduction -= 1; },
   },
   {
     id: 'savings', name: 'Ahorro', rarity: 'common', max: 2,
@@ -272,8 +256,8 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.drillEvery = m.drillEvery ? m.drillEvery - 3 : 14; },
   },
   {
-    id: 'gold', name: 'Fiebre del oro', rarity: 'rare', max: 4,
-    pros: (s) => [`Un <b>${s * 12}%</b> de las piezas son de oro`, 'Cada bloque de oro en una línea: <b>+300 × nivel</b>'],
+    id: 'gold', name: 'Fiebre del oro', rarity: 'rare', max: 3,
+    pros: (s) => [`Un <b>${s * 12}%</b> de las piezas son de oro`, 'Cada bloque de oro en una línea: <b>+150 × nivel</b>'],
     cons: () => ['Las piezas de oro caen <b>el doble de rápido</b>'],
     apply: (m) => { m.goldChance += 0.12; },
   },
@@ -324,13 +308,23 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
     apply: (m) => { m.choices += 1; m.linesReduction -= 1; },
   },
-  // ───────── Épicas ─────────
   {
-    id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
-    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×3</b>'],
-    cons: () => ['Como no hay T, tampoco hay <b>giros de T</b>'],
-    apply: (m) => { m.crossSwap = true; },
+    id: 'breather', name: 'Respiro', rarity: 'rare', max: 2,
+    pros: (s) => [`Al subir de nivel se quitan las <b>${s * 3} filas</b> de abajo del tablero`],
+    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.levelClearRows += 3; m.linesReduction -= 1; },
   },
+  {
+    id: 'domino', name: 'Dominó', rarity: 'rare', max: 2,
+    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
+    apply: (m) => { m.extraPieces.push('D2'); },
+  },
+  {
+    id: 'shortbar', name: 'Barra corta', rarity: 'rare', max: 2,
+    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
+    apply: (m) => { m.extraPieces.push('I3'); },
+  },
+  // ───────── Épicas ─────────
   {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
     pros: () => ['Cualquier pieza que no sea el cuadrado cuenta como <b>giro</b> si, tras girarla, no puede moverse a izquierda, derecha ni arriba, y puntúa como uno'],
@@ -340,8 +334,7 @@ export const PERKS: PerkDef[] = [
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
     pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
-    cons: () => ['El bonus de combo es un <b>30% menor</b>'],
-    apply: (m) => { m.b2bMult += 1; m.comboMult = Math.max(0, m.comboMult - 0.3); },
+    apply: (m) => { m.b2bMult += 1; },
   },
   {
     id: 'eternal', name: 'Combo eterno', rarity: 'epic', max: 2,
@@ -375,9 +368,15 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'collector', name: 'Coleccionista', rarity: 'epic', max: 1,
-    pros: () => ['<b>+6%</b> a toda la puntuación por cada <b>mejora distinta</b> que tengas'],
+    pros: () => ['<b>+8%</b> a toda la puntuación por cada <b>mejora distinta</b> que tengas'],
     cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
-    apply: (m) => { m.collector += 0.06; m.linesReduction -= 1; },
+    apply: (m) => { m.collector += 0.08; m.linesReduction -= 1; },
+  },
+  {
+    id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
+    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×5</b>'],
+    cons: () => ['Como no hay T, tampoco hay <b>giros de T</b>'],
+    apply: (m) => { m.crossSwap = true; },
   },
   // ───────── Legendarias ─────────
   {
@@ -389,8 +388,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'fury', name: 'Furia', rarity: 'legendary', max: 1,
     pros: () => ['Cuanta más racha, más puntos: a racha llena, <b>×2</b> a toda la puntuación'],
-    cons: () => ['La racha baja el <b>doble de rápido</b> con cada pieza fijada'],
-    apply: (m) => { m.fury += 1; m.streakDecayMult *= 2; },
+    cons: () => ['La racha baja <b>una vez y media más rápido</b> con cada pieza fijada'],
+    apply: (m) => { m.fury += 1; m.streakDecayMult *= 1.5; },
   },
   {
     id: 'echo', name: 'Eco', rarity: 'legendary', max: 1,
@@ -407,8 +406,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'quake', name: 'Terremoto', rarity: 'legendary', max: 1,
     pros: () => ['Tras un <b>cuádruple</b> o un giro de <b>2 líneas o más</b>, lo que queda <b>cae</b> y rellena los huecos', 'Las líneas que salen así <b>puntúan más</b> cuantas más encadenas'],
-    cons: () => ['La basura sube <b>3 piezas antes</b>'],
-    apply: (m) => { m.quake = true; m.garbageDelay -= 3; },
+    cons: () => ['La basura sube <b>2 piezas antes</b>'],
+    apply: (m) => { m.quake = true; m.garbageDelay -= 2; },
   },
   {
     id: 'prism', name: 'Prisma', rarity: 'legendary', max: 2,

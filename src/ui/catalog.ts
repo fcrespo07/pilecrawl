@@ -68,7 +68,7 @@ const SCORE_ITEMS: { name: string; lines: string[] }[] = [
   },
   {
     name: 'Extras',
-    lines: ['Bloque de <b>oro</b> limpiado: <b>+300 × nivel</b>', 'Tablero vacío tras limpiar: <b>+3500 × nivel</b>'],
+    lines: ['Bloque de <b>oro</b> limpiado: <b>+150 × nivel</b>', 'Tablero vacío tras limpiar: <b>+3500 × nivel</b>'],
   },
   {
     name: 'Bajar y soltar',
@@ -85,7 +85,7 @@ const SCORE_ITEMS: { name: string; lines: string[] }[] = [
   },
   {
     name: 'Piezas especiales',
-    lines: ['Sobre las líneas que completa: monominó <b>×0,5</b>, cruz <b>×3</b>, gancho <b>×2</b>'],
+    lines: ['Sobre las líneas que completa: monominó <b>×0,5</b>, cruz <b>×5</b>, gancho <b>×2</b>'],
   },
   {
     name: 'Multiplicadores',

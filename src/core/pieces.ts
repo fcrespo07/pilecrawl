@@ -49,7 +49,7 @@ export const PIECES: Record<string, PieceDef> = {
   D2: def(9, 'D', 0xb4ff4d, 'JLSTZ', ['##', '..']),
   V3: def(10, 'V', 0x4dffe1, 'JLSTZ', ['#.', '##']),
   I3: def(11, 'I3', 0xffb3f0, 'JLSTZ', ['...', '###', '...']),
-  X5: def(13, 'X', 0xe6e8ff, 'JLSTZ', ['.#.', '###', '.#.'], 3),
+  X5: def(13, 'X', 0xe6e8ff, 'JLSTZ', ['.#.', '###', '.#.'], 5),
   P5: def(14, 'P', 0x8f7bff, 'JLSTZ', ['##.', '##.', '#..'], 2),
 };
 
