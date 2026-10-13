@@ -27,6 +27,7 @@ import { renderCatalog } from './ui/catalog';
 import { renderExpedition, wireExpedition } from './ui/expeditionScreen';
 import { awardRun, loadExpedition } from './expedition';
 import { Lab, LAB_ENABLED } from './ui/lab';
+import { initLogoEyes } from './ui/eyes';
 
 const game = new Game();
 // estadísticas anónimas: solo si hay servidor (el mismo del ranking); ver privacidad.html
@@ -203,6 +204,7 @@ function wireTouch() {
 }
 
 const home = document.getElementById('home')!;
+initLogoEyes(document.querySelector<HTMLCanvasElement>('.home-logo')!, () => !home.classList.contains('hidden'));
 const TUTORIAL_SEED = 0x7a11;
 const catalog = document.getElementById('catalog')!;
 
