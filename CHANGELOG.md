@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+- (#PR) Al acabar la partida, Espacio, Enter y el botón de reintentar no arrancan otra hasta 0,8 s sin pulsar (cada pulsación alarga la espera), así que aporrear la tecla no encadena partidas. La caída rápida con la flecha abajo se dibuja entre celdas: se ve bajar, no teletransportarse. Solo cambia el dibujo; las reglas y las repeticiones no cambian.
 
 ## 0.24.6 — 2026-10-13
 - (#55) Administración del ranking en `/admin.html` (con `ADMIN_TOKEN`): ver cada tabla, borrar una puntuación o todas las de un jugador, ocultar jugadores y generar un código de recuperación nuevo para quien perdió el suyo (el anterior deja de valer; el código no se puede leer porque solo se guarda su hash). Acciones registradas en el log del servidor. La clave se compara por hash y solo los intentos fallidos cuentan para el bloqueo por IP. La página lleva una política de seguridad estricta y el servidor avisa si la clave mide menos de 24 caracteres.

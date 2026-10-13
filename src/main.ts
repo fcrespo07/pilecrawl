@@ -15,6 +15,7 @@ import { mountAd } from './ui/adSlot';
 import { adCmpManaged, adConsentManaged, adProviderFromEnv, openAdCmp, resetAdConsent } from './ads/providers';
 import { Tutorial } from './ui/tutorial';
 import { Input } from './input';
+import { EndLock } from './endlock';
 import { renderKeyHints, SettingsUI } from './ui/settings';
 import { replayInto } from './core/replay';
 import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } from './savedrun';
@@ -37,6 +38,8 @@ const stats = new StatsCollector(game, (s) => {
 addEventListener('pagehide', () => stats.finish('quit'));
 const renderer = new Renderer(game);
 const input = new Input(game);
+/** Tras acabar una partida, las teclas y el botón de reintentar esperan un rato sin pulsar. */
+const endLock = new EndLock(800);
 const ui = new UI(game);
 const lab = new Lab(game);
 const settingsUI = new SettingsUI(() => renderKeyHints());
@@ -59,7 +62,7 @@ const rankingUI = new RankingUI(
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
   onPlay: () => void startRun(),
-  onRetry: () => void startRun('tutorial'),
+  onRetry: () => { if (!endLock.blocks()) void startRun('tutorial'); },
   onHome: () => {
     // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
     game.reset();
@@ -156,6 +159,7 @@ function wireAudioAndFeel() {
   });
   ev.on('revive', () => audio.revive());
   ev.on('gameover', () => {
+    endLock.arm();
     audio.stopMusic();
     audio.gameOver();
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
@@ -506,6 +510,7 @@ function onKeyDown(e: KeyboardEvent) {
     const homeOpen = !home.classList.contains('hidden');
     if ((e.code === 'Enter' || (e.code === 'Space' && !homeOpen)) && !e.repeat) {
       e.preventDefault();
+      if (st === 'over' && endLock.blocks()) return;
       // tras fallar el tutorial, Enter lo repite; el resto de veces, la partida elegida en la portada
       void startRun(st === 'over' && (game.mode === 'tutorial' || game.mode === 'expedition') ? game.mode : undefined);
     }
@@ -624,7 +629,10 @@ async function boot() {
   a.href = import.meta.env.VITE_PRIVACY_URL || '/privacidad.html';
   a.hidden = false;
   document.getElementById('home-btn')!.addEventListener('click', () => showHome(true));
-  document.getElementById('retry-btn')!.addEventListener('click', () => void startRun(game.mode === 'expedition' ? 'expedition' : undefined));
+  document.getElementById('retry-btn')!.addEventListener('click', () => {
+    if (endLock.blocks()) return;
+    void startRun(game.mode === 'expedition' ? 'expedition' : undefined);
+  });
 
   wireAudioAndFeel();
   wireTouch();
