@@ -8,7 +8,7 @@ import { Renderer } from './fx/renderer';
 import { loadMeta, recordBestLevel } from './core/meta';
 import { dailySeed, MODES, msToNextDaily, type ModeId } from './core/modes';
 import { randomSeed } from './core/rng';
-import { loadLastMode, loadTutorialDone, saveLastMode, saveTutorialDone } from './records';
+import { loadLastMode, loadTutorialDone, markPlayed, saveLastMode, saveTutorialDone } from './records';
 import { ModeSelect } from './ui/modeSelect';
 import { renderHomePanels } from './ui/homePanels';
 import { mountAd } from './ui/adSlot';
@@ -417,6 +417,8 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   if (starting) return;
   starting = true;
   const mode = forced ?? modeSelect.mode;
+  // empezar cualquier partida (también el tutorial) cierra la primera visita: la portada vuelve a la de siempre
+  markPlayed();
   // el diario se fija al empezar: si pasa la medianoche jugando, sigue siendo el mismo desafío
   // la fecha la da el servidor si responde (un reloj mal puesto no cambia el desafío); si no, la del reloj local
   if (mode === 'daily') await net.serverDay(1500);

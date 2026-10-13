@@ -26,6 +26,8 @@
   --legendary: #ffd23f;
   --curse: #ff4f7b;
   --hyper: #b07aff;
+  /* arcoíris de las hiperperks: un ciclo que se repite (ver .rainbow) */
+  --rainbow: linear-gradient(90deg, #ff4d6d, #ffb84d, #f5f54a, #4dff88, #4dd8ff, #7a8cff, #d07aff, #ff4dd2, #ff4d6d);
   --danger: #ff3b5c;
   /* píxel: amarillo de títulos, azul secundario, rojo de alerta y los dos tonos del relieve */
   --hi: #ffd23f;
@@ -1076,7 +1078,7 @@ body.tutorial #perk-list .empty { display: none; }
 
 /* ═════════════ Portada v3: boceto del usuario (paneles a los lados, jugar en el centro) ═════════════ */
 #home .home-inner { width: min(100%, 1120px); }
-.home-stage { width: 100%; display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 520px) minmax(200px, 1fr); gap: 24px; align-items: center; }
+.home-stage { width: 100%; display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 520px) minmax(240px, 1fr); gap: 24px; align-items: center; }
 .home-center { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
 .home-center .mode-select { grid-template-columns: 1fr; width: 100%; gap: 8px; }
 .home-center .mode-opt { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 10px 14px; gap: 2px 12px; }
@@ -1094,11 +1096,13 @@ body.tutorial #perk-list .empty { display: none; }
 .home-panel .rank-list { max-height: none; overflow: visible; }
 .rank-list b { font-family: var(--f-display); font-weight: 400; font-size: 12px; color: var(--ink); }
 .home-rank { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
-.home-rank li { display: grid; grid-template-columns: 2em 1fr auto; gap: 6px; align-items: baseline; font-size: 16px; color: var(--muted); padding: 2px 6px; }
+.home-rank li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 3px 6px; align-items: baseline; font-size: 16px; color: var(--muted); padding: 2px 6px; }
 .home-rank li.me { background: var(--panel-hi); color: var(--hi); }
 .home-rank li.gap { margin-top: 6px; border-top: 2px dashed var(--muted); padding-top: 6px; }
-.home-rank .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.home-rank .s { font-family: var(--f-display); font-size: 11px; color: var(--ink); }
+/* el nombre ocupa toda la fila (la puntuación va debajo); si no cabe, baja a la siguiente línea */
+.home-rank .n { overflow-wrap: anywhere; line-height: 1.15; }
+.home-rank .r { grid-row: 1 / span 2; }
+.home-rank .s { grid-column: 2; justify-self: end; font-family: var(--f-display); font-size: 11px; color: var(--ink); }
 .rank-big { margin: 4px 0; font-family: var(--f-display); font-size: 22px; color: var(--ink); }
 .rank-note { margin: 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
 .home-first .home-hero .home-title { margin: 12px 0 14px; }
@@ -1339,3 +1343,36 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 }
 .home-center .resume-box .home-btn { font-size: 18px; padding: 14px 20px; }
 .home-center .resume-box .home-btn small { font-size: 18px; }
+
+/* ───────────── hiperperks: arcoíris que se mueve ───────────── */
+/* el ciclo del arcoíris mide 240 px y se repite: al desplazarlo un ciclo, el bucle no da saltos */
+@keyframes rainbow-run { from { background-position: 0 0; } to { background-position: 240px 0; } }
+.card.r-hyper .card-band { background: var(--rainbow) 0 0 / 240px 100% repeat; animation: rainbow-run 2.4s linear infinite; }
+.card.r-hyper .card-name,
+#perks.hyper .perk-title span,
+.p-hyper .hy-name,
+.build-row.r-hyper .b-name,
+.cat-item.r-hyper .b-name {
+  background: var(--rainbow) 0 0 / 240px 100% repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  animation: rainbow-run 2.4s linear infinite;
+}
+.card.r-hyper .card-front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--rainbow) 0 0 / 240px 100% repeat;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  animation: rainbow-run 2.4s linear infinite;
+  pointer-events: none;
+}
+.p-hyper .hy-bar i { background: var(--rainbow) 0 0 / 240px 100% repeat; }
+@media (prefers-reduced-motion: reduce) {
+  .card.r-hyper .card-band, .card.r-hyper .card-name, #perks.hyper .perk-title span,
+  .p-hyper .hy-name, .build-row.r-hyper .b-name, .cat-item.r-hyper .b-name, .card.r-hyper .card-front::after { animation: none; }
+}

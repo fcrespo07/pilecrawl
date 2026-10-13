@@ -77,6 +77,20 @@ export function loadTutorialDone(): boolean {
   return read(TUTORIAL_KEY) === '1';
 }
 
+const PLAYED_KEY = 'blockrogue.played';
+/** Claves que solo existen si ya se ha jugado en este navegador (guardar, récords, diario, tutorial). */
+const PROGRESS_KEYS = [PLAYED_KEY, ...Object.values(BEST_KEY), DAILY_KEY, TUTORIAL_KEY, 'blockrogue.save'];
+
+/** Primera visita: nunca se ha empezado una partida en este navegador. Entonces la portada enseña el tutorial. */
+export function isFirstVisit(): boolean {
+  return PROGRESS_KEYS.every((k) => read(k) === null);
+}
+
+/** Se llama al empezar cualquier partida (también el tutorial): a partir de ahí la portada es la de siempre. */
+export function markPlayed() {
+  write(PLAYED_KEY, '1');
+}
+
 export function saveTutorialDone() {
   write(TUTORIAL_KEY, '1');
 }

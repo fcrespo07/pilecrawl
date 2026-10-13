@@ -56,3 +56,23 @@ describe('récords por modo', () => {
     expect(r.loadBest('daily', '2026-10-10')).toBe(10);
   });
 });
+
+describe('primera visita', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', memoryStorage());
+  });
+
+  it('sin datos es primera visita, y deja de serlo al empezar una partida', async () => {
+    const r = await reload();
+    expect(r.isFirstVisit()).toBe(true);
+    r.markPlayed();
+    expect(r.isFirstVisit()).toBe(false);
+  });
+
+  it('quien ya tiene récords guardados no vuelve a ver el tutorial de entrada', async () => {
+    let r = await reload();
+    r.submitScore('normal', '2026-10-13', 500);
+    r = await reload();
+    expect(r.isFirstVisit()).toBe(false);
+  });
+});

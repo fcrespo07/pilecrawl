@@ -4,6 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.24.2 — 2026-10-13
+- Los nombres del ranking de la portada se ven completos: si no caben en una línea, bajan a la siguiente en vez de cortarse. Los paneles laterales son un poco más anchos.
+- Primera visita: en un navegador sin partidas guardadas, el tutorial aparece primero en la lista de modos y marcado. Tras empezar cualquier partida, la portada vuelve a la de siempre.
+- Las hiperperks se ven en arcoíris que se mueve: tarjeta, nombre, barra de la hiperperk y su entrada en el catálogo. Con movimiento reducido, el arcoíris queda fijo.
+
 ## 0.24.1 — 2026-10-13
 - Los ojos del marcianito del logo de la portada siguen al cursor (o al último toque, y tras un momento vuelven a su posición de reposo). Pasos de un píxel, sin coste con la partida en marcha y quietos con movimiento reducido (#50).
 
