@@ -1356,7 +1356,7 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 }
 .card.r-hyper .card-band { background-image: linear-gradient(90deg, #ff4d6d 0 14%, #ffb13d 14% 28%, #ffe14d 28% 42%, #6dff8e 42% 57%, #2ee6ff 57% 71%, #6fb6ff 71% 85%, #ff4dd2 85%); }
 .card.r-hyper .card-tilt, .build-row.r-hyper, .cat-item.r-hyper, #perks.hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] {
-  animation: rb 1.4s linear infinite;
+  animation: rb 2.8s linear infinite;
 }
 .card.r-hyper .card-tilt { --c: var(--rb); }
 .build-row.r-hyper, .cat-item.r-hyper, #hyper-box[data-state='ready'], #hyper-box[data-state='active'] { --c: var(--rb); }
