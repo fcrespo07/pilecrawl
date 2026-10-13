@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md).
 
 ## Sin publicar
+
+## 0.24.2 — 2026-10-13
 - Ranking: las lecturas se reintentan una vez si la red falla, y el aviso de «sin conexión» menciona que una red de colegio o empresa puede estar filtrando el servidor (#51).
 
 ## 0.24.1 — 2026-10-13
