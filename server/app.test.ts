@@ -288,6 +288,37 @@ describe('administración', () => {
     expect((await call('GET', '/api/admin/board', undefined, ADMIN)).status).toBe(429);
   });
 
+  it('una clave corta o vacía desactiva el panel', async () => {
+    const { call } = setup({ adminToken: 'corta' });
+    expect((await call('GET', '/api/admin/board', undefined, 'corta')).status).toBe(404);
+  });
+
+  it('el tope global de fallos bloquea aunque cambie la IP', async () => {
+    const cfg: Config = { ...loadConfig({}), adminToken: ADMIN, now: () => new Date(clock) };
+    const app = createApp(cfg, openDb(':memory:'));
+    const get = async (ip: string, token: string) =>
+      (await app(new Request('http://x/api/admin/board', { headers: { authorization: `Bearer ${token}` } }), ip)).status;
+    // 12 IPs con 9 fallos cada una: ninguna llega al tope por IP (10), pero juntas pasan el global (100)
+    for (let i = 0; i < 12; i++) for (let j = 0; j < 9; j++) await get(`10.7.0.${i}`, 'mala');
+    expect(await get('10.7.1.1', ADMIN)).toBe(429);
+  });
+
+  it('borra un jugador entero y libera el apodo', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    const id = token.split('.')[0];
+    const start = (await call('POST', '/api/runs/start', { mode: 'normal' }, token)).body;
+    const g = playHuman(start.seed, 400_000, 'normal', start.bestLevel);
+    expect((await call('POST', '/api/runs', { runId: start.runId, replay: g.replay() }, token)).status).toBe(200);
+    expect((await call('DELETE', `/api/admin/players/${id}`)).status).toBe(401);
+    expect((await call('DELETE', `/api/admin/players/${id}`, undefined, ADMIN)).status).toBe(200);
+    expect((await call('GET', '/api/players/me', undefined, token)).status).toBe(401);
+    expect((await call('POST', '/api/players/recover', { code: token })).status).toBe(404);
+    expect((await call('GET', '/api/leaderboard?mode=normal&scope=all')).body.entries).toHaveLength(0);
+    expect((await call('DELETE', `/api/admin/players/${id}`, undefined, ADMIN)).status).toBe(404);
+    expect((await call('POST', '/api/players', { nickname: 'Fer' })).status).toBe(201);
+  }, 30_000);
+
   it('las peticiones correctas no gastan el límite', async () => {
     const { call } = setup();
     for (let i = 0; i < 30; i++) expect((await call('GET', '/api/admin/board', undefined, ADMIN)).status).toBe(200);

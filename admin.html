@@ -32,9 +32,9 @@
   <body>
     <main>
       <h1>Administración del ranking</h1>
-      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); se guarda solo en esta pestaña.</p>
+      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); no se guarda en ningún sitio: al recargar hay que volver a pegarla (el gestor de contraseñas puede rellenarla).</p>
       <div class="row">
-        <input id="token" type="password" placeholder="Clave" autocomplete="off" />
+        <input id="token" type="password" placeholder="Clave" autocomplete="current-password" />
       </div>
       <p id="err"></p>
       <p id="msg"></p>

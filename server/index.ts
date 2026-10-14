@@ -3,13 +3,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { createReadStream, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 import { createApp } from './app';
-import { loadConfig } from './config';
+import { ADMIN_TOKEN_MIN_LEN, ADMIN_TOKEN_WARN_LEN, loadConfig } from './config';
 import { openDb } from './db';
 import { clientIp } from './ip';
 
-/** Por debajo de esto la clave de administrador se considera débil y se avisa en el arranque. */
-const ADMIN_TOKEN_MIN = 24;
-/** La página de admin guarda la clave en sessionStorage: sin scripts ajenos ni inline, ni conexiones a otros orígenes. */
+/** La clave de administrador se teclea en esa página: sin scripts ajenos ni inline, ni conexiones a otros orígenes. */
 const ADMIN_CSP =
   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const MAX_BODY = 512 * 1024;
@@ -27,8 +25,10 @@ const MIME: Record<string, string> = {
 };
 
 const cfg = loadConfig();
-if (cfg.adminToken && cfg.adminToken.length < ADMIN_TOKEN_MIN)
-  console.warn(`ADMIN_TOKEN mide menos de ${ADMIN_TOKEN_MIN} caracteres: es corta para una clave de administrador (openssl rand -base64 32).`);
+if (cfg.adminToken && cfg.adminToken.length < ADMIN_TOKEN_MIN_LEN)
+  console.error(`ADMIN_TOKEN mide menos de ${ADMIN_TOKEN_MIN_LEN} caracteres: el panel de administración queda DESACTIVADO (openssl rand -base64 32).`);
+else if (cfg.adminToken && cfg.adminToken.length < ADMIN_TOKEN_WARN_LEN)
+  console.warn(`ADMIN_TOKEN mide menos de ${ADMIN_TOKEN_WARN_LEN} caracteres: es corta para una clave de administrador (openssl rand -base64 32).`);
 const db = openDb(cfg.dbPath);
 const api = createApp(cfg, db);
 
@@ -76,7 +76,7 @@ function sendStatic(pathname: string, res: ServerResponse): boolean {
     // los ficheros de /assets llevan el hash en el nombre: nunca cambian
     'cache-control': file.includes(`${sep}assets${sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache',
     'x-content-type-options': 'nosniff',
-    ...(file === join(cfg.staticDir, 'admin.html') ? { 'content-security-policy': ADMIN_CSP } : {}),
+    ...(file === join(cfg.staticDir, 'admin.html') ? { 'content-security-policy': ADMIN_CSP, 'referrer-policy': 'no-referrer', 'cache-control': 'no-store' } : {}),
   });
   createReadStream(file).pipe(res);
   return true;
