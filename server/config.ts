@@ -30,6 +30,11 @@ export interface Config {
   newSeed: () => number;
 }
 
+/** Una clave de administrador más corta que esto no se acepta: el panel queda desactivado. */
+export const ADMIN_TOKEN_MIN_LEN = 16;
+/** Por debajo de esto se avisa en el arranque. */
+export const ADMIN_TOKEN_WARN_LEN = 24;
+
 const list = (v: string | undefined) =>
   (v ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 

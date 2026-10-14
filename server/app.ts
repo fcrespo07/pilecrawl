@@ -5,7 +5,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { RULES_VERSION } from '../src/core/game';
 import { dailyNumber, dailySeed, isModeId, MODES, utcDate, type ModeId } from '../src/core/modes';
-import type { Config } from './config';
+import { ADMIN_TOKEN_MIN_LEN, type Config } from './config';
 import { RateLimiter } from './ratelimit';
 import { parseStats, summarize, type StatsRow } from './stats';
 import { isRankedMode, RANKED_MODES, verifyReplay } from './validate';
@@ -187,12 +187,15 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   };
 
   const needAdmin = (req: Request, ip: string, now: number) => {
-    if (!cfg.adminToken) throw new ApiError(404, 'no existe');
+    // sin clave, o con una demasiado corta para aguantar adivinarla, el panel no existe
+    if (cfg.adminToken.length < ADMIN_TOKEN_MIN_LEN) throw new ApiError(404, 'no existe');
     // solo cuentan los fallos: la página de admin hace varias peticiones válidas seguidas
     if (adminFails.count(`a:${ip}`, now) >= ADMIN_MAX_FAILS) throw new ApiError(429, 'demasiados intentos');
     const m = /^Bearer (.+)$/.exec(req.headers.get('authorization') ?? '');
     if (!m || !safeEqHashed(m[1], cfg.adminToken)) {
       adminFails.allow(`a:${ip}`, now);
+      // solo el aviso de cada bloqueo, para que un ataque no llene el registro
+      if (adminFails.count(`a:${ip}`, now) === ADMIN_MAX_FAILS) audit('clave-incorrecta-bloqueo', `ip=${ip}`);
       throw new ApiError(401, 'sin permiso');
     }
   };
@@ -513,6 +516,17 @@ export function createApp(cfg: Config, db: DatabaseSync) {
         )
         .all(runsMatch[1]);
       return json({ runs: rows });
+    }
+
+    // borrar un jugador entero: apodo, código de recuperación, partidas, puntuaciones y repeticiones
+    const playerMatch = /^\/api\/admin\/players\/([0-9a-f]{24})$/.exec(path);
+    if (method === 'DELETE' && playerMatch) {
+      needAdmin(req, ip, now);
+      const info = q.player.get(playerMatch[1]) as unknown as PlayerRow | undefined;
+      if (!info) throw new ApiError(404, 'no existe');
+      q.deletePlayer.run(info.id); // arrastra starts, runs, bests y replays (ON DELETE CASCADE)
+      audit('borrar-jugador', `jugador=${info.id} apodo=${info.nickname}`);
+      return json({ ok: true });
     }
 
     // borrar todas las puntuaciones de un jugador (conserva la cuenta y el apodo)

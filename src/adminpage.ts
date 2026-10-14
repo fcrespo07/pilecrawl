@@ -17,11 +17,6 @@ const RANKED = Object.keys(MODES).filter((m) => m !== 'tutorial' && m !== 'exped
 
 $('mode').innerHTML = RANKED.map((m) => `<option value="${m}">${esc(MODES[m as keyof typeof MODES].name)}</option>`).join('');
 $('smode').innerHTML = `<option value="normal">Cartas: Partida</option>${MODE_IDS.filter((m) => m !== 'normal').map((m) => `<option value="${m}">Cartas: ${esc(m)}</option>`).join('')}<option value="all">Cartas: todos</option>`;
-try {
-  $<HTMLInputElement>('token').value = sessionStorage.getItem('admin.token') ?? '';
-} catch {
-  /* sin almacenamiento */
-}
 
 const say = (err: string, msg = '') => {
   $('err').textContent = err;
@@ -32,11 +27,9 @@ async function api<T>(method: string, path: string, body?: unknown): Promise<T> 
   const token = $<HTMLInputElement>('token').value.trim();
   const res = await fetch(path, { method, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
-  if (!res.ok) throw new Error(res.status === 401 ? 'Clave incorrecta.' : res.status === 404 && !token ? 'Falta la clave.' : (data.error ?? `Error ${res.status}`));
-  try {
-    sessionStorage.setItem('admin.token', token);
-  } catch {
-    /* sin almacenamiento */
+  if (!res.ok) {
+    const none = res.status === 404 && data.error === 'no existe';
+    throw new Error(res.status === 401 ? 'Clave incorrecta.' : none && !token ? 'Falta la clave.' : none ? 'No existe, o el panel está desactivado (ADMIN_TOKEN vacío o de menos de 16 caracteres).' : (data.error ?? `Error ${res.status}`));
   }
   return data;
 }
@@ -78,7 +71,7 @@ async function loadPlayers(query: string) {
     d.players.map((p) => [
       `<span class="l">${esc(p.nickname)}${p.hidden ? ' <span class="neg">(oculto)</span>' : ''}</span>`,
       String(p.runs), String(p.bestLevel), new Date(p.createdAt).toISOString().slice(0, 10),
-      `<span class="acts">${btn('runs', { id: p.id }, 'Partidas')} ${btn('hide', { id: p.id, hidden: p.hidden ? 0 : 1 }, p.hidden ? 'Mostrar' : 'Ocultar')} ${btn('code', { id: p.id, nick: p.nickname }, 'Código nuevo')} ${btn('del-all', { id: p.id, nick: p.nickname }, 'Borrar todas', true)}</span>`,
+      `<span class="acts">${btn('runs', { id: p.id }, 'Partidas')} ${btn('hide', { id: p.id, hidden: p.hidden ? 0 : 1 }, p.hidden ? 'Mostrar' : 'Ocultar')} ${btn('code', { id: p.id, nick: p.nickname }, 'Código nuevo')} ${btn('del-all', { id: p.id, nick: p.nickname }, 'Borrar todas', true)} ${btn('del-player', { id: p.id, nick: p.nickname }, 'Borrar jugador', true)}</span>`,
     ]),
   );
 }
@@ -126,17 +119,32 @@ document.addEventListener('click', (e) => {
     if (!confirm(`¿Borrar ${nick}? No se puede deshacer.`)) return;
     void run(async () => {
       await api('DELETE', `/api/admin/runs/${runId}`);
-      say('', 'Borrada.');
       if (player) await loadRuns(player);
       await loadBoard().catch(() => undefined);
+      say('', 'Borrada.');
     });
   } else if (act === 'del-all') {
     if (!confirm(`¿Borrar TODAS las puntuaciones de ${nick}? La cuenta se conserva. No se puede deshacer.`)) return;
     void run(async () => {
       const d = await api<{ deleted: number }>('DELETE', `/api/admin/players/${id}/scores`);
-      say('', `Borradas ${d.deleted} partidas de ${nick}.`);
       await loadPlayers($<HTMLInputElement>('pq').value);
       await loadBoard().catch(() => undefined);
+      say('', `Borradas ${d.deleted} partidas de ${nick}.`);
+    });
+  } else if (act === 'del-player') {
+    // irreversible: hay que teclear el apodo, no basta con aceptar
+    const typed = prompt(`Borrar a ${nick} entero: apodo, código de recuperación y TODAS sus partidas. No se puede deshacer.\n\nEscribe su apodo para confirmar:`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== nick.toLowerCase()) {
+      say('El apodo no coincide: no se ha borrado nada.');
+      return;
+    }
+    void run(async () => {
+      await api('DELETE', `/api/admin/players/${id}`);
+      $('runs').innerHTML = '';
+      await loadPlayers($<HTMLInputElement>('pq').value);
+      await loadBoard().catch(() => undefined);
+      say('', `Jugador ${nick} borrado.`);
     });
   } else if (act === 'code') {
     if (!confirm(`¿Generar un código nuevo para ${nick}? El anterior dejará de funcionar en todos sus navegadores.`)) return;
