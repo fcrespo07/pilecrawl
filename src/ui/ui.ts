@@ -196,8 +196,8 @@ export class UI {
     const n = hyper ? g.hyperChoices.length : g.choices.length;
     box.classList.toggle('four', n > 3);
     $('key4').hidden = n < 4;
-    if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, hyperFoot(h))));
-    else g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i, `r-${rarityKey(p)}`, rarityLabel(p), this.game.perkStacks(p.id), this.stackLabel(this.game.perkStacks(p.id), p.max))));
+    if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, '', hyperFoot(h))));
+    else g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i, `r-${rarityKey(p)}`, rarityLabel(p), this.game.perkStacks(p.id), this.stackLabel(this.game.perkStacks(p.id), p.max), '')));
     // oferta maldita: aviso claro en el título y el color de las maldiciones
     const cursed = !hyper && g.cursedOffer;
     $('perks').classList.toggle('cursed', cursed);
@@ -227,16 +227,17 @@ export class UI {
     return `<span class="odd odd-streak">Racha <b>${Math.round(g.streak)}</b></span>${parts.join('')}`;
   }
 
+  /** Marca de la carta junto a la rareza: única, acumulable (con las copias que tienes) o los usos posibles. */
   private stackLabel(cur: number, max: number): string {
     if (max === 1) return 'Única';
-    if (max >= 99) return cur > 0 ? `Tienes ${cur} · acumulable` : 'Acumulable';
+    if (max >= 99) return cur > 0 ? `×${cur}` : 'Acumulable';
     let pips = '';
     for (let k = 0; k < max; k++) pips += `<i class="pip ${k < cur ? 'on' : k === cur ? 'next' : ''}"></i>`;
     return `<span class="pips">${pips}</span>`;
   }
 
-  /** Carta de mejora o de hiperperk: `cls` da el color, `band` la etiqueta y `foot` el pie. */
-  private makeCard(p: PerkDef | HyperDef, i: number, cls: string, band: string, cur: number, foot: string): HTMLElement {
+  /** Carta de mejora o de hiperperk: `cls` da el color, `band` la rareza, `tag` la marca junto a ella y `foot` el pie (si hay). */
+  private makeCard(p: PerkDef | HyperDef, i: number, cls: string, band: string, cur: number, tag: string, foot: string): HTMLElement {
     const el = document.createElement('div');
     el.className = `card ${cls}`;
     el.style.setProperty('--i', String(i));
@@ -246,12 +247,12 @@ export class UI {
         <div class="card-flip">
           <div class="card-face card-back">${CARD_MARK}</div>
           <div class="card-face card-front">
-            <div class="card-band"><span>${band}</span><kbd>${i + 1}</kbd></div>
+            <div class="card-band"><span>${band}</span>${tag ? `<span class="card-tag">${tag}</span>` : ''}<kbd>${i + 1}</kbd></div>
             <div class="card-icon">${perkIcon(p.id)}</div>
             <div class="card-name">${p.name}</div>
             <div class="card-sep"></div>
             ${effectsHTML(p, cur + 1)}
-            <div class="card-foot">${foot}</div>
+            ${foot ? `<div class="card-foot">${foot}</div>` : ''}
             <div class="card-shine"></div>
           </div>
         </div>
