@@ -5,7 +5,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.26.2 — 2026-10-14
-- [interno] (#65) El panel de administración puede borrar un jugador entero (apodo, código de recuperación y todas sus partidas; hay que teclear el apodo para confirmar). Endurecimiento: el panel se desactiva si `ADMIN_TOKEN` mide menos de 16 caracteres la clave ya no se guarda en el navegador y la página va sin caché ni referrer.
+- [interno] (#65) El panel de administración puede borrar un jugador entero (apodo, código de recuperación y todas sus partidas; hay que teclear el apodo para confirmar). Endurecimiento: el panel se desactiva si `ADMIN_TOKEN` mide menos de 16 caracteres, la clave ya no se guarda en el navegador y la página va sin caché ni referrer.
 
 ## 0.26.1 — 2026-10-14
 - (#64) Las cartas de mejora ya no cortan el texto: la marca (única, copias o usos) pasa a la franja de la rareza, el icono de escritorio es más pequeño y, en móvil, la carta crece con su texto. Las reglas no cambian.
