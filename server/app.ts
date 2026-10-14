@@ -22,8 +22,6 @@ const STATS_MAX_ROWS = 200_000;
 const NEAR = 2;
 /** Claves de administrador falladas por IP y 10 minutos antes de bloquear. */
 const ADMIN_MAX_FAILS = 10;
-/** Fallos de clave en toda la web por hora, vengan de la IP que vengan (por si alguien falsea su IP): tope a la fuerza bruta. */
-const ADMIN_MAX_FAILS_GLOBAL = 100;
 
 interface PlayerRow {
   id: string;
@@ -73,7 +71,6 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   /** Revalidar cuesta CPU en un único hilo: tope global, aunque falle el límite por IP. */
   const revalidations = new RateLimiter(30, 60_000);
   const adminFails = new RateLimiter(ADMIN_MAX_FAILS, 600_000);
-  const adminFailsGlobal = new RateLimiter(ADMIN_MAX_FAILS_GLOBAL, 3_600_000);
   const renameLimit = new RateLimiter(3, 86_400_000);
   const recoverLimit = new RateLimiter(10, 600_000);
   // estadísticas anónimas: tope por IP y tope global (la IP no se guarda, solo cuenta en memoria)
@@ -193,12 +190,10 @@ export function createApp(cfg: Config, db: DatabaseSync) {
     // sin clave, o con una demasiado corta para aguantar adivinarla, el panel no existe
     if (cfg.adminToken.length < ADMIN_TOKEN_MIN_LEN) throw new ApiError(404, 'no existe');
     // solo cuentan los fallos: la página de admin hace varias peticiones válidas seguidas
-    if (adminFails.count(`a:${ip}`, now) >= ADMIN_MAX_FAILS || adminFailsGlobal.count('a', now) >= ADMIN_MAX_FAILS_GLOBAL)
-      throw new ApiError(429, 'demasiados intentos');
+    if (adminFails.count(`a:${ip}`, now) >= ADMIN_MAX_FAILS) throw new ApiError(429, 'demasiados intentos');
     const m = /^Bearer (.+)$/.exec(req.headers.get('authorization') ?? '');
     if (!m || !safeEqHashed(m[1], cfg.adminToken)) {
       adminFails.allow(`a:${ip}`, now);
-      adminFailsGlobal.allow('a', now);
       // solo el aviso de cada bloqueo, para que un ataque no llene el registro
       if (adminFails.count(`a:${ip}`, now) === ADMIN_MAX_FAILS) audit('clave-incorrecta-bloqueo', `ip=${ip}`);
       throw new ApiError(401, 'sin permiso');
