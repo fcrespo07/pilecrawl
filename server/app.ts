@@ -1,7 +1,7 @@
 // API del ranking. Una función `(Request, ip) => Response`: sin sockets, así se prueba directamente.
 import { NICK_CHARS, isBlockedNick, nickKey } from './nick';
 import type { DatabaseSync } from 'node:sqlite';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { RULES_VERSION } from '../src/core/game';
 import { dailyNumber, dailySeed, isModeId, MODES, utcDate, type ModeId } from '../src/core/modes';
@@ -63,6 +63,19 @@ function scopeRange(scope: string): [string, string] {
   return [day, new Date(Date.parse(`${day}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10)];
 }
 
+const LINK_TTL_MS = 600_000;
+/** Sin 0/O/1/I/L para que se pueda dictar o copiar a mano. */
+const LINK_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function newLinkCode(): string {
+  let c = '';
+  for (let i = 0; i < 8; i++) c += LINK_ALPHABET[randomInt(LINK_ALPHABET.length)];
+  return c;
+}
+/** Acepta minúsculas, espacios y guion: «k7m2 q9xd» y «K7M2-Q9XD» son el mismo código. */
+function normalizeLinkCode(raw: string): string {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 export function createApp(cfg: Config, db: DatabaseSync) {
   const general = new RateLimiter(240, 60_000);
   const createLimit = new RateLimiter(5, 3_600_000);
@@ -73,6 +86,10 @@ export function createApp(cfg: Config, db: DatabaseSync) {
   const adminFails = new RateLimiter(ADMIN_MAX_FAILS, 600_000);
   const renameLimit = new RateLimiter(3, 86_400_000);
   const recoverLimit = new RateLimiter(10, 600_000);
+  const linkLimit = new RateLimiter(5, 600_000);
+  const redeemLimit = new RateLimiter(10, 600_000);
+  /** Códigos cortos de vinculación: viven solo en memoria (10 min, un uso) y guardan el token del jugador. */
+  const links = new Map<string, { token: string; playerId: string; expires: number }>();
   // estadísticas anónimas: tope por IP y tope global (la IP no se guarda, solo cuenta en memoria)
   const statsLimit = new RateLimiter(40, 3_600_000);
   const statsGlobal = new RateLimiter(60, 60_000);
@@ -302,6 +319,29 @@ export function createApp(cfg: Config, db: DatabaseSync) {
       const p = authToken(code);
       if (!p) throw new ApiError(404, 'código no válido');
       return json({ id: p.id, nickname: p.nickname, token: code });
+    }
+
+    // Código corto para vincular otro dispositivo: vale 10 minutos y un solo uso
+    if (method === 'POST' && path === '/api/players/me/link') {
+      const me = needPlayer(req);
+      if (!linkLimit.allow(`l:${me.id}`, now)) throw new ApiError(429, 'demasiados códigos, prueba en unos minutos');
+      for (const [k, v] of links) if (v.expires <= now || v.playerId === me.id) links.delete(k);
+      const token = /^Bearer (.+)$/.exec(req.headers.get('authorization') ?? '')![1];
+      let code = '';
+      do code = newLinkCode(); while (links.has(code));
+      links.set(code, { token, playerId: me.id, expires: now + LINK_TTL_MS });
+      return json({ code, expiresIn: LINK_TTL_MS / 1000 });
+    }
+
+    if (method === 'POST' && path === '/api/players/link/redeem') {
+      if (!redeemLimit.allow(`r:${ip}`, now)) throw new ApiError(429, 'demasiados intentos, prueba más tarde');
+      const code = normalizeLinkCode(String((await readJson(req)).code ?? ''));
+      const l = links.get(code);
+      links.delete(code); // un uso, también si ya caducó
+      if (!l || l.expires <= now) throw new ApiError(404, 'código no válido o caducado');
+      const p = authToken(l.token);
+      if (!p) throw new ApiError(404, 'código no válido o caducado');
+      return json({ id: p.id, nickname: p.nickname, token: l.token });
     }
 
     // Código nuevo: invalida el anterior en todos los navegadores

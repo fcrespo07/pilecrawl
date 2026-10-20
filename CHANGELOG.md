@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#67) Vincular dispositivos: «Vincular otro dispositivo» en Rankings da un código corto (8 letras, vale 10 minutos y un solo uso) para entrar con tu apodo en otro móvil u ordenador. La pantalla final también ofrece «Ya tengo un apodo en otro dispositivo». El código de recuperación largo sigue valiendo.
 
 ## 0.27.0 — 2026-10-20
 - (#66) Botón «Compartir resultado» en la pantalla final: abre el menú de compartir del sistema o copia un texto corto con modo, puntos, nivel y líneas. Las reglas no cambian.

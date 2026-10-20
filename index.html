@@ -283,6 +283,10 @@
           <form id="publish-nick" class="rank-nick" hidden>
             <div><input id="publish-nick-input" maxlength="16" minlength="3" autocomplete="off" placeholder="Apodo" aria-label="Apodo para el ranking" required /><button class="btn small" type="submit"><span>Crear apodo</span></button></div>
           </form>
+          <button id="publish-link-open" class="rank-link" type="button" hidden>Ya tengo un apodo en otro dispositivo</button>
+          <form id="publish-link" class="rank-nick" hidden>
+            <div><input id="publish-link-input" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Código de vinculación" aria-label="Código de vinculación" required /><button class="btn small" type="submit"><span>Entrar</span></button></div>
+          </form>
           <button id="publish-btn" class="btn small" type="button" hidden><span>Publicar puntuación</span></button>
           <p id="publish-msg" class="rank-msg" role="status"></p>
         </div>
@@ -315,17 +319,18 @@
           <label for="ranking-nick-input">Para entrar en la tabla, elige un apodo (3 a 16 caracteres)</label>
           <div><input id="ranking-nick-input" maxlength="16" minlength="3" autocomplete="off" required /><button class="home-btn small" type="submit">Crear</button></div>
           <p id="ranking-nick-msg" class="rank-msg" role="status"></p>
-          <button id="ranking-recover-open" class="rank-link" type="button">Ya tengo un apodo en otro navegador</button>
+          <button id="ranking-recover-open" class="rank-link" type="button">Ya tengo un apodo en otro dispositivo</button>
         </form>
         <form id="ranking-recover" class="rank-nick" hidden>
-          <label for="ranking-recover-input">Pega tu código de recuperación</label>
+          <label for="ranking-recover-input">Escribe el código de vinculación (8 letras) o pega tu código de recuperación</label>
           <div><input id="ranking-recover-input" maxlength="80" autocomplete="off" spellcheck="false" required /><button class="home-btn small" type="submit">Recuperar</button></div>
         </form>
         <div id="ranking-me" class="rank-me" hidden>
-          <p>Juegas como <b id="ranking-me-name"></b>. <button id="ranking-rename" class="rank-link" type="button">Cambiar apodo</button> · <button id="ranking-code" class="rank-link" type="button">Código de recuperación</button> · <button id="ranking-delete" class="rank-link" type="button">Borrar mis datos</button></p>
+          <p>Juegas como <b id="ranking-me-name"></b>. <button id="ranking-rename" class="rank-link" type="button">Cambiar apodo</button> · <button id="ranking-link" class="rank-link" type="button">Vincular otro dispositivo</button> · <button id="ranking-code" class="rank-link" type="button">Código de recuperación</button> · <button id="ranking-delete" class="rank-link" type="button">Borrar mis datos</button></p>
           <form id="ranking-rename-form" class="rank-nick" hidden>
             <div><input id="ranking-rename-input" maxlength="16" minlength="3" autocomplete="off" aria-label="Nuevo apodo" required /><button class="home-btn small" type="submit">Guardar</button></div>
           </form>
+          <p id="ranking-link-box" hidden>En el otro dispositivo pulsa «Ya tengo un apodo» y escribe: <b id="ranking-link-code" class="link-code"></b> (vale 10 minutos y un solo uso)</p>
           <p id="ranking-code-box" hidden>Guárdalo: quien lo tenga puede jugar como tú. <input id="ranking-code-text" readonly aria-label="Código de recuperación" /> <button id="ranking-rotate" class="rank-link" type="button">Generar código nuevo (el anterior deja de valer)</button></p>
         </div>
         <p id="ranking-msg2" class="rank-msg" role="status"></p>

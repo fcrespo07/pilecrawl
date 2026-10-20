@@ -55,7 +55,7 @@ export class RankingUI {
     $('ranking-recover').addEventListener('submit', (e) => {
       e.preventDefault();
       void this.run(async () => {
-        await net.recover(($('ranking-recover-input') as HTMLInputElement).value.trim());
+        await net.joinWithCode(($('ranking-recover-input') as HTMLInputElement).value);
         $('ranking-recover').hidden = true;
         await this.load();
       });
@@ -73,6 +73,18 @@ export class RankingUI {
         await net.rename(($('ranking-rename-input') as HTMLInputElement).value);
         $('ranking-rename-form').hidden = true;
         await this.load();
+      });
+    });
+    $('ranking-link').addEventListener('click', () => {
+      const box = $('ranking-link-box');
+      if (!box.hidden) {
+        box.hidden = true;
+        return;
+      }
+      void this.run(async () => {
+        const c = await net.createLinkCode();
+        $('ranking-link-code').textContent = `${c.slice(0, 4)}-${c.slice(4)}`;
+        box.hidden = false;
       });
     });
     $('ranking-code').addEventListener('click', () => {
@@ -93,6 +105,23 @@ export class RankingUI {
     $('publish-nick').addEventListener('submit', (e) => {
       e.preventDefault();
       void this.createPlayer($('publish-nick-input') as HTMLInputElement, $('publish-msg'), () => this.refreshPublish());
+    });
+    $('publish-link-open').addEventListener('click', () => {
+      $('publish-link').hidden = false;
+      ($('publish-link-input') as HTMLInputElement).focus();
+    });
+    $('publish-link').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const msg = $('publish-msg');
+      msg.textContent = '';
+      void net
+        .joinWithCode(($('publish-link-input') as HTMLInputElement).value)
+        .then(() => {
+          $('publish-link').hidden = true;
+          this.refreshPublish();
+          if (this.finished) void this.publish();
+        })
+        .catch((err) => (msg.textContent = (err as Error).message));
     });
     $('publish-btn').addEventListener('click', () => void this.publish());
   }
@@ -129,6 +158,7 @@ export class RankingUI {
     $('ranking-nick').hidden = player !== null;
     $('ranking-me').hidden = player === null;
     $('ranking-code-box').hidden = true;
+    $('ranking-link-box').hidden = true;
     $('ranking-rename-form').hidden = true;
     if (player) $('ranking-me-name').textContent = player.nickname;
     list.innerHTML = '<li class="rank-empty">Cargando…</li>';
@@ -200,6 +230,8 @@ export class RankingUI {
     const player = net.loadPlayer();
     const btn = $('publish-btn') as HTMLButtonElement;
     $('publish-nick').hidden = player !== null;
+    $('publish-link-open').hidden = player !== null;
+    if (player) $('publish-link').hidden = true;
     btn.hidden = player === null;
     btn.disabled = false;
     btn.querySelector('span')!.textContent = 'Publicar puntuación';
