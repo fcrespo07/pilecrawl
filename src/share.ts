@@ -17,16 +17,19 @@ export function shareText(i: ShareInfo): string {
 /** Abre el menú de compartir del sistema si existe; si no, copia el texto. Devuelve lo que hizo. */
 export async function shareRun(i: ShareInfo): Promise<'shared' | 'copied' | 'failed'> {
   const text = shareText(i);
-  try {
-    if (navigator.share) {
+  if (navigator.share) {
+    try {
       await navigator.share({ text });
       return 'shared';
+    } catch (e) {
+      // cancelar el menú de compartir no es un fallo; cualquier otro error cae al portapapeles
+      if ((e as Error).name === 'AbortError') return 'shared';
     }
+  }
+  try {
     await navigator.clipboard.writeText(text);
     return 'copied';
-  } catch (e) {
-    // cancelar el menú de compartir no es un fallo
-    if ((e as Error).name === 'AbortError') return 'shared';
+  } catch {
     return 'failed';
   }
 }
