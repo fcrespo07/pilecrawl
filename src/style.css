@@ -1405,3 +1405,4 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 #retry-btn.locked {
   opacity: 0.45;
 }
+.link-code { font-family: 'Press Start 2P', monospace; font-size: 14px; letter-spacing: 2px; color: var(--hot); user-select: all; }

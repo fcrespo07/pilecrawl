@@ -57,6 +57,35 @@ describe('jugadores', () => {
   });
 });
 
+describe('vincular dispositivo', () => {
+  it('da un código corto de un solo uso que caduca', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    expect((await call('POST', '/api/players/me/link')).status).toBe(401);
+    const l = await call('POST', '/api/players/me/link', undefined, token);
+    expect(l.status).toBe(200);
+    expect(l.body.code).toMatch(/^[A-Z2-9]{8}$/);
+    const spaced = `${l.body.code.slice(0, 4).toLowerCase()} - ${l.body.code.slice(4)}`;
+    const r = await call('POST', '/api/players/link/redeem', { code: spaced });
+    expect(r.body).toMatchObject({ nickname: 'Fer', token });
+    expect((await call('POST', '/api/players/link/redeem', { code: l.body.code })).status).toBe(404);
+    // caduca a los 10 minutos
+    const l2 = await call('POST', '/api/players/me/link', undefined, token);
+    clock += 601_000;
+    expect((await call('POST', '/api/players/link/redeem', { code: l2.body.code })).status).toBe(404);
+  });
+
+  it('un código nuevo anula el anterior y rotar el secreto invalida los pendientes', async () => {
+    const { call, register } = setup();
+    const token = await register('Fer');
+    const a = (await call('POST', '/api/players/me/link', undefined, token)).body.code;
+    const b = (await call('POST', '/api/players/me/link', undefined, token)).body.code;
+    expect((await call('POST', '/api/players/link/redeem', { code: a })).status).toBe(404);
+    await call('POST', '/api/players/me/rotate', undefined, token);
+    expect((await call('POST', '/api/players/link/redeem', { code: b })).status).toBe(404);
+  });
+});
+
 describe('identidad', () => {
   it('cambia de apodo, filtra palabras y se recupera con el código', async () => {
     const { call, register } = setup();

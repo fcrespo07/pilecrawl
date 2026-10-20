@@ -130,6 +130,21 @@ export async function recover(code: string): Promise<Player> {
   return p;
 }
 
+/** Código corto (10 min, un uso) para que otro dispositivo entre como tú. */
+export async function createLinkCode(): Promise<string> {
+  return (await call<{ code: string }>('POST', '/api/players/me/link', undefined, true)).code;
+}
+
+/** Entra con un código de vinculación (8 letras) o, si no lo parece, con el código de recuperación completo. */
+export async function joinWithCode(raw: string): Promise<Player> {
+  const text = raw.trim();
+  if (/^[0-9a-f]{24}\./.test(text)) return recover(text);
+  const r = await call<{ token: string; nickname: string }>('POST', '/api/players/link/redeem', { code: text });
+  const p = { token: r.token, nickname: r.nickname };
+  savePlayer(p);
+  return p;
+}
+
 /** Cambia el secreto: el código anterior deja de valer en todos los navegadores. */
 export async function rotateCode(): Promise<Player> {
   const r = await call<{ token: string; nickname: string }>('POST', '/api/players/me/rotate', undefined, true);
