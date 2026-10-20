@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.27.0 — 2026-10-20
+- (#66) Botón «Compartir resultado» en la pantalla final: abre el menú de compartir del sistema o copia un texto corto con modo, puntos, nivel y líneas. Las reglas no cambian.
+
 ## 0.26.2 — 2026-10-14
 - [interno] (#65) El panel de administración puede borrar un jugador entero (apodo, código de recuperación y todas sus partidas; hay que teclear el apodo para confirmar). Endurecimiento: el panel se desactiva si `ADMIN_TOKEN` mide menos de 16 caracteres, la clave ya no se guarda en el navegador y la página va sin caché ni referrer.
 

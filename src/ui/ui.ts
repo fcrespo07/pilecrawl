@@ -10,6 +10,7 @@ import { dailyNumber, MODES } from '../core/modes';
 import { perkName } from '../core/expedition';
 import { loadBest, submitScore } from '../records';
 import { keyName } from '../settings';
+import { shareRun, type ShareInfo } from '../share';
 
 const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 /** Las maldiciones llevan su propio color y etiqueta en vez de la rareza. */
@@ -67,6 +68,7 @@ export class UI {
   private hyperKey = '';
   private streakKey = '';
   private overTimer = 0;
+  private shareInfo: ShareInfo | null = null;
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
@@ -76,6 +78,12 @@ export class UI {
     });
     this.bindTooltips($('perk-list'));
     this.bindTooltips($('over-perks'));
+    $('share-btn').addEventListener('click', async () => {
+      if (!this.shareInfo) return;
+      const r = await shareRun(this.shareInfo);
+      $('share-btn').querySelector('span')!.textContent =
+        r === 'copied' ? 'Copiado' : r === 'failed' ? 'No se pudo compartir' : 'Compartir resultado';
+    });
   }
 
   // ───────────── overlays ─────────────
@@ -170,6 +178,10 @@ export class UI {
       (prize ? stat('Fragmentos', `+${fmt(prize.shards)}`) : '') +
       (prize?.unlocked.length ? stat('Perk abierto', prize.unlocked.map(perkName).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
+    const share = $('share-btn');
+    share.hidden = g.sandbox || g.mode === 'tutorial';
+    share.querySelector('span')!.textContent = 'Compartir resultado';
+    this.shareInfo = { mode: this.modeTitle(), score: g.score, level: g.level, lines: g.lines };
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);
   }
