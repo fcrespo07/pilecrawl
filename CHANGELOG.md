@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.29.0 — 2026-10-22
+- (#68) Pilecrawl se puede instalar como app (icono en la pantalla de inicio, sin barra del navegador). En navegadores que lo permiten sale «Instalar en este dispositivo» en la portada. No guarda nada sin conexión: siempre juegas la última versión.
+
 ## 0.28.0 — 2026-10-20
 - (#67) Vincular dispositivos: «Vincular otro dispositivo» en Rankings da un código corto (8 letras, vale 10 minutos y un solo uso) para entrar con tu apodo en otro móvil u ordenador. La pantalla final también ofrece «Ya tengo un apodo en otro dispositivo». El código de recuperación largo sigue valiendo.
 
