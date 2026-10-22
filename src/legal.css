@@ -18,3 +18,15 @@ h1 .logo { width: 40px; height: 40px; vertical-align: middle; margin-right: 10px
 .release ul { padding-left: 22px; margin: 6px 0; }
 .release li { margin: 6px 0; }
 code { background: #1c2240; border-radius: 3px; padding: 0 4px; font-size: 16px; }
+.perk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.perk { background: #171c36; border: 2px solid #3a4375; border-radius: 4px; padding: 10px 14px; }
+.perk h3 { margin: 0 0 4px; font-size: 18px; color: #fff; }
+.perk h3 small { display: block; font-size: 13px; font-weight: normal; color: #9aa3c7; }
+.perk .fx { margin: 6px 0 0; padding-left: 18px; font-size: 16px; line-height: 1.4; }
+.perk .pro { color: #9be7a0; }
+.perk .con { color: #ff9a9a; }
+.perk.r-rare { border-color: #5aa9ff; }
+.perk.r-epic { border-color: #c07bff; }
+.perk.r-legendary { border-color: #ffc94d; }
+.perk.r-curse { border-color: #c94a4a; }
+.perk.r-hyper { border-color: #8fd1ff; }
