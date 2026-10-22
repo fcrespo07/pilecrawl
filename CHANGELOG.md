@@ -5,6 +5,12 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 - (rework de perks, fase 1) **Cambia las reglas (`RULES_VERSION` 13): el ranking empieza de cero.** Salen Pluma, Pulso firme (se funden en Pulso tranquilo: +100 ms de fijado y caída un 6% más lenta), Ahorro y Esquina. Atajo ya no es solo «2 líneas menos»: su primera línea de cada nivel cuenta ×3, y cada subida de nivel acerca 3 piezas la basura. Cinco maldiciones nuevas que cambian cómo se juega: Cola ciega (solo ves la siguiente pieza), Sin fantasma, Pieza pesada (una gris cae al doble), Deriva (el tablero se desplaza una columna cada 8 piezas) y Ruleta (un bloque salta de columna cada 5). Propuesta completa en `planes/rework-perks.md`.
 
+## 0.29.1 — 2026-10-22
+- (#69) Tres páginas de texto para quien llega desde un buscador: Guía (cómo se juega, racha, hiperperks, modos y consejos), Catálogo de mejoras (generado desde los datos del juego, así siempre está al día) y enlaces en el pie y en el menú de todas las páginas. Se añaden `sitemap.xml` y `robots.txt`.
+
+## 0.29.0 — 2026-10-22
+- (#68) Pilecrawl se puede instalar como app (icono en la pantalla de inicio, sin barra del navegador). En navegadores que lo permiten sale «Instalar en este dispositivo» en la portada. No guarda nada sin conexión: siempre juegas la última versión.
+
 ## 0.28.0 — 2026-10-20
 - (#67) Vincular dispositivos: «Vincular otro dispositivo» en Rankings da un código corto (8 letras, vale 10 minutos y un solo uso) para entrar con tu apodo en otro móvil u ordenador. La pantalla final también ofrece «Ya tengo un apodo en otro dispositivo». El código de recuperación largo sigue valiendo.
 

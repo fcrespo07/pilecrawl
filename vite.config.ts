@@ -1,6 +1,9 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { CURSES, PERKS, RARITY_LABEL, type PerkDef, type Rarity } from './src/core/perks';
+import { HYPERS } from './src/core/hypers';
+import { UNLOCK_LEVEL } from './src/core/meta';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -37,6 +40,25 @@ function releaseNotesHtml(): string {
     .join('\n');
 }
 
+/** Catálogo de mejoras para `perks.html`, generado desde los datos del juego (así nunca se desfasa del juego). */
+function perksHtml(): string {
+  const effects = (p: { pros: (n: number) => string[]; cons?: (n: number) => string[] }) =>
+    `<ul class="fx">${p.pros(1).map((t) => `<li class="pro">${t}</li>`).join('')}${(p.cons?.(1) ?? []).map((t) => `<li class="con">${t}</li>`).join('')}</ul>`;
+  const maxLabel = (p: PerkDef) => (p.max === 1 ? 'Única' : p.max >= 99 ? 'Acumulable' : `Hasta ×${p.max}`);
+  const card = (p: PerkDef) => `<article class="perk r-${p.curse ? 'curse' : p.rarity}"><h3>${p.name} <small>${p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]} · ${maxLabel(p)}</small></h3>${effects(p)}</article>`;
+  const plural: Record<Rarity, string> = { common: 'Comunes', rare: 'Raras', epic: 'Épicas', legendary: 'Legendarias' };
+  const rarities: Rarity[] = ['common', 'rare', 'epic', 'legendary'];
+  const out: string[] = [];
+  for (const r of rarities) {
+    const list = PERKS.filter((p) => p.rarity === r);
+    const lock = UNLOCK_LEVEL[r] > 0 ? ` Se desbloquean al llegar al nivel ${UNLOCK_LEVEL[r]} en alguna partida.` : '';
+    out.push(`<section><h2 id="${r}">${plural[r]} <span class="note">${list.length}</span></h2>${lock ? `<p class="note">${lock.trim()}</p>` : ''}<div class="perk-grid">${list.map(card).join('')}</div></section>`);
+  }
+  out.push(`<section><h2 id="malditas">Maldiciones <span class="note">${CURSES.length}</span></h2><p class="note">Solo salen en ofertas malditas, desde el nivel 5. No tienen ventaja: la compensación es que la oferta siguiente es rara o mejor.</p><div class="perk-grid">${CURSES.map(card).join('')}</div></section>`);
+  out.push(`<section><h2 id="hiperperks">Hiperperks <span class="note">${HYPERS.length}</span></h2><p class="note">Habilidades activas, una por partida. Se cargan con líneas y se lanzan con la tecla D.</p><div class="perk-grid">${HYPERS.map((h) => `<article class="perk r-hyper"><h3>${h.name} <small>${h.charge} líneas · ${h.durationMs ? `dura ${h.durationMs / 1000} s` : 'al instante'}</small></h3>${effects(h)}</article>`).join('')}</div></section>`);
+  return out.join('\n');
+}
+
 /**
  * Cosas de publicación que dependen de variables del build (VITE_*), sin identificadores en el código:
  * - `ads.txt` con la línea de AdSense (si hay VITE_AD_CLIENT válido);
@@ -57,6 +79,7 @@ function publishing(env: Record<string, string>): Plugin {
     transformIndexHtml(html) {
       const mail = email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : '(correo de contacto sin configurar)';
       let out = html.replaceAll('{{OWNER}}', esc(owner)).replaceAll('{{EMAIL}}', mail).replaceAll('{{VERSION}}', pkg.version).replaceAll('{{REPO_URL}}', repoUrl);
+      if (out.includes('{{PERKS}}')) out = out.replaceAll('{{PERKS}}', () => perksHtml());
       if (out.includes('{{NOVEDADES}}')) out = out.replaceAll('{{NOVEDADES}}', () => releaseNotesHtml());
       return client ? out.replace('</head>', `  <meta name="google-adsense-account" content="${client}" />\n  </head>`) : out;
     },
@@ -82,6 +105,8 @@ export default defineConfig(({ mode }) => {
         admin: resolve(__dirname, 'admin.html'),
         novedades: resolve(__dirname, 'novedades.html'),
         reportar: resolve(__dirname, 'reportar.html'),
+        guia: resolve(__dirname, 'guia.html'),
+        perks: resolve(__dirname, 'perks.html'),
       },
     },
   },
