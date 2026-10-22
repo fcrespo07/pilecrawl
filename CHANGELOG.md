@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.29.0 — 2026-10-22
 - (#68) Pilecrawl se puede instalar como app (icono en la pantalla de inicio, sin barra del navegador). En navegadores que lo permiten sale «Instalar en este dispositivo» en la portada. No guarda nada sin conexión: siempre juegas la última versión.
 
 ## 0.28.0 — 2026-10-20
