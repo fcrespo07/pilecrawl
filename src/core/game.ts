@@ -537,7 +537,7 @@ export class Game {
     if (this.holdUsed && !this.mods.infiniteHold) return;
     this.record([this.steps, 'hold']);
     const a = this.active;
-    const spec: PieceSpec = { def: a.hyperFrom ?? a.def, bomb: a.bomb, prism: a.prism, gold: a.gold };
+    const spec: PieceSpec = { def: a.hyperFrom ?? a.def, bomb: a.bomb, prism: a.prism, gold: a.gold, ...(a.heavy ? { heavy: true } : {}) };
     let next: PieceSpec | undefined;
     if (this.hold.length >= this.mods.holdSlots) next = this.hold.shift();
     this.hold.push(spec);

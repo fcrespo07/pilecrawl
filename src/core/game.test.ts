@@ -305,6 +305,14 @@ describe('perks nuevos', () => {
     expect(g['garbageCounter']).toBeGreaterThan(before);
   });
 
+  it('una pieza pesada guardada en la reserva sigue siendo pesada', () => {
+    const g = playing();
+    g.mods.heavyEvery = 7;
+    g.active!.heavy = true;
+    g.holdPiece();
+    expect(g.hold[0].heavy).toBe(true);
+  });
+
   it('Deriva desplaza el tablero una columna sin perder bloques', () => {
     const g = playing();
     g.board[ROWS - 1][0] = PIECES.T.id;
