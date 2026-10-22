@@ -690,6 +690,15 @@ export class Renderer {
       this.flashList.push({ x: BOARD_X, y: BOARD_Y + BOARD_H - CELL, w: BOARD_W, h: CELL, color: 0xff3050, life: 0.3, max: 0.3 });
     });
 
+    ev.on('drift', () => {
+      this.shake(0.2);
+      this.floatText('DERIVA', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x9a7bff, size: 28 });
+    });
+    ev.on('roulette', ({ to }) => {
+      this.shake(0.1);
+      this.flashList.push({ x: BOARD_X + to[0] * CELL, y: BOARD_Y + (to[1] - HIDDEN) * CELL, w: CELL, h: CELL, color: 0xffffff, life: 0.3, max: 0.3 });
+    });
+
     ev.on('levelup', ({ level }) => {
       this.accentTarget = accentFor(level);
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
@@ -849,7 +858,7 @@ export class Renderer {
       for (let i = 0; i < g.mods.holdSlots; i++, x += hs + 8) hold.push({ x, y: HOLD_Y + top, s: hs });
       const next: { x: number; y: number; s: number }[] = [];
       x = NEXT_X + 12;
-      for (let i = 0; i < g.mods.preview; i++) {
+      for (let i = 0; i < g.previewCount(); i++) {
         const s = i === 0 ? 56 : 40;
         if (x + s > NEXT_X + NEXT_W - 8) break;
         next.push({ x, y: NEXT_Y + top + (56 - s) / 2, s });
@@ -865,7 +874,7 @@ export class Renderer {
     const holdH = y - HOLD_Y + 4;
     const next: { x: number; y: number; s: number }[] = [];
     y = NEXT_Y + top;
-    for (let i = 0; i < g.mods.preview; i++) {
+    for (let i = 0; i < g.previewCount(); i++) {
       const s = i === 0 ? 64 : 48;
       if (y + s > BOARD_Y + BOARD_H) break; // con muchas piezas en la cola, las que no caben no se dibujan
       next.push({ x: NEXT_X + (NEXT_W - s) / 2, y, s });
@@ -877,7 +886,7 @@ export class Renderer {
 
   private updatePanels() {
     const g = this.game;
-    const key = `${g.mods.holdSlots}|${g.mods.preview}|${this.accent}|${this.skinId}`;
+    const key = `${g.mods.holdSlots}|${g.previewCount()}|${this.accent}|${this.skinId}`;
     if (key === this.panelKey) return;
     this.panelKey = key;
     const { hold, next, holdH, nextH } = this.queueSlots();
@@ -980,6 +989,7 @@ export class Renderer {
   private specColor(spec: PieceSpec, i: number): number {
     if (spec.bomb || spec.hyperBomb) return lerpColor(0xff2a2a, 0xffb020, 0.5 + 0.5 * Math.sin(this.time * 18));
     if (spec.prism) return hsv((this.time * 0.6 + i * 0.12) % 1, 0.75, 1);
+    if (spec.heavy) return lerpColor(0x6b6f7a, 0xc8ccd6, 0.5 + 0.5 * Math.sin(this.time * 3));
     if (spec.gold) return lerpColor(GOLD_COLOR, 0xffffff, 0.2 + 0.2 * Math.sin(this.time * 5 + i));
     return spec.def.color;
   }
@@ -1011,7 +1021,7 @@ export class Renderer {
     // ghost
     let gy = a.y;
     while (!g.collides(a.def, ax, gy + 1, arot)) gy++;
-    shape.forEach(([cx, cy], i) => {
+    if (!g.mods.noGhost) shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;
       this.placeCell(this.ghosts, this.px(ax + cx), this.py(y), CELL, this.specColor(a, i), 0.7);

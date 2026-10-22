@@ -26,6 +26,8 @@ export interface PieceSpec {
   bomb: boolean;
   prism: boolean;
   gold: boolean;
+  /** Pieza pesada (maldición): cae al doble de rápido. */
+  heavy?: boolean;
   /** Bomba solo por Bombardeo: no pasa a la reserva y no borra si era prisma u oro. */
   hyperBomb?: boolean;
   /** Pieza que era antes de que Diluvio la volviera una I: es la que va a la reserva. */
@@ -74,6 +76,8 @@ export interface GameEvents {
   quake: { chain: number };
   settle: { columns: number };
   garbage: { hole: number };
+  drift: void;
+  roulette: { from: [number, number]; to: [number, number] };
   garbageWarn: { progress: number };
   levelup: { level: number };
   interest: { amount: number };
@@ -110,7 +114,7 @@ export const REROLL_EVERY_LEVELS = 5;
 export const SOFT_DROP_MS = 40;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 12;
+export const RULES_VERSION = 13;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -121,6 +125,8 @@ export const EMPTY_OFFER_POINTS = 1000;
 /** Mínimo de piezas entre filas de basura, sumen lo que sumen los perks. */
 export const GARBAGE_MIN_INTERVAL = 3;
 export const CURSE_CHANCE = 0.12;
+/** Piezas que acerca la basura cada subida de nivel con Atajo. */
+export const SHORTCUT_GARBAGE = 3;
 /** Tutorial: columna donde empieza el hueco de 2 de ancho, primeras piezas, líneas por nivel y líneas que carga la hiperperk. */
 export const TUTORIAL_HOLE = 7;
 export const TUTORIAL_PIECES = ['O', 'T', 'J', 'I'];
@@ -381,7 +387,8 @@ export class Game {
     const bomb = m.bombEvery > 0 && this.generated % m.bombEvery === 0;
     const prism = !bomb && m.prismEvery > 0 && this.generated % m.prismEvery === 0;
     const gold = !bomb && !prism && this.rng() < m.goldChance;
-    return { def, bomb, prism, gold };
+    const heavy = m.heavyEvery > 0 && this.generated % m.heavyEvery === 0;
+    return { def, bomb, prism, gold, ...(heavy ? { heavy } : {}) };
   }
 
   /** Re-marca bombas/prismas de la cola cuando cambia un perk que los afecta. */
@@ -392,6 +399,7 @@ export class Game {
       const n = startIdx + i;
       if (!s.bomb && m.bombEvery > 0 && n % m.bombEvery === 0) { s.bomb = true; s.prism = false; s.gold = false; }
       if (!s.bomb && !s.prism && m.prismEvery > 0 && n % m.prismEvery === 0) { s.prism = true; s.gold = false; }
+      if (m.heavyEvery > 0 && n % m.heavyEvery === 0) s.heavy = true;
     });
   }
 
@@ -539,6 +547,11 @@ export class Game {
     this.holdUsed = true;
   }
 
+  /** Piezas de la cola que se ven (la maldición Cola ciega deja solo la siguiente). */
+  previewCount(): number {
+    return this.mods.blindQueue ? 1 : this.mods.preview;
+  }
+
   ghostY(): number {
     const a = this.active!;
     let y = a.y;
@@ -553,6 +566,7 @@ export class Game {
     let speed = this.mods.gravitySpeed;
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
+    if (this.active?.heavy) speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
     speed *= this.labGravity;
     t /= speed;
@@ -685,7 +699,6 @@ export class Game {
   scoreMultNow(): number {
     const m = this.mods;
     let mult = m.scoreMult;
-    if (m.savings > 0) mult *= 1 + m.savings * Math.min(this.rerolls, 5);
     if (m.vertigo > 0 && this.inDanger(0.5)) mult *= 1 + m.vertigo;
     if (m.collector > 0) mult *= 1 + m.collector * this.perkOrder.filter((id) => !PERK_BY_ID[id].curse).length;
     if (this.phoenixBonus > 0) mult *= 1 + this.phoenixBonus;
@@ -972,12 +985,39 @@ export class Game {
       }
     }
 
+    // Deriva y Ruleta (maldiciones): cambian el tablero cada cierto número de piezas
+    if (m.driftEvery > 0 && this.piecesLocked % m.driftEvery === 0) this.driftBoard();
+    if (m.rouletteEvery > 0 && this.piecesLocked % m.rouletteEvery === 0) this.spinRoulette();
+
     if (this.pendingLevelUps > 0) {
       if (m.levelClearRows > 0) this.breathe(m.levelClearRows * this.pendingLevelUps);
       this.beginChoice();
       return;
     }
     this.spawn();
+  }
+
+  /** Deriva: cada fila se desplaza una columna a la derecha y lo que sale por un lado entra por el otro. */
+  private driftBoard() {
+    this.board = this.board.map((row) => [row[COLS - 1], ...row.slice(0, COLS - 1)]);
+    this.events.emit('drift', undefined);
+  }
+
+  /** Ruleta: el bloque más alto de una columna con bloques salta encima de otra columna al azar. */
+  private spinRoulette() {
+    const tops: number[] = [];
+    for (let x = 0; x < COLS; x++) if (this.board.some((r) => r[x] !== 0)) tops.push(x);
+    if (tops.length === 0) return;
+    const from = tops[Math.floor(this.rng() * tops.length)];
+    const others = Array.from({ length: COLS }, (_, x) => x).filter((x) => x !== from);
+    const to = others[Math.floor(this.rng() * others.length)];
+    const fromY = this.board.findIndex((r) => r[from] !== 0);
+    // fila libre justo encima de la pila de `to`
+    const dest = this.board.some((r) => r[to] !== 0) ? this.board.findIndex((r) => r[to] !== 0) - 1 : ROWS - 1;
+    if (dest < HIDDEN) return; // sin sitio visible: no se mueve
+    this.board[dest][to] = this.board[fromY][from];
+    this.board[fromY][from] = 0;
+    this.events.emit('roulette', { from: [from, fromY], to: [to, dest] });
   }
 
   /** Respiro: borra las `n` filas de abajo que tengan bloques. No puntúa ni cuenta como línea. */
@@ -1075,11 +1115,15 @@ export class Game {
   }
 
   private addLevelProgress(n: number) {
+    // Atajo: la primera línea de cada nivel vale más
+    if (this.mods.shortcut > 0 && this.linesIntoLevel === 0 && n > 0) n += 2 * this.mods.shortcut;
     this.linesIntoLevel += n;
     while (this.linesIntoLevel >= this.linesNeeded()) {
       this.linesIntoLevel -= this.linesNeeded();
       this.level++;
       this.pendingLevelUps++;
+      // Atajo: cada subida acerca la siguiente fila de basura
+      if (this.mods.shortcut > 0) this.garbageCounter += SHORTCUT_GARBAGE;
       if (this.mods.rerollPerLevel > 0) this.rerolls += this.mods.rerollPerLevel;
       if (this.level % REROLL_EVERY_LEVELS === 0) {
         this.rerolls++;

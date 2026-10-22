@@ -12,25 +12,25 @@ describe('laboratorio', () => {
   it('añadir y quitar mejoras recalcula los efectos y marca la partida', () => {
     const g = run();
     expect(g.sandbox).toBe(false);
-    g.labAddPerk('feather');
-    g.labAddPerk('feather');
+    g.labAddPerk('calm');
+    g.labAddPerk('calm');
     expect(g.sandbox).toBe(true);
-    expect(g.perkStacks('feather')).toBe(2);
-    expect(g.mods.gravitySpeed).toBeCloseTo(0.88 * 0.88);
-    g.labRemovePerk('feather');
-    expect(g.mods.gravitySpeed).toBeCloseTo(0.88);
-    g.labRemovePerk('feather');
+    expect(g.perkStacks('calm')).toBe(2);
+    expect(g.mods.gravitySpeed).toBeCloseTo(0.94 * 0.94);
+    g.labRemovePerk('calm');
+    expect(g.mods.gravitySpeed).toBeCloseTo(0.94);
+    g.labRemovePerk('calm');
     expect(g.mods.gravitySpeed).toBe(1);
-    expect(g.perkOrder).not.toContain('feather');
+    expect(g.perkOrder).not.toContain('calm');
   });
 
   it('respeta el máximo de copias y no toca vidas ni rerolls al añadir o quitar', () => {
     const g = run();
-    for (let i = 0; i < 20; i++) g.labAddPerk('feather');
-    expect(g.perkStacks('feather')).toBe(5);
+    for (let i = 0; i < 20; i++) g.labAddPerk('calm');
+    expect(g.perkStacks('calm')).toBe(3);
     g.labSet({ lives: 2, rerolls: 4 });
     g.labAddPerk('c_lead');
-    g.labRemovePerk('feather');
+    g.labRemovePerk('calm');
     expect(g.lives).toBe(2);
     expect(g.rerolls).toBe(4);
   });
@@ -40,7 +40,7 @@ describe('laboratorio', () => {
     const base = g.gravityMs();
     g.labSet({ gravity: 2 });
     expect(g.gravityMs()).toBeCloseTo(base / 2);
-    g.labAddPerk('feather');
+    g.labAddPerk('calm');
     g.labClearPerks();
     expect(g.perkOrder).toEqual([]);
     expect(g.mods.gravitySpeed).toBe(1);

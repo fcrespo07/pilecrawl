@@ -39,8 +39,8 @@ export interface Mods {
   choices: number;
   /** filas de abajo que se borran al subir de nivel (Respiro) */
   levelClearRows: number;
-  /** +puntuación por cada reroll guardado (Ahorro) */
-  savings: number;
+  /** líneas extra de la primera línea de cada nivel; al subir de nivel sube una fila de basura (Atajo) */
+  shortcut: number;
   /** líneas para ganar un reroll; 0 = desactivado (Cosecha) */
   harvestEvery: number;
   /** puntos × nivel por pieza fijada rápido (Reflejos) */
@@ -65,6 +65,16 @@ export interface Mods {
   echo: number;
   /** rerolls que se ganan al subir de nivel (Casino) */
   rerollPerLevel: number;
+  /** maldición: solo se ve la siguiente pieza (Cola ciega) */
+  blindQueue: boolean;
+  /** maldición: sin fantasma (Sin fantasma) */
+  noGhost: boolean;
+  /** maldición: cada tantas piezas llega una que cae al doble; 0 = no (Pieza pesada) */
+  heavyEvery: number;
+  /** maldición: cada tantas piezas el tablero se desplaza una columna; 0 = no (Deriva) */
+  driftEvery: number;
+  /** maldición: cada tantas piezas un bloque cambia de sitio; 0 = no (Ruleta) */
+  rouletteEvery: number;
 }
 
 export function baseMods(): Mods {
@@ -99,7 +109,7 @@ export function baseMods(): Mods {
     luck: 0,
     choices: 3,
     levelClearRows: 0,
-    savings: 0,
+    shortcut: 0,
     harvestEvery: 0,
     reflexPoints: 0,
     recycle: 0,
@@ -112,6 +122,11 @@ export function baseMods(): Mods {
     streakDecayMult: 1,
     echo: 0,
     rerollPerLevel: 0,
+    blindQueue: false,
+    noGhost: false,
+    heavyEvery: 0,
+    driftEvery: 0,
+    rouletteEvery: 0,
   };
 }
 
@@ -163,14 +178,15 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.preview += 1; },
   },
   {
-    id: 'feather', name: 'Pluma', rarity: 'common', max: 5,
-    pros: () => ['Las piezas caen un <b>12% más lento</b>'],
-    apply: (m) => { m.gravitySpeed *= 0.88; },
+    id: 'calm', name: 'Pulso tranquilo', rarity: 'common', max: 3,
+    pros: () => ['<b>+100 ms</b> de margen antes de que la pieza se fije', 'Las piezas caen un <b>6% más lento</b>'],
+    apply: (m) => { m.lockDelay += 100; m.gravitySpeed *= 0.94; },
   },
   {
-    id: 'grip', name: 'Pulso firme', rarity: 'common', max: 3,
-    pros: () => ['<b>+150 ms</b> de margen antes de que la pieza se fije al tocar el suelo'],
-    apply: (m) => { m.lockDelay += 150; },
+    // el comodín sin tope: la oferta nunca se queda sin cartas (ver perks.test.ts)
+    id: 'dice', name: 'Dados', rarity: 'common', max: 99,
+    pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
+    apply: (_m, g) => { g.rerolls += 2; },
   },
   {
     id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
@@ -179,10 +195,10 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.scoreMult *= 1.3; m.linesReduction -= 1; },
   },
   {
-    id: 'shortcut', name: 'Atajo', rarity: 'common', max: 3,
-    pros: () => ['Necesitas <b>2 líneas menos</b> para subir de nivel'],
-    cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
-    apply: (m) => { m.linesReduction += 2; m.gravitySpeed *= 1.08; },
+    id: 'shortcut', name: 'Atajo', rarity: 'common', max: 2,
+    pros: (st) => [`La <b>primera línea</b> de cada nivel cuenta <b>×${1 + st * 2}</b> para subir de nivel`],
+    cons: () => ['Cada vez que subes de nivel, la próxima fila de basura se acerca <b>3 piezas</b>'],
+    apply: (m) => { m.shortcut += 1; },
   },
   {
     id: 'chain', name: 'Cadena', rarity: 'common', max: 5,
@@ -195,26 +211,10 @@ export const PERKS: PerkDef[] = [
     apply: (m) => { m.garbageDelay += 3; },
   },
   {
-    id: 'dice', name: 'Dados', rarity: 'common', max: 99,
-    pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
-    apply: (_m, g) => { g.rerolls += 2; },
-  },
-  {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
     pros: (s) => [`El hard drop da <b>×${1 + s * 2}</b> de puntos por fila (${2 + s * 4} en vez de 2)`],
     cons: () => ['Bajar con soft drop <b>ya no suma puntos</b>'],
     apply: (m) => { m.hardDropMult += 2; m.softDropPoints = false; },
-  },
-  {
-    id: 'corner', name: 'Esquina', rarity: 'common', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 esquinas</b>' : 'una <b>esquina</b>'} (3 bloques en L)`],
-    apply: (m) => { m.extraPieces.push('V3'); },
-  },
-  {
-    id: 'savings', name: 'Ahorro', rarity: 'common', max: 2,
-    pros: (s) => [`Cada reroll que guardas suma <b>+${s * 10}%</b> a toda la puntuación (cuentan hasta <b>5</b>)`],
-    cons: () => ['Al gastar un reroll, ese extra <b>baja</b>'],
-    apply: (m) => { m.savings += 0.1; },
   },
   {
     id: 'harvest', name: 'Cosecha', rarity: 'common', max: 2,
@@ -467,6 +467,31 @@ export const CURSES: PerkDef[] = [
     id: 'c_ballast', name: 'Lastre', rarity: 'common', max: 1, curse: true,
     pros: () => [], cons: () => ['Cada bolsa trae <b>una S o Z extra</b>'],
     apply: (m) => { m.extraPieces.push('SZ'); },
+  },
+  {
+    id: 'c_blind', name: 'Cola ciega', rarity: 'common', max: 1, curse: true,
+    pros: () => [], cons: () => ['Solo ves <b>la siguiente pieza</b> de la cola'],
+    apply: (m) => { m.blindQueue = true; },
+  },
+  {
+    id: 'c_ghost', name: 'Sin fantasma', rarity: 'common', max: 1, curse: true,
+    pros: () => [], cons: () => ['<b>Desaparece el fantasma</b> que marca dónde caerá la pieza'],
+    apply: (m) => { m.noGhost = true; },
+  },
+  {
+    id: 'c_heavy', name: 'Pieza pesada', rarity: 'common', max: 2, curse: true,
+    pros: () => [], cons: (s) => [`Cada <b>${s > 1 ? 5 : 7} piezas</b> llega una gris que cae al <b>doble de rápido</b>`],
+    apply: (m) => { m.heavyEvery = m.heavyEvery ? 5 : 7; },
+  },
+  {
+    id: 'c_drift', name: 'Deriva', rarity: 'common', max: 1, curse: true,
+    pros: () => [], cons: () => ['Cada <b>8 piezas</b> el tablero entero se desplaza <b>una columna</b> a la derecha (lo que sale por un lado entra por el otro)'],
+    apply: (m) => { m.driftEvery = 8; },
+  },
+  {
+    id: 'c_roulette', name: 'Ruleta', rarity: 'common', max: 1, curse: true,
+    pros: () => [], cons: () => ['Cada <b>5 piezas</b> el bloque más alto de una columna salta a otra al azar'],
+    apply: (m) => { m.rouletteEvery = 5; },
   },
 ];
 

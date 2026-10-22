@@ -6,8 +6,7 @@ const B = (x: number, y: number, s = 6) =>
 
 const PATHS: Record<string, string> = {
   vision: `<path d="M3 16c3.5-6 8-9 13-9s9.5 3 13 9c-3.5 6-8 9-13 9S6.5 22 3 16z"/>${B(13, 13)}<rect x="13" y="13" width="6" height="6" rx="1"/>`,
-  feather: `<path d="M26 4C15 5 8 13 7 25"/><path d="M26 4c2 10-6 17-15 16"/><path d="M7 25l-3 3"/><path d="M13 16l7-1.5M10.5 21l6-.5"/>`,
-  grip: `<circle cx="16" cy="18" r="10"/><path d="M16 18v-6M12 3h8M16 3v5M25 8l2.5-2.5"/>${B(13, 20, 6)}`,
+  calm: `<circle cx="16" cy="18" r="10"/><path d="M16 18v-6M12 3h8M16 3v5M25 8l2.5-2.5"/>${B(13, 20, 6)}`,
   greed: `<path d="M9 5h14l6 8-13 15L3 13z"/><path d="M3 13h26M12 5l-2 8 6 15 6-15-2-8"/>`,
   shortcut: `<path d="M3 7h6v6h6v6h6v6h8"/><path d="M27 3v11M23 10l4 4 4-4"/>`,
   chain: `<rect x="2" y="11" width="16" height="10" rx="5" transform="rotate(-35 10 16)"/><rect x="14" y="11" width="16" height="10" rx="5" transform="rotate(-35 22 16)"/>`,
@@ -31,7 +30,6 @@ const PATHS: Record<string, string> = {
   pact: `<path d="M6 3c-.5 6 2.5 10 7 11M26 3c.5 6-2.5 10-7 11"/><circle cx="16" cy="20" r="8.5"/><path d="M12 18.5l2.5 1.5M20 18.5l-2.5 1.5M12.5 24c2 1.3 5 1.3 7 0"/>`,
   quake: `<path d="M2 18h6l2.5-5 3.5 11 3.5-16 3.5 13 2.5-3H30"/><path d="M5 27h22" stroke-opacity=".5"/>`,
   breather: `<path d="M16 15V4M11 9l5-5 5 5"/><rect x="4" y="19" width="24" height="9" rx="1" stroke-dasharray="3 2.5"/>${B(7, 21, 5)}${B(13.5, 21, 5)}${B(20, 21, 5)}`,
-  savings: `<path d="M6 13h20v14H6z"/><path d="M12 13V9a4 4 0 0 1 8 0v4"/>${B(13, 17, 6)}`,
   harvest: `<path d="M16 29V13"/><path d="M16 21c-5 0-8-3-9-8 5 0 8 3 9 8zM16 17c5 0 8-3 9-8-5 0-8 3-9 8z"/><path d="M16 13c-2-2-2-6 0-9 2 3 2 7 0 9z" fill="currentColor" fill-opacity=".35"/>`,
   reflex: `<path d="M18 3L7 18h8l-2 11 12-16h-8z"/>`,
   recycle: `<path d="M9 13l4-7h6l2.5 4.5"/><path d="M24 15l3 6-3 5h-5"/><path d="M14 26H8l-3-5 2.5-4.5"/><path d="M19.5 7.5l2 3 3-1.5M17 23.5l2 2.5-2 2.5M5.5 19l2-2.5 3 1"/>`,
@@ -59,7 +57,6 @@ const PATHS: Record<string, string> = {
 /** Perks de pieza: el icono es la propia pieza. */
 const PIECE_PERKS: Record<string, string> = {
   domino: 'D2',
-  corner: 'V3',
   shortbar: 'I3',
   mono: 'M1',
   hook: 'P5',

@@ -293,13 +293,34 @@ describe('perks nuevos', () => {
     expect(g.rerolls).toBe(before + 1);
   });
 
-  it('Ahorro y Coleccionista suben el multiplicador según el estado', () => {
+  it('Atajo: la primera línea del nivel cuenta triple y al subir de nivel la basura se acerca', () => {
     const g = playing();
-    take(g, 'savings');
-    g.rerolls = 3;
-    expect(g.scoreMultNow()).toBeCloseTo(1.3);
-    g.rerolls = 0;
-    expect(g.scoreMultNow()).toBeCloseTo(1);
+    take(g, 'shortcut');
+    g['addLevelProgress'](1);
+    expect(g.linesIntoLevel).toBe(3);
+    g['addLevelProgress'](1);
+    expect(g.linesIntoLevel).toBe(4);
+    const before = g['garbageCounter'];
+    g['addLevelProgress'](20);
+    expect(g['garbageCounter']).toBeGreaterThan(before);
+  });
+
+  it('Deriva desplaza el tablero una columna sin perder bloques', () => {
+    const g = playing();
+    g.board[ROWS - 1][0] = PIECES.T.id;
+    g.board[ROWS - 1][COLS - 1] = PIECES.T.id;
+    g['driftBoard']();
+    expect(g.board[ROWS - 1][1]).toBe(PIECES.T.id);
+    expect(g.board[ROWS - 1][0]).toBe(PIECES.T.id);
+    expect(g.board[ROWS - 1].filter((v) => v !== 0).length).toBe(2);
+  });
+
+  it('Ruleta mueve un bloque sin perder ni crear ninguno', () => {
+    const g = playing();
+    for (let x = 0; x < 4; x++) g.board[ROWS - 1][x] = PIECES.T.id;
+    const count = () => g.board.flat().filter((v) => v !== 0).length;
+    g['spinRoulette']();
+    expect(count()).toBe(4);
   });
 
   it('Vértigo solo multiplica con el montón por encima de la mitad', () => {
