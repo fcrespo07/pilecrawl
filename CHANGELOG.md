@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.29.1 — 2026-10-22
+- (#69) Tres páginas de texto para quien llega desde un buscador: Guía (cómo se juega, racha, hiperperks, modos y consejos), Catálogo de mejoras (generado desde los datos del juego, así siempre está al día) y enlaces en el pie y en el menú de todas las páginas. Se añaden `sitemap.xml` y `robots.txt`.
+
 ## 0.29.0 — 2026-10-22
 - (#68) Pilecrawl se puede instalar como app (icono en la pantalla de inicio, sin barra del navegador). En navegadores que lo permiten sale «Instalar en este dispositivo» en la portada. No guarda nada sin conexión: siempre juegas la última versión.
 
