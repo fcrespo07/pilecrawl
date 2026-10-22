@@ -6,7 +6,7 @@ import { openDb } from './db';
 
 const good = {
   mode: 'normal', rules: 7, build: '0.20.0', end: 'topout', level: 6, score: 12000, lines: 40, secs: 300, revives: 0, hyper: null,
-  picks: [{ k: 'p', s: ['feather', 'grip'], p: 'feather' }],
+  picks: [{ k: 'p', s: ['calm', 'vision'], p: 'calm' }],
 };
 
 describe('parseStats', () => {
@@ -27,7 +27,7 @@ describe('parseStats', () => {
       { ...good, picks: [{ k: 'x', s: [], p: null }] },
       { ...good, picks: [{ k: 'p', s: ['<script>'], p: null }] },
       { ...good, picks: [{ k: 'p', s: ['carta_inventada'], p: null }] },
-      { ...good, picks: [{ k: 'h', s: ['feather'], p: null }] },
+      { ...good, picks: [{ k: 'h', s: ['calm'], p: null }] },
       { ...good, hyper: 'inventada' },
       { ...good, picks: [{ k: 'p', s: Array(9).fill('a'), p: null }] },
     ]) expect(parseStats(bad as never)).toBeNull();
@@ -74,7 +74,7 @@ describe('API de estadísticas', () => {
     const r = await call('GET', '/api/admin/stats?days=7', undefined, 'admin-secret-token');
     expect(r.status).toBe(200);
     expect(r.body.runs).toBe(1);
-    expect(r.body.cards[0].id).toBe('feather');
+    expect(r.body.cards[0].id).toBe('calm');
   });
 
   it('rechaza modos heredados en el resumen', async () => {

@@ -31,7 +31,7 @@ describe('perks', () => {
   it('no ofrece mejoras que ya están al máximo', () => {
     const owned = new Map<string, number>();
     for (const p of PERKS) owned.set(p.id, p.max);
-    const left = ['vision', 'feather', 'grip'];
+    const left = ['vision', 'calm', 'greed'];
     for (const id of left) owned.set(id, 0);
     const picks = rollPerks(owned, 0).map((p) => p.id).sort();
     expect(picks).toEqual([...left].sort());
@@ -138,9 +138,9 @@ describe('ofertas', () => {
   it('si no quedan bastantes de una rareza, se completa con otras', () => {
     const owned = new Map<string, number>();
     for (const p of PERKS) owned.set(p.id, p.max);
-    for (const id of ['quake', 'vision', 'feather']) owned.set(id, 0);
+    for (const id of ['quake', 'vision', 'calm']) owned.set(id, 0);
     const picks = rollOffer(owned, 0, 3, Infinity, makeRng(1)).map((p) => p.id).sort();
-    expect(picks).toEqual(['feather', 'quake', 'vision']);
+    expect(picks).toEqual(['calm', 'quake', 'vision']);
   });
 
   it('las maldiciones solo tienen desventajas y no salen en las ofertas normales', () => {
