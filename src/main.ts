@@ -30,6 +30,7 @@ import { renderExpedition, wireExpedition } from './ui/expeditionScreen';
 import { awardRun, loadExpedition } from './expedition';
 import { Lab, LAB_ENABLED } from './ui/lab';
 import { initLogoEyes } from './ui/eyes';
+import { initInstall } from './install';
 
 const game = new Game();
 // estadísticas anónimas: solo si hay servidor (el mismo del ranking); ver privacidad.html
@@ -598,6 +599,7 @@ async function boot() {
   reloadSave();
   document.getElementById('settings-open')!.addEventListener('click', (e) => settingsUI.open(e.currentTarget as HTMLElement));
   document.getElementById('settings-open-home')!.addEventListener('click', (e) => settingsUI.open(e.currentTarget as HTMLElement));
+  initInstall(document.getElementById('install-btn')!);
   saveExitBtn.addEventListener('click', saveAndExit);
   quitBtn.addEventListener('click', () => {
     // dos pasos: tirar la partida no se puede deshacer
