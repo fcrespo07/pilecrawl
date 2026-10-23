@@ -1,4 +1,4 @@
-import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture, TilingSprite } from 'pixi.js';
 import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
@@ -151,30 +151,41 @@ function makeTrailTexture(): Texture {
   });
 }
 
+/** Degradado del cielo. Las estrellas son sprites aparte (titilan) y las colinas, una franja que se desplaza. */
 function makeBackground(skin: Skin): Texture {
   const w = W / 2, h = H / 2;
-  const tex = canvasTex(w, h, (c) => {
+  return canvasTex(w, h, (c) => {
     const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, hex(skin.bg0));
     g.addColorStop(1, hex(skin.bg1));
     c.fillStyle = g;
     c.fillRect(0, 0, w, h);
-    if (!skin.stars) return;
-    // cielo de estrellas con semilla fija (sale igual siempre) y colinas escalonadas al pie
-    let seed = 7;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let k = 0; k < 140; k++) {
-      c.fillStyle = rnd() < 0.2 ? 'rgba(255,210,63,0.8)' : 'rgba(255,255,255,0.55)';
-      const sz = rnd() < 0.15 ? 2 : 1;
-      c.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), sz, sz);
-    }
+  });
+}
+
+/** Alto de la franja de colinas al pie, en píxeles lógicos. */
+const HILL_H = 112;
+/** Cuántas estrellas titilan a la vez en la piel con cielo. */
+const STAR_COUNT = 46;
+/** Velocidad de desplazamiento de las colinas, en píxeles lógicos por segundo. */
+const WAVE_SPEED = 7;
+
+/**
+ * Colinas de píxeles al pie, en columnas de 8 px. La altura sigue dos ondas que dan un número entero de
+ * vueltas en el ancho, así la franja se puede repetir en horizontal sin costura al desplazarla.
+ */
+function makeHills(w: number): Texture {
+  const cols = Math.max(1, Math.round(w / 8));
+  const tw = cols * 8;
+  const tex = canvasTex(tw, HILL_H, (c) => {
     c.fillStyle = 'rgba(80,60,160,0.35)';
-    for (let x = 0; x < w; x += 4) {
-      const hh = 24 + Math.round(10 * Math.sin(x / 37) + 6 * Math.sin(x / 13)) * 2;
-      c.fillRect(x, h - hh, 4, hh);
+    for (let i = 0; i < cols; i++) {
+      const t = i / cols;
+      const hh = Math.max(8, 48 + Math.round(10 * Math.sin(2 * Math.PI * 2 * t) + 6 * Math.sin(2 * Math.PI * 6 * t)) * 4);
+      c.fillRect(i * 8, HILL_H - hh, 8, hh);
     }
   });
-  // se dibuja a media resolución: sin suavizado al ampliar, para que estrellas y colinas sigan siendo píxeles
+  // sin suavizado al ampliar: los bordes de las columnas siguen siendo píxeles
   tex.source.scaleMode = 'nearest';
   return tex;
 }
@@ -238,7 +249,11 @@ export class Renderer {
   private glows!: Pool;
   particles!: Particles;
 
-  private stars: { s: Sprite; speed: number }[] = [];
+  /** Estrellas que titilan: cada una aparece en un sitio al azar, se funde y vuelve a salir en otro. */
+  private starList: { s: Sprite; t: number; dur: number; peak: number }[] = [];
+  private starLayer = new Container();
+  private hills!: TilingSprite;
+  private waveX = 0;
   private blobs: { s: Sprite; ph: number; sp: number }[] = [];
   private scanlines = new Graphics();
   private filterSig = -1;
@@ -350,6 +365,11 @@ export class Renderer {
     oldBg.destroy(true);
     this.bgSprite.width = W;
     this.bgSprite.height = H;
+    const oldHills = this.hills.texture;
+    this.hills.texture = makeHills(W);
+    oldHills.destroy(true);
+    this.hills.width = W;
+    this.hills.y = H - HILL_H;
     this.vignette.width = W;
     this.vignette.height = H;
     this.screenFlash.width = W;
@@ -364,7 +384,7 @@ export class Renderer {
     for (const t of this.labels) t.resolution = res;
     this.drawBoardBg();
     this.panelKey = '';
-    this.stars.forEach((st) => { st.s.x = Math.random() * W; st.s.y = Math.random() * H; });
+    this.starList.forEach((st) => this.placeStar(st, true));
   }
 
   private buildScanlines() {
@@ -389,7 +409,58 @@ export class Renderer {
     this.bgSprite = new Sprite(makeBackground(this.skin));
     this.bgSprite.width = W;
     this.bgSprite.height = H;
-    this.bg.addChild(this.bgSprite);
+    this.starLayer.removeChildren();
+    this.starList = [];
+    for (let k = 0; k < STAR_COUNT; k++) {
+      const s = new Sprite(Texture.WHITE);
+      this.starLayer.addChild(s);
+      const st = { s, t: 0, dur: 1, peak: 1 };
+      this.placeStar(st, true);
+      this.starList.push(st);
+    }
+    this.hills = new TilingSprite({ texture: makeHills(W), width: W, height: HILL_H });
+    this.hills.y = H - HILL_H;
+    this.bg.addChild(this.bgSprite, this.starLayer, this.hills);
+    this.updateSkinBg();
+  }
+
+  /** Pone una estrella en un sitio al azar y reinicia su ciclo: sube, se queda y se apaga poco a poco. */
+  private placeStar(st: { s: Sprite; t: number; dur: number; peak: number }, first = false) {
+    const big = Math.random() < 0.15;
+    st.s.width = st.s.height = big ? 4 : 2;
+    st.s.tint = Math.random() < 0.2 ? 0xffd23f : 0xffffff;
+    st.s.x = Math.floor(Math.random() * W);
+    st.s.y = Math.floor(Math.random() * (H - HILL_H / 2));
+    st.dur = 4 + Math.random() * 4;
+    st.peak = 0.4 + Math.random() * 0.45;
+    st.t = first ? Math.random() * st.dur : 0;
+    // nace invisible: el siguiente fotograma le da su brillo según su ciclo
+    st.s.alpha = 0;
+  }
+
+  /** Estrellas y colinas solo en la piel con cielo; las demás pieles dejan el fondo liso. */
+  private updateSkinBg() {
+    const on = !!this.skin.stars;
+    this.starLayer.visible = on;
+    this.hills.visible = on;
+  }
+
+  /** Estrellas y colinas se mueven solo con efectos encendidos y sin «reducir movimiento». */
+  private animateBg(sec: number) {
+    if (!this.skin.stars) return;
+    const animate = this.highQuality && !REDUCED_MOTION;
+    for (const st of this.starList) {
+      if (animate) {
+        st.t += sec;
+        if (st.t >= st.dur) this.placeStar(st);
+        // seno al cuadrado: 0 al empezar y al acabar, así no hay saltos de brillo
+        st.s.alpha = st.peak * Math.sin((Math.PI * st.t) / st.dur) ** 2;
+      } else st.s.alpha = st.peak * 0.6;
+    }
+    if (animate) {
+      this.waveX = (this.waveX + sec * WAVE_SPEED) % this.hills.texture.width;
+      this.hills.tilePosition.x = Math.round(this.waveX);
+    }
   }
 
   /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve a la de base). */
@@ -402,6 +473,7 @@ export class Renderer {
     this.bgSprite.texture = makeBackground(this.skin);
     old.destroy(true);
     this.app.renderer.background.color = this.skin.bg0;
+    this.updateSkinBg();
     this.drawBoardBg();
     this.panelKey = '';
     this.accentTarget = accentFor(this.game.level);
@@ -862,14 +934,7 @@ export class Renderer {
       b.s.y = H / 2 + Math.sin(b.ph + i * 2) * 260;
       b.s.tint = i % 2 === 0 ? this.accent : accentFor(lvl + 2);
     });
-    const speedMul = 1 + Math.min(lvl, 20) * 0.15;
-    for (const st of this.stars) {
-      st.s.y -= st.speed * speedMul * sec;
-      if (st.s.y < -5) {
-        st.s.y = H + 5;
-        st.s.x = Math.random() * W;
-      }
-    }
+    this.animateBg(sec);
   }
 
   /** Casillas de la reserva (columna izquierda) y de la cola (columna derecha), según los perks. */

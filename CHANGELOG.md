@@ -5,6 +5,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 - (#73) **La interfaz de la partida se reordena y la racha se hace visible.** Todo queda alineado con el tablero: a la izquierda marcador, nivel, contadores y mejoras; a la derecha la cola, la hiperperk y la racha. La lista de teclas pasa a la pausa y desaparece el contador de líneas (ya está en el nivel). La racha tiene cuatro tramos (buena, gran, ardiente, imparable) con nombre y color, cuenta las limpiezas seguidas, saca un texto pequeño sobre el tablero y el marco se enciende, con aura y brasas, cuanto más sube. No cambia reglas.
 
+## 0.31.0 — 2026-10-23
+- (#72) El fondo cobra vida: las estrellas titilan (aparecen en sitios al azar y se apagan y encienden poco a poco) y las colinas de píxeles del pie se desplazan despacio de un lado a otro. Con los efectos apagados o con «reducir movimiento» quedan quietas. Solo cambia el aspecto.
+
 ## 0.30.0 — 2026-10-22
 - (#70) **Cambia las reglas (`RULES_VERSION` 13): el ranking empieza de cero.** Salen Pluma, Pulso firme (se funden en Pulso tranquilo: +100 ms de fijado y caída un 6% más lenta), Ahorro y Esquina. Atajo ya no es solo «2 líneas menos»: su primera línea de cada nivel cuenta ×3, y cada subida de nivel acerca 3 piezas la basura. Cinco maldiciones nuevas que cambian cómo se juega: Cola ciega (solo ves la siguiente pieza), Sin fantasma, Pieza pesada (una gris cae al doble), Deriva (el tablero se desplaza una columna cada 8 piezas) y Ruleta (un bloque salta de columna cada 5). Propuesta completa en `planes/rework-perks.md`.
 
