@@ -108,6 +108,7 @@
             <li><span data-keys="r180"></span>180°</li>
             <li><span data-keys="hold"></span>reserva</li>
             <li><span data-keys="hyper"></span>hiperperk</li>
+            <li><span data-keys="skill"></span>habilidad</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
           </ul>
           <p class="home-note">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
@@ -193,6 +194,11 @@
           <div id="hyper-state" class="hy-state"></div>
         </section>
 
+        <section class="panel p-skill" id="skill-box" data-state="none" hidden>
+          <header>Habilidad <kbd data-keys="skill"></kbd></header>
+          <div class="hy-row"><div id="skill-ico" class="hy-ico"></div><div id="skill-name" class="hy-name"></div></div>
+          <div id="skill-state" class="hy-state"></div>
+        </section>
       </div>
       <div id="tooltip"></div>
       <div id="lab-badge" class="lab-badge" hidden>Laboratorio · no puntúa</div>
@@ -209,8 +215,10 @@
         <div id="cards"></div>
         <div class="perk-actions">
           <button id="reroll" class="btn ghost small"><span>Reroll</span><kbd>R</kbd><b id="reroll-count">1</b></button>
+          <button id="skip" class="btn ghost small" title="No coges carta y ganas un reroll"><span>Saltar</span><kbd>K</kbd><b>+1</b></button>
           <span class="hint">Pulsa <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd id="key4" hidden>4</kbd> o haz clic</span>
         </div>
+        <div id="shed" class="perk-shed"></div>
       </div>
 
       <!-- ═════════════ Pausa ═════════════ -->
@@ -232,6 +240,7 @@
             <li><span data-keys="r180"></span>180°</li>
             <li><span data-keys="hold"></span>reserva</li>
             <li><span data-keys="hyper"></span>hiperperk</li>
+            <li><span data-keys="skill"></span>habilidad</li>
             <li><span><kbd>Esc</kbd></span>pausa</li>
             <li><span><kbd>M</kbd></span>música</li>
             <li><span><kbd>N</kbd></span>sonido</li>

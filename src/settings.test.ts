@@ -20,13 +20,22 @@ async function fresh() {
 describe('ajustes de teclas', () => {
   beforeEach(() => vi.stubGlobal('localStorage', memoryStorage()));
 
+  it('una acción nueva no se queda con una tecla que ya usa otra guardada', async () => {
+    localStorage.setItem('blockrogue.keys', JSON.stringify({ left: ['KeyA'], right: ['KeyD'], down: ['KeyQ'], hard: ['Space'], cw: ['KeyW'] }));
+    const s = await fresh();
+    s.loadSettings();
+    expect(s.actionOf('KeyQ')).toBe('down');
+    expect(s.keymap.skill).toEqual([]);
+  });
+
   it('por defecto cada acción tiene sus teclas de siempre', async () => {
     const s = await fresh();
     expect(s.actionOf('Space')).toBe('hard');
     expect(s.actionOf('KeyX')).toBe('cw');
     expect(s.actionOf('ShiftRight')).toBe('hold');
     expect(s.actionOf('KeyD')).toBe('hyper');
-    expect(s.actionOf('KeyQ')).toBeNull();
+    expect(s.actionOf('KeyQ')).toBe('skill');
+    expect(s.actionOf('KeyJ')).toBeNull();
   });
 
   it('cambiar una tecla se guarda y sobrevive a recargar', async () => {

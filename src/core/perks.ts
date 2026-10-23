@@ -75,6 +75,14 @@ export interface Mods {
   driftEvery: number;
   /** maldición: cada tantas piezas un bloque cambia de sitio; 0 = no (Ruleta) */
   rouletteEvery: number;
+  /** habilidad activa de la partida ('' = ninguna): una vez por nivel, con la tecla de habilidad */
+  skill: '' | 'tactic' | 'wild';
+  /** al limpiar líneas desaparece además el bloque más alto (Erosión) */
+  erosion: boolean;
+  /** cada subida de nivel da una carta extra (Tahúr) */
+  gambler: boolean;
+  /** probabilidad extra (0 a 1) de que una subida de nivel traiga oferta maldita */
+  curseChance: number;
 }
 
 export function baseMods(): Mods {
@@ -127,6 +135,10 @@ export function baseMods(): Mods {
     heavyEvery: 0,
     driftEvery: 0,
     rouletteEvery: 0,
+    skill: '',
+    erosion: false,
+    gambler: false,
+    curseChance: 0,
   };
 }
 
@@ -145,6 +157,8 @@ export interface PerkDef {
   weight?: number;
   /** Maldición: solo sale en las ofertas malditas y no tiene ventaja (sus efectos van en `cons`). */
   curse?: boolean;
+  /** Habilidad activa: solo puedes tener una por partida (las demás dejan de salir en las ofertas). */
+  skill?: boolean;
 }
 
 /** Peso por carta: solo lo usa `rollPerks` (la mejora inicial del diario, que no pasa de rara). */
@@ -227,7 +241,19 @@ export const PERKS: PerkDef[] = [
     cons: () => ['Las piezas caen un <b>8% más rápido</b>'],
     apply: (m) => { m.reflexPoints += 60; m.gravitySpeed *= 1.08; },
   },
+  {
+    id: 'tactic', name: 'Pausa táctica', rarity: 'common', max: 1, skill: true,
+    pros: () => ['Una vez por nivel, con la tecla de <b>habilidad</b>, la caída se <b>congela 3 s</b> (tampoco baja con la flecha)'],
+    cons: () => ['Mientras dura <b>no puedes girar</b>', 'Solo puedes tener <b>una habilidad</b> por partida'],
+    apply: (m) => { m.skill = 'tactic'; },
+  },
   // ───────── Raras ─────────
+  {
+    id: 'wild', name: 'Comodín', rarity: 'rare', max: 1, skill: true,
+    pros: () => ['Una vez por nivel, con la tecla de <b>habilidad</b>, <b>descartas la pieza actual</b>: llega la siguiente de la cola'],
+    cons: () => ['Descartar te quita <b>25 de racha</b>', 'No vale con piezas <b>especiales</b> (bomba, prisma, oro, pesada)', 'Solo puedes tener <b>una habilidad</b> por partida'],
+    apply: (m) => { m.skill = 'wild'; },
+  },
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
     pros: () => ['Las ofertas traen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> (si ya están desbloqueadas)'],
@@ -326,6 +352,18 @@ export const PERKS: PerkDef[] = [
   },
   // ───────── Épicas ─────────
   {
+    id: 'erosion', name: 'Erosión', rarity: 'epic', max: 1,
+    pros: () => ['Cada vez que limpias líneas desaparece además el <b>bloque más alto</b> del tablero'],
+    cons: () => ['Necesitas <b>+1 línea</b> para subir de nivel'],
+    apply: (m) => { m.erosion = true; m.linesReduction -= 1; },
+  },
+  {
+    id: 'gambler', name: 'Tahúr', rarity: 'epic', max: 1,
+    pros: () => ['Cada subida de nivel te da <b>una carta extra</b>: eliges dos veces'],
+    cons: () => ['Necesitas <b>+3 líneas</b> para subir de nivel', 'Con más ofertas, hay más ocasiones de <b>maldición</b>', 'La carta extra <b>no se puede saltar</b>'],
+    apply: (m) => { m.gambler = true; m.linesReduction -= 3; },
+  },
+  {
     id: 'allspin', name: 'Maestro del giro', rarity: 'epic', max: 1,
     pros: () => ['Cualquier pieza que no sea el cuadrado cuenta como <b>giro</b> si, tras girarla, no puede moverse a izquierda, derecha ni arriba, y puntúa como uno'],
     cons: () => ['Los cuádruples dan un <b>25% menos</b>'],
@@ -357,8 +395,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'pact', name: 'Pacto', rarity: 'epic', max: 2,
     pros: () => ['<b>×2</b> a toda la puntuación'],
-    cons: () => ['Las piezas caen un <b>35% más rápido</b>'],
-    apply: (m) => { m.scoreMult *= 2; m.gravitySpeed *= 1.35; },
+    cons: () => ['Las piezas caen un <b>35% más rápido</b>', 'Las ofertas malditas salen <b>10% más</b> a menudo'],
+    apply: (m) => { m.scoreMult *= 2; m.gravitySpeed *= 1.35; m.curseChance += 0.1; },
   },
   {
     id: 'anchor', name: 'Ancla', rarity: 'epic', max: 1,
@@ -412,8 +450,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'prism', name: 'Prisma', rarity: 'legendary', max: 2,
     pros: (s) => [`Cada <b>${s > 1 ? 10 : 16} piezas</b> sale un prisma`, 'Al caer borra <b>todos los bloques</b> del color en que aterriza', 'Lo que queda encima <b>cae</b> a los huecos'],
-    cons: () => ['Las piezas caen un <b>15% más rápido</b>'],
-    apply: (m) => { m.prismEvery = m.prismEvery ? 10 : 16; m.gravitySpeed *= 1.15; },
+    cons: () => ['Las piezas caen un <b>15% más rápido</b>', 'Las ofertas malditas salen <b>8% más</b> a menudo'],
+    apply: (m) => { m.prismEvery = m.prismEvery ? 10 : 16; m.gravitySpeed *= 1.15; m.curseChance += 0.08; },
   },
   {
     id: 'phoenix', name: 'Fénix', rarity: 'legendary', max: 1,
@@ -499,6 +537,13 @@ export const PERK_BY_ID: Record<string, PerkDef> = Object.fromEntries([...PERKS,
 
 const NO_LOCKED: ReadonlySet<string> = new Set();
 
+/** Una habilidad activa ya elegida deja fuera a las demás: solo hay una tecla de habilidad. */
+function skillTaken(owned: Map<string, number>, p: PerkDef): boolean {
+  if (!p.skill) return false;
+  for (const [id, n] of owned) if (n > 0 && PERK_BY_ID[id]?.skill) return true;
+  return false;
+}
+
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
   return bestLevel >= (p.unlock ?? UNLOCK_LEVEL[p.rarity]);
@@ -514,7 +559,7 @@ export function rollPerks(
   /** Perks bloqueados por retos (Expedición): no salen. */
   locked: ReadonlySet<string> = NO_LOCKED,
 ): PerkDef[] {
-  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id));
+  const pool = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id) && !skillTaken(owned, p));
   const weight = (p: PerkDef) => {
     const base = RARITY_WEIGHT[p.rarity];
     if (p.rarity === 'common') return base;
@@ -564,7 +609,7 @@ function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] 
 
 /** Rarezas que pueden salir en una oferta y su peso: por carta (con la suerte) × cartas disponibles. */
 function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>, heat: Heat) {
-  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id));
+  const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id) && !skillTaken(owned, p));
   const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
   let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
   if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
@@ -589,9 +634,10 @@ export function offerOdds(
 }
 
 /**
- * Oferta de una subida de nivel: primero se sortea una rareza (con sus pesos, la suerte, los
- * desbloqueos y cuántas cartas quedan de ella) y las cartas son todas de esa rareza. Si no quedan bastantes, se completa con
- * las rarezas de al lado, empezando por las de abajo.
+ * Oferta de una subida de nivel: cada carta tiene su propia rareza. Para cada hueco se sortea una rareza
+ * (con sus pesos, la suerte, el calor, los desbloqueos y cuántas cartas quedan de ella) y luego una carta de esa
+ * rareza que no se haya sacado ya. Así una oferta puede mezclar comunes con una épica, y cada carta que se
+ * da la vuelta puede sorprender.
  */
 export function rollOffer(
   owned: Map<string, number>,
@@ -604,21 +650,23 @@ export function rollOffer(
   locked: ReadonlySet<string> = NO_LOCKED,
   heat: Heat = NO_HEAT,
 ): PerkDef[] {
-  const { rarities, weights, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked, heat);
-  if (!rarities.length) return [];
-  const total = weights.reduce((s, w) => s + w, 0);
-  let x = rand() * total;
-  let idx = 0;
-  for (; idx < rarities.length - 1; idx++) {
-    x -= weights[idx];
-    if (x <= 0) break;
-  }
-  const picks = drawUniform(byRarity(rarities[idx]), n, rand);
-  // relleno: primero las rarezas más bajas cercanas, luego las más altas
-  const order = [...rarities.slice(0, idx).reverse(), ...rarities.slice(idx + 1)];
-  for (const r of order) {
-    if (picks.length >= n) break;
-    picks.push(...drawUniform(byRarity(r), n - picks.length, rand));
+  const { rarities, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked, heat);
+  const pools = new Map<Rarity, PerkDef[]>(rarities.map((r) => [r, [...byRarity(r)]]));
+  const picks: PerkDef[] = [];
+  while (picks.length < n) {
+    const live = rarities.filter((r) => pools.get(r)!.length > 0);
+    if (!live.length) break;
+    const weights = live.map((r) => rarityWeight(r, luck, heat, pools.get(r)!));
+    let x = rand() * weights.reduce((t, w) => t + w, 0);
+    let idx = 0;
+    for (; idx < live.length - 1; idx++) {
+      x -= weights[idx];
+      if (x <= 0) break;
+    }
+    const pool = pools.get(live[idx])!;
+    const [card] = drawUniform(pool, 1, rand);
+    pool.splice(pool.indexOf(card), 1);
+    picks.push(card);
   }
   return picks;
 }
