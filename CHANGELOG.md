@@ -4,8 +4,11 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
-## 0.34.0 — 2026-10-23
+## 0.35.0 — 2026-10-23
 - (#74) Efectos de pantalla por legendaria, solo cosméticos (no cambian reglas): Eco deja postimágenes de cada pieza, Terremoto ondula la imagen, Prisma y las subidas de nivel lanzan un barrido arcoíris, Fénix y Segunda vida estallan de color al revivir, Casino brilla en cada oferta y, con una vida de reserva y la pila alta, el borde late. Con Furia y racha alta el calor ondula los márgenes y con Fénix, a ratos y solo con la pila baja, las tres filas de abajo (muy leve; no se aplica con efectos apagados ni con movimiento reducido). Cada caída directa larga lanza una onda corta.
+
+## 0.34.0 — 2026-10-23
+- (#75) El panel de Mejoras pasa de iconos a una lista con nombre, nivel (veces cogida) y color de rareza; el detalle sale al pasar el ratón. Además, racha e hiperperk bajan a una columna a la derecha de la cola, para que una cola larga no las pise, y el panel de Nivel se estrecha para no chocar con la reserva doble. La habilidad activa va en esa misma columna, bajo la hiperperk.
 
 ## 0.33.0 — 2026-10-23
 - (#71) **Cambia las reglas (`RULES_VERSION` 14): el ranking empieza de cero.** Cuatro perks nuevos: dos **habilidades** que se usan con la tecla Q (o tocando su panel en móvil), una vez por nivel y solo una por partida, **Pausa táctica** (común: congela la caída 3 s, sin girar) y **Comodín** (rara: descartas la pieza actual, −25 de racha); **Erosión** (épica: al limpiar líneas desaparece también el bloque más alto, +1 línea por nivel) y **Tahúr** (épica: una carta extra en cada subida de nivel, +3 líneas por nivel). En la pantalla de cartas, **Saltar** (tecla K) no coge carta y da un reroll (no vale en ofertas malditas ni de hiperperk), y se puede **quitar una maldición** por un reroll.
