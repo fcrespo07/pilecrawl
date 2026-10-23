@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { runReplay } from './replay';
 import { COLS, Game, HYPER_STOP_GRACE, GARBAGE_MIN_INTERVAL, ROWS, SOFT_DROP_MS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
-import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
+import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX, STREAK_TIERS, streakTier } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
-import { CURSES, PERK_BY_ID, PERKS } from './perks';
+import { CURSES, PERK_BY_ID, PERKS, rollOffer } from './perks';
+import { makeRng } from './rng';
 import type { PieceSpec } from './game';
 
 /** Partida lista para jugar, sin azar en la cola inicial que moleste a los tests. */
@@ -445,6 +446,31 @@ describe('racha', () => {
     expect(g.streak).toBe(0);
   });
 
+  it('los tramos empiezan en sus umbrales', () => {
+    expect(streakTier(0)).toBe(0);
+    expect(streakTier(STREAK_TIERS[0] - 1)).toBe(0);
+    expect(streakTier(STREAK_TIERS[0])).toBe(1);
+    expect(streakTier(STREAK_TIERS[3])).toBe(4);
+    expect(streakTier(STREAK_MAX)).toBe(4);
+  });
+
+  it('la cadena cuenta limpiezas con buena racha y se corta al caer del primer tramo', () => {
+    const g = playing();
+    const ups: number[] = [];
+    let ended = 0;
+    g.events.on('streakUp', (e) => ups.push(e.chain));
+    g.events.on('streakEnd', (e) => { ended = e.chain; });
+    g.streak = STREAK_TIERS[0];
+    clearBottomLineWithI(g);
+    expect(g.streakChain).toBe(1);
+    expect(ups).toEqual([1]);
+    g.streak = STREAK_TIERS[0] + STREAK_DECAY - 1; // la siguiente pieza lo deja justo por debajo
+    g.hardDrop();
+    expect(g.streakChain).toBe(0);
+    expect(ended).toBe(1);
+    expect(g.streakBest).toBe(1);
+  });
+
   it('limpiar rápido suma más que limpiar despacio', () => {
     const fast = playing();
     clearBottomLineWithI(fast);
@@ -828,5 +854,145 @@ describe('ofertas sin cartas', () => {
     expect(g.state).toBe('playing');
     expect(g.pendingLevelUps).toBe(0);
     expect(g.perks.get(last.id)).toBe(last.max);
+  });
+});
+
+describe('fase 2 del rework: habilidades, Erosión, Tahúr, saltar y sacrificar', () => {
+  const grant = (g: Game, id: string) => g['grantPerk'](PERK_BY_ID[id]);
+
+  it('Pausa táctica congela la caída 3 s, impide girar y se usa una vez por nivel', () => {
+    const g = playing();
+    grant(g, 'tactic');
+    setActive(g, PIECES.T, 4, 5); // una pieza que gira (el cuadrado no)
+    expect(g.skillReady()).toBe(true);
+    const y = g.active!.y;
+    expect(g.useSkill()).toBe(true);
+    expect(g.skillReady()).toBe(false);
+    g.update(1000);
+    expect(g.active!.y).toBe(y);
+    expect(g.rotate(1)).toBe(false);
+    for (let i = 0; i < 400; i++) g.step();
+    expect(g.skillLeft).toBe(0);
+    expect(g.rotate(1)).toBe(true);
+    expect(g.skillReady()).toBe(false); // mismo nivel
+    g.level++;
+    expect(g.skillReady()).toBe(true);
+  });
+
+  it('Comodín descarta la pieza, quita racha y no devuelve el hold', () => {
+    const g = playing();
+    grant(g, 'wild');
+    g.streak = 50;
+    g['holdUsed'] = true;
+    const next = g.queue[0].def;
+    expect(g.useSkill()).toBe(true);
+    expect(g.active!.def).toBe(next);
+    expect(g.streak).toBe(25);
+    expect(g['holdUsed']).toBe(true);
+  });
+
+  it('solo puede haber una habilidad: con una elegida, la otra no sale', () => {
+    const owned = new Map<string, number>([['wild', 1]]);
+    for (let i = 0; i < 200; i++) {
+      const ids = rollOffer(owned, 5, 3, Infinity, makeRng(i)).map((p) => p.id);
+      expect(ids).not.toContain('tactic');
+    }
+  });
+
+  it('Erosión quita el bloque más alto al limpiar líneas', () => {
+    const g = playing();
+    grant(g, 'erosion');
+    g.board[ROWS - 6][3] = PIECES.T.id;
+    clearBottomLineWithI(g);
+    expect(g.board[ROWS - 6][3]).toBe(0);
+  });
+
+  it('Tahúr da una carta extra por subida de nivel', () => {
+    const g = playing();
+    grant(g, 'gambler');
+    g['addLevelProgress'](g.linesNeeded());
+    expect(g.pendingLevelUps).toBe(1);
+    expect(g.bonusOffers).toBe(1);
+    g['beginChoice']();
+    g.choosePerk(0);
+    expect(g.state).toBe('choosing');
+    expect(g.offerLevel()).toBe(g.level);
+    g.choosePerk(0);
+    expect(g.state).toBe('playing');
+  });
+
+  it('saltar la oferta da un reroll, pero no en ofertas malditas', () => {
+    const g = playing();
+    g.pendingLevelUps = 1;
+    g['beginChoice']();
+    expect(g.canSkip()).toBe(true);
+    const before = g.rerolls;
+    expect(g.skipOffer()).toBe(true);
+    expect(g.rerolls).toBe(before + 1);
+    expect(g.state).toBe('playing');
+    g.pendingLevelUps = 1;
+    g['beginChoice']();
+    g.cursedOffer = true;
+    expect(g.canSkip()).toBe(false);
+  });
+
+  it('sacrificar una maldición cuesta un reroll y la quita', () => {
+    const g = playing();
+    grant(g, 'c_lead');
+    expect(g.mods.gravitySpeed).toBeCloseTo(1.1);
+    g.pendingLevelUps = 1;
+    g['beginChoice']();
+    g.rerolls = 2;
+    expect(g.shedCurse(0)).toBe(true);
+    expect(g.rerolls).toBe(1);
+    expect(g.mods.gravitySpeed).toBeCloseTo(1);
+    expect(g.ownedCurses()).toEqual([]);
+    expect(g.shedCurse(0)).toBe(false);
+  });
+});
+
+describe('correcciones de la revisión de la fase 2', () => {
+  const grant = (g: Game, id: string) => g['grantPerk'](PERK_BY_ID[id]);
+
+  it('Erosión no convierte la limpieza en tablero limpio', () => {
+    const g = playing();
+    grant(g, 'erosion');
+    g.board[ROWS - 6][3] = PIECES.T.id;
+    const before = g.score;
+    clearBottomLineWithI(g);
+    expect(g.score - before).toBeLessThan(3500);
+  });
+
+  it('el Comodín no descarta piezas especiales', () => {
+    const g = playing();
+    grant(g, 'wild');
+    g.active!.heavy = true;
+    expect(g.skillReady()).toBe(false);
+    g.active!.heavy = false;
+    g.active!.bomb = true;
+    expect(g.skillReady()).toBe(false);
+  });
+
+  it('la carta extra de Tahúr no se puede saltar', () => {
+    const g = playing();
+    grant(g, 'gambler');
+    g.pendingLevelUps = 1;
+    g.bonusOffers = 1;
+    g['beginChoice']();
+    expect(g.canSkip()).toBe(true);
+    g.choosePerk(0);
+    expect(g.state).toBe('choosing');
+    expect(g.canSkip()).toBe(false);
+  });
+
+  it('con la Pausa táctica, la flecha abajo tampoco baja la pieza', () => {
+    const g = playing();
+    grant(g, 'tactic');
+    setActive(g, PIECES.T, 4, 5);
+    g.useSkill();
+    g.softDropping = true;
+    const y = g.active!.y;
+    g.update(500);
+    expect(g.active!.y).toBe(y);
   });
 });

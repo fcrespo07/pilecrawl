@@ -18,6 +18,20 @@ export const STREAK_COMBO = 3;
 export const STREAK_COMBO_CAP = 6;
 export const STREAK_PERFECT = 30;
 
+/**
+ * Tramos de racha: desde cuánta racha cuenta como buena racha y cómo se llama cada escalón.
+ * Solo sirven para mostrarla (HUD, textos y efectos); no cambian ninguna regla.
+ */
+export const STREAK_TIERS = [20, 40, 60, 80];
+export const STREAK_TIER_NAMES = ['Sin racha', 'Buena racha', 'Gran racha', 'Racha ardiente', 'Imparable'];
+
+/** Tramo de una racha: 0 (sin racha) a 4. */
+export function streakTier(streak: number): number {
+  let t = 0;
+  while (t < STREAK_TIERS.length && streak >= STREAK_TIERS[t]) t++;
+  return t;
+}
+
 /** Suerte extra (en Tréboles) a racha llena. */
 export const STREAK_MAX_LUCK = 1;
 

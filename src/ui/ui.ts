@@ -1,7 +1,7 @@
 import { Game, STEP_MS } from '../core/game';
 import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
-import { STREAK_MAX } from '../core/streak';
+import { STREAK_MAX, STREAK_TIER_NAMES, streakTier } from '../core/streak';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
@@ -19,6 +19,11 @@ export const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABE
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
+/** Ms entre carta y carta al destapar una oferta nueva, y tras un reroll. */
+const REVEAL_STEP_MS = 900;
+const REVEAL_FAST_MS = 280;
+/** Lo que tarda una carta en estar boca arriba desde que se pintan (su turno aparte): 450 ms de espera y 700 de vuelta. */
+const REVEAL_FLIP_MS = 1150;
 
 function $(id: string) {
   return document.getElementById(id)!;
@@ -59,6 +64,9 @@ export class UI {
   private perksOpen = false;
   private picking = false;
   private choiceDelay = 0;
+  /** Cuándo se pintaron las cartas y cada cuánto se da la vuelta una (ms): no se puede elegir una carta aún boca abajo. */
+  private revealStart = 0;
+  private revealStep = REVEAL_STEP_MS;
   /** Fecha del desafío diario que se está jugando (AAAA-MM-DD, UTC). */
   private date = '';
   private timedKey = '';
@@ -66,12 +74,14 @@ export class UI {
   private segsKey = '';
   private livesKey = -1;
   private hyperKey = '';
+  private skillKey = '';
   private streakKey = '';
   private overTimer = 0;
   private shareInfo: ShareInfo | null = null;
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
+    $('skip').addEventListener('click', () => this.skip());
     $('b2b-ico').innerHTML = UI_ICONS.flame;
     document.querySelectorAll<HTMLElement>('[data-icon]').forEach((el) => {
       el.innerHTML = perkIcon(el.dataset.icon!);
@@ -194,14 +204,20 @@ export class UI {
     this.choiceDelay = 380;
   }
 
-  private renderCards() {
+  /** `fast`: tras un reroll las cartas se destapan deprisa; la primera vez, una a una para dar expectación. */
+  private renderCards(fast = false) {
     const g = this.game;
-    const shownLevel = g.level - g.pendingLevelUps + 1;
+    this.revealStep = fast ? REVEAL_FAST_MS : REVEAL_STEP_MS;
+    this.revealStart = performance.now();
+    $('cards').style.setProperty('--step', `${this.revealStep}ms`);
+    const shownLevel = g.offerLevel();
     $('perk-level').textContent = pad2(shownLevel);
     $('perks').style.setProperty('--level', this.levelColor(shownLevel));
     $('reroll-count').textContent = String(g.rerolls);
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
+    ($('skip') as HTMLButtonElement).hidden = !g.canSkip();
     const hyper = g.choosingHyper;
+    this.renderShed();
     $('perks').classList.toggle('hyper', hyper);
     const box = $('cards');
     box.innerHTML = '';
@@ -292,6 +308,8 @@ export class UI {
     const hyper = g.choosingHyper;
     const choice = hyper ? g.hyperChoices[i] : g.choices[i];
     if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !choice) return;
+    // la carta tiene que estar ya boca arriba
+    if (performance.now() - this.revealStart < REVEAL_FLIP_MS + i * this.revealStep) return;
     this.picking = true;
     const perk = choice as PerkDef;
     audio.pick(hyper ? 3 : perk.curse ? 0 : RARITY_RANK[perk.rarity]);
@@ -308,11 +326,48 @@ export class UI {
     }, 520);
   }
 
+  /** Saltar la oferta: sin carta, +1 reroll. */
+  skip() {
+    if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !this.game.canSkip()) return;
+    // no se salta una oferta sin haberla visto entera (y así una pulsación suelta al subir de nivel no la salta)
+    if (performance.now() - this.revealStart < REVEAL_FLIP_MS + (this.game.choices.length - 1) * this.revealStep) return;
+    if (this.game.skipOffer()) {
+      audio.reroll();
+      if (this.game.state === 'choosing') this.renderCards();
+      else {
+        this.perksOpen = false;
+        this.hide('perks');
+      }
+    }
+  }
+
+  /** Botones para sacrificar una maldición (1 reroll) mientras eliges carta. */
+  private renderShed() {
+    const g = this.game;
+    const box = $('shed');
+    box.innerHTML = '';
+    if (g.choosingHyper || g.rerolls <= 0) return;
+    g.ownedCurses().forEach((id, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn ghost small';
+      b.textContent = `Quitar ${Game.perkDef(id).name} (−1 reroll)`;
+      b.addEventListener('click', () => {
+        if (this.picking) return;
+        if (g.shedCurse(i)) {
+          audio.reroll();
+          this.renderCards(true);
+        }
+      });
+      box.appendChild(b);
+    });
+  }
+
   reroll() {
     if (!this.perksOpen || this.picking) return;
     if (this.game.reroll()) {
       audio.reroll();
-      this.renderCards();
+      this.renderCards(true);
     }
   }
 
@@ -374,6 +429,26 @@ export class UI {
     $('hyper-state').textContent = text;
   }
 
+  /** Panel de la habilidad activa: solo se ve si has cogido Pausa táctica o Comodín. */
+  private updateSkill() {
+    const g = this.game;
+    const skill = g.mods.skill;
+    const active = g.skillLeft > 0;
+    const state = !skill ? 'none' : active ? 'active' : g.skillUsedLevel === g.level ? 'used' : 'ready';
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const text = state === 'active' ? `Congelada · ${Math.ceil((g.skillLeft * STEP_MS) / 1000)} s` : state === 'used' ? 'Usada este nivel' : coarse ? 'Lista: tócala' : `Lista: ${keyName('skill')}`;
+    const key = `${skill}|${state}|${text}`;
+    if (key === this.skillKey) return;
+    this.skillKey = key;
+    const box = $('skill-box');
+    box.hidden = !skill;
+    box.dataset.state = state;
+    const id = skill;
+    $('skill-name').textContent = id ? Game.perkDef(id === 'tactic' ? 'tactic' : 'wild').name : '';
+    $('skill-ico').innerHTML = id ? perkIcon(id) : '';
+    $('skill-state').textContent = text;
+  }
+
   /** Medidor de racha y calor por rareza: cada jugada calienta una rareza y se ve su probabilidad ahora. */
   private updateStreak() {
     const g = this.game;
@@ -381,10 +456,18 @@ export class UI {
     const odds = g.offerOdds();
     const hyper = g.hyperOfferChance();
     const rows = (['rare', 'epic', 'legendary'] as const).map((r) => ({ r, heat: Math.round(g.heat[r]), odd: pctTxt(odds[r]) }));
-    const key = `${Math.round(g.streak)}|${pctTxt(hyper)}|${rows.map((x) => `${x.heat}.${x.odd}`).join(',')}`;
+    const tier = streakTier(g.streak);
+    const key = `${Math.round(g.streak)}|${g.streakChain}|${g.streakBest}|${pctTxt(hyper)}|${rows.map((x) => `${x.heat}.${x.odd}`).join(',')}`;
     if (key === this.streakKey) return;
     this.streakKey = key;
     $('streak-num').textContent = String(Math.round(g.streak));
+    $('streak-box').dataset.tier = String(tier);
+    $('streak-tier').textContent = STREAK_TIER_NAMES[tier];
+    // cadena: limpiezas seguidas con buena racha; la mejor de la partida se enseña cuando ya no es la actual
+    $('streak-chain').innerHTML =
+      g.streakChain > 0
+        ? `Seguidas <b>×${g.streakChain}</b>${g.streakBest > g.streakChain ? ` · mejor ×${g.streakBest}` : ''}`
+        : g.streakBest > 0 ? `Mejor cadena ×${g.streakBest}` : 'Sube desde 20';
     $('streak-odds').innerHTML =
       rows
         .map(
@@ -416,7 +499,6 @@ export class UI {
     $('score').textContent = fmt(this.shownScore);
     $('mult').textContent = `×${g.scoreMultNow().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     $('level').textContent = pad2(g.level);
-    $('lines').textContent = String(g.lines);
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';
     $('b2b-box').classList.toggle('on', g.b2b);
     $('rerolls').textContent = String(g.rerolls);
@@ -445,6 +527,7 @@ export class UI {
     }
 
     this.updateHyper();
+    this.updateSkill();
     this.updateStreak();
 
     const key = g.perkOrder.map((id) => `${id}${g.perkStacks(id)}`).join(',');

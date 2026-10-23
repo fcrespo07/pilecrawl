@@ -39,6 +39,10 @@ const PATHS: Record<string, string> = {
   anchor: `<circle cx="16" cy="6" r="2.5"/><path d="M16 8.5V28M10 13h12"/><path d="M5 19c0 5 5 9 11 9s11-4 11-9"/><path d="M3 21l2-3 3 2M29 21l-2-3-3 2"/>`,
   collector: `<rect x="4" y="4" width="10" height="10" rx="2"/><rect x="18" y="4" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="4" y="18" width="10" height="10" rx="2" fill="currentColor" fill-opacity=".35"/><rect x="18" y="18" width="10" height="10" rx="2" stroke-dasharray="3 2.5"/>`,
   phoenix: `<path d="M16 29c-5-3-6-8-4-13-4 1-7-2-9-6 4 0 7 1 9 3 0-4 2-7 4-10 2 3 4 6 4 10 2-2 5-3 9-3-2 4-5 7-9 6 2 5 1 10-4 13z"/><path d="M16 15v10" stroke-opacity=".6"/>`,
+  tactic: `<rect x="9" y="5" width="5" height="22" rx="1"/><rect x="18" y="5" width="5" height="22" rx="1"/>`,
+  wild: `<rect x="4" y="9" width="14" height="18" rx="2"/><rect x="14" y="5" width="14" height="18" rx="2" fill="currentColor" fill-opacity=".35"/><path d="M19 12l4 4 4-4" stroke-opacity=".8"/>`,
+  erosion: `<path d="M4 28h24"/>${B(4, 22, 5)}${B(11, 22, 5)}${B(18, 22, 5)}<rect x="11" y="15" width="5" height="5" rx="1" stroke-dasharray="2 1.5"/><path d="M24 6l-4 5 5 1-4 5"/>`,
+  gambler: `<rect x="4" y="9" width="12" height="17" rx="2" transform="rotate(-10 10 17)"/><rect x="14" y="6" width="12" height="17" rx="2" transform="rotate(12 20 15)" fill="currentColor" fill-opacity=".35"/><circle cx="20" cy="15" r="1.8" fill="currentColor"/>`,
   // hiperperks
   slowmo: `<circle cx="16" cy="17" r="11"/><path d="M16 10v7l4 3"/><path d="M12 3h8"/><path d="M5 9.5L3 7.5M27 9.5l2-2" stroke-opacity=".6"/>`,
   frenzy: `<path d="M5 25l6-9-6-9M14 25l6-9-6-9M23 25l6-9-6-9"/>`,

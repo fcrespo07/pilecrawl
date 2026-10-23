@@ -3,7 +3,18 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.34.0 — 2026-10-23
 - (#74) Efectos de pantalla por legendaria, solo cosméticos (no cambian reglas): Eco deja postimágenes de cada pieza, Terremoto ondula la imagen, Prisma y las subidas de nivel lanzan un barrido arcoíris, Fénix y Segunda vida estallan de color al revivir, Casino brilla en cada oferta y, con una vida de reserva y la pila alta, el borde late. Con Furia y racha alta el calor ondula los márgenes y con Fénix, a ratos y solo con la pila baja, las tres filas de abajo (muy leve; no se aplica con efectos apagados ni con movimiento reducido). Cada caída directa larga lanza una onda corta.
+
+## 0.33.0 — 2026-10-23
+- (#71) **Cambia las reglas (`RULES_VERSION` 14): el ranking empieza de cero.** Cuatro perks nuevos: dos **habilidades** que se usan con la tecla Q (o tocando su panel en móvil), una vez por nivel y solo una por partida, **Pausa táctica** (común: congela la caída 3 s, sin girar) y **Comodín** (rara: descartas la pieza actual, −25 de racha); **Erosión** (épica: al limpiar líneas desaparece también el bloque más alto, +1 línea por nivel) y **Tahúr** (épica: una carta extra en cada subida de nivel, +3 líneas por nivel). En la pantalla de cartas, **Saltar** (tecla K) no coge carta y da un reroll (no vale en ofertas malditas ni de hiperperk), y se puede **quitar una maldición** por un reroll.
+
+## 0.32.0 — 2026-10-23
+- (#73) **La interfaz de la partida se reordena y la racha se hace visible.** Todo queda alineado con el tablero: a la izquierda marcador, nivel, contadores y mejoras; a la derecha la cola, la hiperperk y la racha. La lista de teclas pasa a la pausa y desaparece el contador de líneas (ya está en el nivel). La racha tiene cuatro tramos (buena, gran, ardiente, imparable) con nombre y color, cuenta las limpiezas seguidas, saca un texto pequeño sobre el tablero y el marco se enciende, con aura y brasas, cuanto más sube. No cambia reglas.
+
+## 0.31.0 — 2026-10-23
+- (#72) El fondo cobra vida: las estrellas titilan (aparecen en sitios al azar y se apagan y encienden poco a poco) y las colinas de píxeles del pie se desplazan despacio de un lado a otro. Con los efectos apagados o con «reducir movimiento» quedan quietas. Solo cambia el aspecto.
 
 ## 0.30.0 — 2026-10-22
 - (#70) **Cambia las reglas (`RULES_VERSION` 13): el ranking empieza de cero.** Salen Pluma, Pulso firme (se funden en Pulso tranquilo: +100 ms de fijado y caída un 6% más lenta), Ahorro y Esquina. Atajo ya no es solo «2 líneas menos»: su primera línea de cada nivel cuenta ×3, y cada subida de nivel acerca 3 piezas la basura. Cinco maldiciones nuevas que cambian cómo se juega: Cola ciega (solo ves la siguiente pieza), Sin fantasma, Pieza pesada (una gris cae al doble), Deriva (el tablero se desplaza una columna cada 8 piezas) y Ruleta (un bloque salta de columna cada 5). Propuesta completa en `planes/rework-perks.md`.
