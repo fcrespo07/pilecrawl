@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
-- (#PR) El panel de Mejoras pasa de iconos a una lista con nombre, nivel (veces cogida) y color de rareza; el detalle sale al pasar el ratón. Además, racha e hiperperk bajan a una columna a la derecha de la cola, para que una cola larga no las pise, y el panel de Nivel se estrecha para no chocar con la reserva doble.
+- (#75) El panel de Mejoras pasa de iconos a una lista con nombre, nivel (veces cogida) y color de rareza; el detalle sale al pasar el ratón. Además, racha e hiperperk bajan a una columna a la derecha de la cola, para que una cola larga no las pise, y el panel de Nivel se estrecha para no chocar con la reserva doble.
 
 ## 0.32.0 — 2026-10-23
 - (#73) **La interfaz de la partida se reordena y la racha se hace visible.** Todo queda alineado con el tablero: a la izquierda marcador, nivel, contadores y mejoras; a la derecha la cola, la hiperperk y la racha. La lista de teclas pasa a la pausa y desaparece el contador de líneas (ya está en el nivel). La racha tiene cuatro tramos (buena, gran, ardiente, imparable) con nombre y color, cuenta las limpiezas seguidas, saca un texto pequeño sobre el tablero y el marco se enciende, con aura y brasas, cuanto más sube. No cambia reglas.
