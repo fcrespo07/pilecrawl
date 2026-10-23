@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runReplay } from './replay';
 import { COLS, Game, HYPER_STOP_GRACE, GARBAGE_MIN_INTERVAL, ROWS, SOFT_DROP_MS, STEP_MS } from './game';
 import { HYPER_BY_ID, HYPERS, type HyperId } from './hypers';
-import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX } from './streak';
+import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVEL, STREAK_DECAY, STREAK_MAX, STREAK_TIERS, streakTier } from './streak';
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { CURSES, PERK_BY_ID, PERKS, rollOffer } from './perks';
 import { makeRng } from './rng';
@@ -444,6 +444,31 @@ describe('racha', () => {
     g.streak = 0;
     g.hardDrop();
     expect(g.streak).toBe(0);
+  });
+
+  it('los tramos empiezan en sus umbrales', () => {
+    expect(streakTier(0)).toBe(0);
+    expect(streakTier(STREAK_TIERS[0] - 1)).toBe(0);
+    expect(streakTier(STREAK_TIERS[0])).toBe(1);
+    expect(streakTier(STREAK_TIERS[3])).toBe(4);
+    expect(streakTier(STREAK_MAX)).toBe(4);
+  });
+
+  it('la cadena cuenta limpiezas con buena racha y se corta al caer del primer tramo', () => {
+    const g = playing();
+    const ups: number[] = [];
+    let ended = 0;
+    g.events.on('streakUp', (e) => ups.push(e.chain));
+    g.events.on('streakEnd', (e) => { ended = e.chain; });
+    g.streak = STREAK_TIERS[0];
+    clearBottomLineWithI(g);
+    expect(g.streakChain).toBe(1);
+    expect(ups).toEqual([1]);
+    g.streak = STREAK_TIERS[0] + STREAK_DECAY - 1; // la siguiente pieza lo deja justo por debajo
+    g.hardDrop();
+    expect(g.streakChain).toBe(0);
+    expect(ended).toBe(1);
+    expect(g.streakBest).toBe(1);
   });
 
   it('limpiar rápido suma más que limpiar despacio', () => {

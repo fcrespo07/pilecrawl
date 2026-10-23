@@ -1,4 +1,4 @@
-import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Filter, Graphics, Rectangle, Sprite, Text, Texture, TilingSprite } from 'pixi.js';
 import { ShockwaveFilter } from 'pixi-filters';
 import { cellType, COLS, HIDDEN, isGold, ROWS, VISIBLE, type Cell, type Game, type PieceSpec } from '../core/game';
 
@@ -9,10 +9,13 @@ import {
 import { Particles } from './particles';
 import { PostFx } from './postfx';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
+import { STREAK_MAX, STREAK_TIER_NAMES, STREAK_TIERS, streakTier } from '../core/streak';
 
 // estilo píxel: fuente de recreativa y oro claro para los textos flotantes sobre fondo oscuro
 const PIXEL_FONT = '"Press Start 2P", monospace';
 const GOLD_TEXT = 0xffc83d;
+/** Color de cada tramo de racha (0 = sin racha): amarillo, naranja, rojo, rosa. Igual que `.p-streak[data-tier]` en style.css. */
+const STREAK_COLORS = [0xffd23f, 0xffd23f, 0xff9a2e, 0xff3b5c, 0xff7ac0];
 
 /** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
 const REDUCED_MOTION =
@@ -148,30 +151,41 @@ function makeTrailTexture(): Texture {
   });
 }
 
+/** Degradado del cielo. Las estrellas son sprites aparte (titilan) y las colinas, una franja que se desplaza. */
 function makeBackground(skin: Skin): Texture {
   const w = W / 2, h = H / 2;
-  const tex = canvasTex(w, h, (c) => {
+  return canvasTex(w, h, (c) => {
     const g = c.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, hex(skin.bg0));
     g.addColorStop(1, hex(skin.bg1));
     c.fillStyle = g;
     c.fillRect(0, 0, w, h);
-    if (!skin.stars) return;
-    // cielo de estrellas con semilla fija (sale igual siempre) y colinas escalonadas al pie
-    let seed = 7;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let k = 0; k < 140; k++) {
-      c.fillStyle = rnd() < 0.2 ? 'rgba(255,210,63,0.8)' : 'rgba(255,255,255,0.55)';
-      const sz = rnd() < 0.15 ? 2 : 1;
-      c.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), sz, sz);
-    }
+  });
+}
+
+/** Alto de la franja de colinas al pie, en píxeles lógicos. */
+const HILL_H = 112;
+/** Cuántas estrellas titilan a la vez en la piel con cielo. */
+const STAR_COUNT = 46;
+/** Velocidad de desplazamiento de las colinas, en píxeles lógicos por segundo. */
+const WAVE_SPEED = 7;
+
+/**
+ * Colinas de píxeles al pie, en columnas de 8 px. La altura sigue dos ondas que dan un número entero de
+ * vueltas en el ancho, así la franja se puede repetir en horizontal sin costura al desplazarla.
+ */
+function makeHills(w: number): Texture {
+  const cols = Math.max(1, Math.round(w / 8));
+  const tw = cols * 8;
+  const tex = canvasTex(tw, HILL_H, (c) => {
     c.fillStyle = 'rgba(80,60,160,0.35)';
-    for (let x = 0; x < w; x += 4) {
-      const hh = 24 + Math.round(10 * Math.sin(x / 37) + 6 * Math.sin(x / 13)) * 2;
-      c.fillRect(x, h - hh, 4, hh);
+    for (let i = 0; i < cols; i++) {
+      const t = i / cols;
+      const hh = Math.max(8, 48 + Math.round(10 * Math.sin(2 * Math.PI * 2 * t) + 6 * Math.sin(2 * Math.PI * 6 * t)) * 4);
+      c.fillRect(i * 8, HILL_H - hh, 8, hh);
     }
   });
-  // se dibuja a media resolución: sin suavizado al ampliar, para que estrellas y colinas sigan siendo píxeles
+  // sin suavizado al ampliar: los bordes de las columnas siguen siendo píxeles
   tex.source.scaleMode = 'nearest';
   return tex;
 }
@@ -235,7 +249,11 @@ export class Renderer {
   private glows!: Pool;
   particles!: Particles;
 
-  private stars: { s: Sprite; speed: number }[] = [];
+  /** Estrellas que titilan: cada una aparece en un sitio al azar, se funde y vuelve a salir en otro. */
+  private starList: { s: Sprite; t: number; dur: number; peak: number }[] = [];
+  private starLayer = new Container();
+  private hills!: TilingSprite;
+  private waveX = 0;
   private blobs: { s: Sprite; ph: number; sp: number }[] = [];
   private scanlines = new Graphics();
   private filterSig = -1;
@@ -267,6 +285,9 @@ export class Renderer {
   private snapPiece = true;
   private overT = 0;
   private dangerAmt = 0;
+  /** Racha que se enseña en el marco: sigue a la real con suavidad para que crezca, no salte. */
+  private streakShown = 0;
+  private emberAcc = 0;
   private skinId: SkinId = 'pixel';
   private skin: Skin = SKINS.pixel;
   private bgSprite!: Sprite;
@@ -344,6 +365,11 @@ export class Renderer {
     oldBg.destroy(true);
     this.bgSprite.width = W;
     this.bgSprite.height = H;
+    const oldHills = this.hills.texture;
+    this.hills.texture = makeHills(W);
+    oldHills.destroy(true);
+    this.hills.width = W;
+    this.hills.y = H - HILL_H;
     this.vignette.width = W;
     this.vignette.height = H;
     this.screenFlash.width = W;
@@ -358,7 +384,7 @@ export class Renderer {
     for (const t of this.labels) t.resolution = res;
     this.drawBoardBg();
     this.panelKey = '';
-    this.stars.forEach((st) => { st.s.x = Math.random() * W; st.s.y = Math.random() * H; });
+    this.starList.forEach((st) => this.placeStar(st, true));
   }
 
   private buildScanlines() {
@@ -383,7 +409,58 @@ export class Renderer {
     this.bgSprite = new Sprite(makeBackground(this.skin));
     this.bgSprite.width = W;
     this.bgSprite.height = H;
-    this.bg.addChild(this.bgSprite);
+    this.starLayer.removeChildren();
+    this.starList = [];
+    for (let k = 0; k < STAR_COUNT; k++) {
+      const s = new Sprite(Texture.WHITE);
+      this.starLayer.addChild(s);
+      const st = { s, t: 0, dur: 1, peak: 1 };
+      this.placeStar(st, true);
+      this.starList.push(st);
+    }
+    this.hills = new TilingSprite({ texture: makeHills(W), width: W, height: HILL_H });
+    this.hills.y = H - HILL_H;
+    this.bg.addChild(this.bgSprite, this.starLayer, this.hills);
+    this.updateSkinBg();
+  }
+
+  /** Pone una estrella en un sitio al azar y reinicia su ciclo: sube, se queda y se apaga poco a poco. */
+  private placeStar(st: { s: Sprite; t: number; dur: number; peak: number }, first = false) {
+    const big = Math.random() < 0.15;
+    st.s.width = st.s.height = big ? 4 : 2;
+    st.s.tint = Math.random() < 0.2 ? 0xffd23f : 0xffffff;
+    st.s.x = Math.floor(Math.random() * W);
+    st.s.y = Math.floor(Math.random() * (H - HILL_H / 2));
+    st.dur = 4 + Math.random() * 4;
+    st.peak = 0.4 + Math.random() * 0.45;
+    st.t = first ? Math.random() * st.dur : 0;
+    // nace invisible: el siguiente fotograma le da su brillo según su ciclo
+    st.s.alpha = 0;
+  }
+
+  /** Estrellas y colinas solo en la piel con cielo; las demás pieles dejan el fondo liso. */
+  private updateSkinBg() {
+    const on = !!this.skin.stars;
+    this.starLayer.visible = on;
+    this.hills.visible = on;
+  }
+
+  /** Estrellas y colinas se mueven solo con efectos encendidos y sin «reducir movimiento». */
+  private animateBg(sec: number) {
+    if (!this.skin.stars) return;
+    const animate = this.highQuality && !REDUCED_MOTION;
+    for (const st of this.starList) {
+      if (animate) {
+        st.t += sec;
+        if (st.t >= st.dur) this.placeStar(st);
+        // seno al cuadrado: 0 al empezar y al acabar, así no hay saltos de brillo
+        st.s.alpha = st.peak * Math.sin((Math.PI * st.t) / st.dur) ** 2;
+      } else st.s.alpha = st.peak * 0.6;
+    }
+    if (animate) {
+      this.waveX = (this.waveX + sec * WAVE_SPEED) % this.hills.texture.width;
+      this.hills.tilePosition.x = Math.round(this.waveX);
+    }
   }
 
   /** Cambia la piel si la ha cambiado un perk (o una partida nueva la devuelve a la de base). */
@@ -396,6 +473,7 @@ export class Renderer {
     this.bgSprite.texture = makeBackground(this.skin);
     old.destroy(true);
     this.app.renderer.background.color = this.skin.bg0;
+    this.updateSkinBg();
     this.drawBoardBg();
     this.panelKey = '';
     this.accentTarget = accentFor(this.game.level);
@@ -470,6 +548,8 @@ export class Renderer {
     this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
     this.accentTarget = accentFor(1);
+    this.streakShown = 0;
+    this.emberAcc = 0;
     this.snapPiece = true;
   }
 
@@ -707,6 +787,24 @@ export class Renderer {
       if (skill === 'tactic') this.flash(0x6ad1ff, 0.12);
     });
 
+    // racha: texto pequeño con el tramo y la cadena, y un destello al subir de tramo
+    ev.on('streakUp', ({ tier, tierUp, chain }) => {
+      const col = STREAK_COLORS[tier];
+      const mid = BOARD_X + BOARD_W / 2;
+      if (chain >= 2 || tierUp) {
+        this.floatText(`${STREAK_TIER_NAMES[tier].toUpperCase()} ×${chain}`, mid, BOARD_Y + 76, { color: col, size: tierUp ? 22 : 16, life: tierUp ? 1.6 : 1.1, vy: -14, delay: 0.15 });
+      }
+      if (tierUp) {
+        this.flash(col, 0.18);
+        this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 6 + tier * 2, wavelength: 120, speed: 650 });
+        this.post.pulse(col, 0.2 + tier * 0.05);
+        this.burstEmbers(col, 10 + tier * 8);
+      }
+    });
+    ev.on('streakEnd', ({ chain }) => {
+      if (chain >= 3) this.floatText(`RACHA PERDIDA ×${chain}`, BOARD_X + BOARD_W / 2, BOARD_Y + 76, { color: 0x9aa0b8, size: 14, life: 1.2, vy: 10 });
+    });
+
     ev.on('levelup', ({ level }) => {
       this.accentTarget = accentFor(level);
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
@@ -806,6 +904,7 @@ export class Renderer {
     this.updateSkin();
     this.accent = lerpColor(this.accent, this.accentTarget, 1 - Math.exp(-sec * 3));
 
+    this.updateStreakFx(sec);
     this.updateBackground(sec);
     this.updatePanels();
     this.drawFrame();
@@ -843,14 +942,7 @@ export class Renderer {
       b.s.y = H / 2 + Math.sin(b.ph + i * 2) * 260;
       b.s.tint = i % 2 === 0 ? this.accent : accentFor(lvl + 2);
     });
-    const speedMul = 1 + Math.min(lvl, 20) * 0.15;
-    for (const st of this.stars) {
-      st.s.y -= st.speed * speedMul * sec;
-      if (st.s.y < -5) {
-        st.s.y = H + 5;
-        st.s.x = Math.random() * W;
-      }
-    }
+    this.animateBg(sec);
   }
 
   /** Casillas de la reserva (columna izquierda) y de la cola (columna derecha), según los perks. */
@@ -936,15 +1028,26 @@ export class Renderer {
     const g = this.game;
     const f = this.frame;
     f.clear();
-    const dangerCol = lerpColor(this.skin.ink, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
+    // racha: el marco se tiñe del color del tramo conforme sube, y desde el tramo 2 le crece un aura
+    const st = this.streakShown;
+    const tier = streakTier(st);
+    const tierCol = STREAK_COLORS[tier];
+    const heat = tier === 0 ? 0 : Math.min(1, 0.35 + (st - STREAK_TIERS[0]) / (STREAK_MAX - STREAK_TIERS[0]));
+    const pulse = REDUCED_MOTION ? 0.8 : 0.7 + 0.3 * Math.sin(this.time * (4 + tier * 1.5));
+    const frameCol = lerpColor(this.skin.ink, tierCol, heat * 0.8 * (tier >= 2 ? pulse : 1));
+    const dangerCol = lerpColor(frameCol, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
     f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 4, color: dangerCol, alpha: 1 });
+    for (let i = 1; i < tier; i++) {
+      const off = 4 + i * 4;
+      f.rect(BOARD_X - off, BOARD_Y - off, BOARD_W + off * 2, BOARD_H + off * 2).stroke({ width: 2, color: tierCol, alpha: (0.5 - i * 0.12) * pulse });
+    }
 
     // medidor de basura
     const gp = g.garbageProgress();
     if (gp > 0) {
       const h = BOARD_H * Math.min(1, gp);
-      const pulse = gp > 0.75 ? 0.6 + 0.4 * Math.sin(this.time * 14) : 0.85;
-      f.rect(BOARD_X - 20, BOARD_Y + BOARD_H - h, 6, h).fill({ color: 0xff3050, alpha: pulse });
+      const gpulse = gp > 0.75 ? 0.6 + 0.4 * Math.sin(this.time * 14) : 0.85;
+      f.rect(BOARD_X - 20, BOARD_Y + BOARD_H - h, 6, h).fill({ color: 0xff3050, alpha: gpulse });
     }
     // hiperperk: barra a la derecha del tablero; se llena con líneas y se vacía mientras está activa
     if (g.hyper) {
@@ -955,8 +1058,8 @@ export class Renderer {
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y, 6, BOARD_H).fill({ color: this.skin.ink, alpha: 0.12 });
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y + BOARD_H - h, 6, h).fill({ color: HYPER_COLOR, alpha });
       if (active) {
-        const pulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
-        f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: pulse });
+        const hpulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
+        f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: hpulse });
       }
     }
     // progreso de nivel (barra fina debajo del tablero)
@@ -1126,6 +1229,38 @@ export class Renderer {
     }
     this.flashes.end();
     this.glows.end();
+  }
+
+  /** Brasas que suben por los lados del tablero: más cuantas más racha. */
+  private burstEmbers(color: number, count: number) {
+    if (REDUCED_MOTION || !this.highQuality) return;
+    for (const x of [BOARD_X - 2, BOARD_X + BOARD_W + 2]) {
+      this.particles.emit({
+        x, y: BOARD_Y + BOARD_H * 0.9, color, count: Math.ceil(count / 2), speed: 120, angle: -Math.PI / 2, spread: 0.9,
+        life: 0.9, size: 4, gravity: -60, jitter: BOARD_H * 0.25, shape: 'spark', shrink: true,
+      });
+    }
+  }
+
+  private updateStreakFx(sec: number) {
+    const g = this.game;
+    const target = g.state === 'playing' ? g.streak : 0;
+    this.streakShown += (target - this.streakShown) * (1 - Math.exp(-sec * 5));
+    if (Math.abs(target - this.streakShown) < 0.05) this.streakShown = target;
+    const tier = streakTier(this.streakShown);
+    if (tier === 0 || REDUCED_MOTION || !this.highQuality) { this.emberAcc = 0; return; }
+    // 3, 8, 16 y 28 brasas por segundo según el tramo
+    this.emberAcc += sec * [0, 3, 8, 16, 28][tier];
+    if (this.emberAcc >= 1) {
+      const n = Math.floor(this.emberAcc);
+      this.emberAcc -= n;
+      const col = STREAK_COLORS[tier];
+      const x = Math.random() < 0.5 ? BOARD_X - 2 : BOARD_X + BOARD_W + 2;
+      this.particles.emit({
+        x, y: BOARD_Y + BOARD_H - Math.random() * BOARD_H * 0.6, color: col, count: n, speed: 50 + tier * 12, angle: -Math.PI / 2,
+        spread: 0.6, life: 0.8 + tier * 0.1, size: 3 + (tier >= 3 ? 1 : 0), gravity: -30, jitter: 4, shape: 'spark', shrink: true,
+      });
+    }
   }
 
   private updatePost(sec: number, dtMs: number) {
