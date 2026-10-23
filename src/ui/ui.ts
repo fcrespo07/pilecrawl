@@ -540,6 +540,7 @@ export class UI {
     if (key !== this.perkKey) {
       this.perkKey = key;
       $('perk-count').textContent = String(g.perkOrder.length);
+      $('perk-list').classList.toggle('compact', g.perkOrder.length > 14);
       $('perk-list').innerHTML = g.perkOrder.length
         ? g.perkOrder.map((id) => perkRowHTML(id, g.perkStacks(id))).join('')
         : '<div class="empty">Aún nada. Sube de nivel para elegir tu primera mejora.</div>';

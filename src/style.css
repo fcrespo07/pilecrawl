@@ -249,8 +249,12 @@ kbd {
 #b2b-box .ico { color: var(--muted); opacity: 0.35; transition: all 0.2s; }
 #b2b-box.on .ico { color: #ffb13d; opacity: 1; filter: drop-shadow(0 0 6px #ff8a3d); }
 
-.p-perks { left: 18px; top: 452px; width: 288px; height: 232px; pointer-events: auto; }
-#perk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; padding-top: 4px; align-content: start; }
+.p-perks { left: 18px; top: 452px; width: 288px; height: 232px; pointer-events: auto; display: flex; flex-direction: column; }
+#perk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; padding: 4px 4px 0 0; align-content: start; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hi) transparent; }
+/* con muchas mejoras las filas se aprietan (22 caben a la vista) y, si aun así no caben, la lista se desplaza */
+#perk-list.compact { gap: 1px 10px; }
+#perk-list.compact .prow { height: 16px; }
+#perk-list.compact .prow .pn { font-size: 14px; }
 #perk-list .empty { grid-column: 1 / -1; }
 .prow { display: flex; align-items: center; gap: 5px; height: 21px; min-width: 0; padding-left: 4px; border-left: 3px solid var(--c); }
 .prow .pi { flex: none; width: 15px; height: 15px; color: var(--c); }
