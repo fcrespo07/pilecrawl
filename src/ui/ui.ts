@@ -1,7 +1,7 @@
 import { Game, STEP_MS } from '../core/game';
 import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
-import { STREAK_MAX } from '../core/streak';
+import { STREAK_MAX, STREAK_TIER_NAMES, streakTier } from '../core/streak';
 import { audio } from '../fx/audio';
 import { accentFor, hex } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
@@ -381,10 +381,18 @@ export class UI {
     const odds = g.offerOdds();
     const hyper = g.hyperOfferChance();
     const rows = (['rare', 'epic', 'legendary'] as const).map((r) => ({ r, heat: Math.round(g.heat[r]), odd: pctTxt(odds[r]) }));
-    const key = `${Math.round(g.streak)}|${pctTxt(hyper)}|${rows.map((x) => `${x.heat}.${x.odd}`).join(',')}`;
+    const tier = streakTier(g.streak);
+    const key = `${Math.round(g.streak)}|${g.streakChain}|${g.streakBest}|${pctTxt(hyper)}|${rows.map((x) => `${x.heat}.${x.odd}`).join(',')}`;
     if (key === this.streakKey) return;
     this.streakKey = key;
     $('streak-num').textContent = String(Math.round(g.streak));
+    $('streak-box').dataset.tier = String(tier);
+    $('streak-tier').textContent = STREAK_TIER_NAMES[tier];
+    // cadena: limpiezas seguidas con buena racha; la mejor de la partida se enseña cuando ya no es la actual
+    $('streak-chain').innerHTML =
+      g.streakChain > 0
+        ? `Seguidas <b>×${g.streakChain}</b>${g.streakBest > g.streakChain ? ` · mejor ×${g.streakBest}` : ''}`
+        : g.streakBest > 0 ? `Mejor cadena ×${g.streakBest}` : 'Sube desde 20';
     $('streak-odds').innerHTML =
       rows
         .map(
@@ -416,7 +424,6 @@ export class UI {
     $('score').textContent = fmt(this.shownScore);
     $('mult').textContent = `×${g.scoreMultNow().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     $('level').textContent = pad2(g.level);
-    $('lines').textContent = String(g.lines);
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';
     $('b2b-box').classList.toggle('on', g.b2b);
     $('rerolls').textContent = String(g.rerolls);

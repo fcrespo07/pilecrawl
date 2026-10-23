@@ -9,10 +9,13 @@ import {
 import { Particles } from './particles';
 import { PostFx } from './postfx';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
+import { STREAK_MAX, STREAK_TIER_NAMES, STREAK_TIERS, streakTier } from '../core/streak';
 
 // estilo píxel: fuente de recreativa y oro claro para los textos flotantes sobre fondo oscuro
 const PIXEL_FONT = '"Press Start 2P", monospace';
 const GOLD_TEXT = 0xffc83d;
+/** Color de cada tramo de racha (0 = sin racha): amarillo, naranja, rojo, rosa. Igual que `.p-streak[data-tier]` en style.css. */
+const STREAK_COLORS = [0xffd23f, 0xffd23f, 0xff9a2e, 0xff3b5c, 0xff7ac0];
 
 /** Si el sistema pide menos movimiento, las sacudidas y ondas se reducen al mínimo. */
 const REDUCED_MOTION =
@@ -282,6 +285,9 @@ export class Renderer {
   private snapPiece = true;
   private overT = 0;
   private dangerAmt = 0;
+  /** Racha que se enseña en el marco: sigue a la real con suavidad para que crezca, no salte. */
+  private streakShown = 0;
+  private emberAcc = 0;
   private skinId: SkinId = 'pixel';
   private skin: Skin = SKINS.pixel;
   private bgSprite!: Sprite;
@@ -542,6 +548,8 @@ export class Renderer {
     this.trauma = this.kickY = this.punch = 0;
     this.overT = 0;
     this.accentTarget = accentFor(1);
+    this.streakShown = 0;
+    this.emberAcc = 0;
     this.snapPiece = true;
   }
 
@@ -771,6 +779,24 @@ export class Renderer {
       this.flashList.push({ x: BOARD_X + to[0] * CELL, y: BOARD_Y + (to[1] - HIDDEN) * CELL, w: CELL, h: CELL, color: 0xffffff, life: 0.3, max: 0.3 });
     });
 
+    // racha: texto pequeño con el tramo y la cadena, y un destello al subir de tramo
+    ev.on('streakUp', ({ tier, tierUp, chain }) => {
+      const col = STREAK_COLORS[tier];
+      const mid = BOARD_X + BOARD_W / 2;
+      if (chain >= 2 || tierUp) {
+        this.floatText(`${STREAK_TIER_NAMES[tier].toUpperCase()} ×${chain}`, mid, BOARD_Y + 76, { color: col, size: tierUp ? 22 : 16, life: tierUp ? 1.6 : 1.1, vy: -14, delay: 0.15 });
+      }
+      if (tierUp) {
+        this.flash(col, 0.18);
+        this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 6 + tier * 2, wavelength: 120, speed: 650 });
+        this.post.pulse(col, 0.2 + tier * 0.05);
+        this.burstEmbers(col, 10 + tier * 8);
+      }
+    });
+    ev.on('streakEnd', ({ chain }) => {
+      if (chain >= 3) this.floatText(`RACHA PERDIDA ×${chain}`, BOARD_X + BOARD_W / 2, BOARD_Y + 76, { color: 0x9aa0b8, size: 14, life: 1.2, vy: 10 });
+    });
+
     ev.on('levelup', ({ level }) => {
       this.accentTarget = accentFor(level);
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
@@ -870,6 +896,7 @@ export class Renderer {
     this.updateSkin();
     this.accent = lerpColor(this.accent, this.accentTarget, 1 - Math.exp(-sec * 3));
 
+    this.updateStreakFx(sec);
     this.updateBackground(sec);
     this.updatePanels();
     this.drawFrame();
@@ -993,15 +1020,26 @@ export class Renderer {
     const g = this.game;
     const f = this.frame;
     f.clear();
-    const dangerCol = lerpColor(this.skin.ink, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
+    // racha: el marco se tiñe del color del tramo conforme sube, y desde el tramo 2 le crece un aura
+    const st = this.streakShown;
+    const tier = streakTier(st);
+    const tierCol = STREAK_COLORS[tier];
+    const heat = tier === 0 ? 0 : Math.min(1, 0.35 + (st - STREAK_TIERS[0]) / (STREAK_MAX - STREAK_TIERS[0]));
+    const pulse = REDUCED_MOTION ? 0.8 : 0.7 + 0.3 * Math.sin(this.time * (4 + tier * 1.5));
+    const frameCol = lerpColor(this.skin.ink, tierCol, heat * 0.8 * (tier >= 2 ? pulse : 1));
+    const dangerCol = lerpColor(frameCol, 0xc0392b, this.dangerAmt * (0.6 + 0.4 * Math.sin(this.time * 8)));
     f.rect(BOARD_X - 4, BOARD_Y - 4, BOARD_W + 8, BOARD_H + 8).stroke({ width: 4, color: dangerCol, alpha: 1 });
+    for (let i = 1; i < tier; i++) {
+      const off = 4 + i * 4;
+      f.rect(BOARD_X - off, BOARD_Y - off, BOARD_W + off * 2, BOARD_H + off * 2).stroke({ width: 2, color: tierCol, alpha: (0.5 - i * 0.12) * pulse });
+    }
 
     // medidor de basura
     const gp = g.garbageProgress();
     if (gp > 0) {
       const h = BOARD_H * Math.min(1, gp);
-      const pulse = gp > 0.75 ? 0.6 + 0.4 * Math.sin(this.time * 14) : 0.85;
-      f.rect(BOARD_X - 20, BOARD_Y + BOARD_H - h, 6, h).fill({ color: 0xff3050, alpha: pulse });
+      const gpulse = gp > 0.75 ? 0.6 + 0.4 * Math.sin(this.time * 14) : 0.85;
+      f.rect(BOARD_X - 20, BOARD_Y + BOARD_H - h, 6, h).fill({ color: 0xff3050, alpha: gpulse });
     }
     // hiperperk: barra a la derecha del tablero; se llena con líneas y se vacía mientras está activa
     if (g.hyper) {
@@ -1012,8 +1050,8 @@ export class Renderer {
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y, 6, BOARD_H).fill({ color: this.skin.ink, alpha: 0.12 });
       f.rect(BOARD_X + BOARD_W + 14, BOARD_Y + BOARD_H - h, 6, h).fill({ color: HYPER_COLOR, alpha });
       if (active) {
-        const pulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
-        f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: pulse });
+        const hpulse = REDUCED_MOTION ? 0.8 : 0.55 + 0.45 * Math.sin(this.time * 9);
+        f.rect(BOARD_X - 13, BOARD_Y - 13, BOARD_W + 26, BOARD_H + 26).stroke({ width: 3, color: HYPER_COLOR, alpha: hpulse });
       }
     }
     // progreso de nivel (barra fina debajo del tablero)
@@ -1183,6 +1221,38 @@ export class Renderer {
     }
     this.flashes.end();
     this.glows.end();
+  }
+
+  /** Brasas que suben por los lados del tablero: más cuantas más racha. */
+  private burstEmbers(color: number, count: number) {
+    if (REDUCED_MOTION || !this.highQuality) return;
+    for (const x of [BOARD_X - 2, BOARD_X + BOARD_W + 2]) {
+      this.particles.emit({
+        x, y: BOARD_Y + BOARD_H * 0.9, color, count: Math.ceil(count / 2), speed: 120, angle: -Math.PI / 2, spread: 0.9,
+        life: 0.9, size: 4, gravity: -60, jitter: BOARD_H * 0.25, shape: 'spark', shrink: true,
+      });
+    }
+  }
+
+  private updateStreakFx(sec: number) {
+    const g = this.game;
+    const target = g.state === 'playing' ? g.streak : 0;
+    this.streakShown += (target - this.streakShown) * (1 - Math.exp(-sec * 5));
+    if (Math.abs(target - this.streakShown) < 0.05) this.streakShown = target;
+    const tier = streakTier(this.streakShown);
+    if (tier === 0 || REDUCED_MOTION || !this.highQuality) { this.emberAcc = 0; return; }
+    // 3, 8, 16 y 28 brasas por segundo según el tramo
+    this.emberAcc += sec * [0, 3, 8, 16, 28][tier];
+    if (this.emberAcc >= 1) {
+      const n = Math.floor(this.emberAcc);
+      this.emberAcc -= n;
+      const col = STREAK_COLORS[tier];
+      const x = Math.random() < 0.5 ? BOARD_X - 2 : BOARD_X + BOARD_W + 2;
+      this.particles.emit({
+        x, y: BOARD_Y + BOARD_H - Math.random() * BOARD_H * 0.6, color: col, count: n, speed: 50 + tier * 12, angle: -Math.PI / 2,
+        spread: 0.6, life: 0.8 + tier * 0.1, size: 3 + (tier >= 3 ? 1 : 0), gravity: -30, jitter: 4, shape: 'spark', shrink: true,
+      });
+    }
   }
 
   private updatePost(sec: number, dtMs: number) {
