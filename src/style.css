@@ -291,7 +291,7 @@ kbd {
 #perks.hyper .perk-title span { color: var(--hyper); }
 
 /* habilidad activa (Pausa táctica, Comodín): una vez por nivel */
-.p-skill { left: 804px; top: 136px; width: 140px; --c: var(--hi); }
+.p-skill { --c: var(--hi); }
 .p-skill[hidden] { display: none; }
 .p-skill > header kbd { margin-left: auto; }
 #skill-box[data-state='ready'] .hy-state, #skill-box[data-state='active'] .hy-state { color: var(--c); font-weight: 700; }

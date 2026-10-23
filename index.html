@@ -178,7 +178,6 @@
           <div id="perk-list"></div>
         </section>
 
-
         <div class="hud-side">
           <section class="panel p-streak" id="streak-box" data-tier="0">
             <header>Racha <span id="streak-num">0</span></header>
@@ -194,13 +193,14 @@
             <div class="hy-bar"><i id="hyper-fill"></i></div>
             <div id="hyper-state" class="hy-state"></div>
           </section>
+
+          <section class="panel p-skill" id="skill-box" data-state="none" hidden>
+            <header>Habilidad <kbd data-keys="skill"></kbd></header>
+            <div class="hy-row"><div id="skill-ico" class="hy-ico"></div><div id="skill-name" class="hy-name"></div></div>
+            <div id="skill-state" class="hy-state"></div>
+          </section>
         </div>
 
-        <section class="panel p-skill" id="skill-box" data-state="none" hidden>
-          <header>Habilidad <kbd data-keys="skill"></kbd></header>
-          <div class="hy-row"><div id="skill-ico" class="hy-ico"></div><div id="skill-name" class="hy-name"></div></div>
-          <div id="skill-state" class="hy-state"></div>
-        </section>
       </div>
       <div id="tooltip"></div>
       <div id="lab-badge" class="lab-badge" hidden>Laboratorio · no puntúa</div>
