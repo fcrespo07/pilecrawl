@@ -1147,7 +1147,8 @@ export class Renderer {
     const g = this.game, playing = g.state === 'playing';
     // calor de Furia (márgenes, con la racha alta) y de Fénix (filas de abajo): solo con movimiento y siempre leves
     const margin = playing && g.mods.fury > 0 ? Math.max(0, (g.streak - 60) / 40) : 0;
-    const low = playing && g.mods.phoenix ? 1 : 0;
+    // el calor de Fénix solo sale a ratos (4 s de cada 14) y nunca con la pila en peligro; fuera de eso el filtro no entra
+    const low = playing && g.mods.phoenix && this.dangerAmt < 0.2 ? Math.max(0, Math.min(1, Math.sin((this.time % 14) / 4 * Math.PI) * 2)) * (this.time % 14 < 4 ? 1 : 0) : 0;
     // con una vida de reserva y la pila alta, el borde late
     this.beat -= sec;
     if (this.beat <= 0) {
