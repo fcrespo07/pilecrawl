@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.34.0 — 2026-10-23
+- (#75) El panel de Mejoras pasa de iconos a una lista con nombre, nivel (veces cogida) y color de rareza; el detalle sale al pasar el ratón. Además, racha e hiperperk bajan a una columna a la derecha de la cola, para que una cola larga no las pise, y el panel de Nivel se estrecha para no chocar con la reserva doble. La habilidad activa va en esa misma columna, bajo la hiperperk.
+
 ## 0.33.0 — 2026-10-23
 - (#71) **Cambia las reglas (`RULES_VERSION` 14): el ranking empieza de cero.** Cuatro perks nuevos: dos **habilidades** que se usan con la tecla Q (o tocando su panel en móvil), una vez por nivel y solo una por partida, **Pausa táctica** (común: congela la caída 3 s, sin girar) y **Comodín** (rara: descartas la pieza actual, −25 de racha); **Erosión** (épica: al limpiar líneas desaparece también el bloque más alto, +1 línea por nivel) y **Tahúr** (épica: una carta extra en cada subida de nivel, +3 líneas por nivel). En la pantalla de cartas, **Saltar** (tecla K) no coge carta y da un reroll (no vale en ofertas malditas ni de hiperperk), y se puede **quitar una maldición** por un reroll.
 
