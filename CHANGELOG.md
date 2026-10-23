@@ -4,6 +4,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.31.0 — 2026-10-23
 - (#72) El fondo cobra vida: las estrellas titilan (aparecen en sitios al azar y se apagan y encienden poco a poco) y las colinas de píxeles del pie se desplazan despacio de un lado a otro. Con los efectos apagados o con «reducir movimiento» quedan quietas. Solo cambia el aspecto.
 
 ## 0.30.0 — 2026-10-22
