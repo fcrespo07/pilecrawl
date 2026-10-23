@@ -428,6 +428,8 @@ export class Renderer {
     st.dur = 4 + Math.random() * 4;
     st.peak = 0.4 + Math.random() * 0.45;
     st.t = first ? Math.random() * st.dur : 0;
+    // nace invisible: el siguiente fotograma le da su brillo según su ciclo
+    st.s.alpha = 0;
   }
 
   /** Estrellas y colinas solo en la piel con cielo; las demás pieles dejan el fondo liso. */
