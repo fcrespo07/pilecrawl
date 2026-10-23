@@ -47,6 +47,12 @@ function chipHTML(id: string, stacks: number): string {
   return `<div class="chip-wrap r-${rarityKey(p)}" data-perk="${id}"><div class="chip">${perkIcon(id)}</div>${stacks > 1 ? `<i>${stacks}</i>` : ''}</div>`;
 }
 
+/** Fila del panel de mejoras: icono, nombre y nivel (veces cogida), con el color de su rareza. */
+function perkRowHTML(id: string, stacks: number): string {
+  const p = Game.perkDef(id);
+  return `<div class="prow r-${rarityKey(p)}" data-perk="${id}"><span class="pi">${perkIcon(id)}</span><span class="pn">${p.name}</span><b>×${Math.max(1, stacks)}</b></div>`;
+}
+
 /** Marca del dorso de las cartas: una «P» de Pilecrawl hecha con bloques. */
 const CARD_MARK = (() => {
   const rows = ['###.', '#..#', '###.', '#...', '#...'];
@@ -459,7 +465,7 @@ export class UI {
       this.perkKey = key;
       $('perk-count').textContent = String(g.perkOrder.length);
       $('perk-list').innerHTML = g.perkOrder.length
-        ? g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('')
+        ? g.perkOrder.map((id) => perkRowHTML(id, g.perkStacks(id))).join('')
         : '<div class="empty">Aún nada. Sube de nivel para elegir tu primera mejora.</div>';
     }
   }
