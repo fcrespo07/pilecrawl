@@ -3,7 +3,7 @@ import { baseMods, HEAT_MAX, NO_HEAT, offerOdds, PERK_BY_ID, rollCurses, rollOff
 import { GARBAGE_ID, getKicks, PIECES, STANDARD, type PieceDef } from './pieces';
 import { HYPER_BY_ID, rollHypers, type HyperDef, type HyperId } from './hypers';
 import {
-  HEAT_DECAY, heatGain, HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck,
+  HEAT_DECAY, heatGain, HYPER_FROM_LEVEL, hyperChance, STREAK_DECAY, STREAK_FAST_MS, STREAK_MAX, streakGain, streakLuck, streakTier,
 } from './streak';
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
@@ -80,6 +80,10 @@ export interface GameEvents {
   roulette: { from: [number, number]; to: [number, number] };
   garbageWarn: { progress: number };
   levelup: { level: number };
+  /** Una limpieza deja la racha en buena racha (tramo 1 o más). Solo informa: no cambia reglas. */
+  streakUp: { streak: number; tier: number; tierUp: boolean; chain: number };
+  /** La racha baja del primer tramo y la cadena se corta. */
+  streakEnd: { chain: number };
   interest: { amount: number };
   /** Subida sin cartas que ofrecer: se resuelve sola con estos puntos. */
   emptyOffer: { points: number };
@@ -225,6 +229,9 @@ export class Game {
   hyperChoices: HyperDef[] = [];
   /** Racha (0..STREAK_MAX): sube jugando bien y baja con cada pieza. Ver `streak.ts`. */
   streak = 0;
+  /** Limpiezas seguidas con la racha en buena racha (tramo 1 o más), y la mejor de la partida. Solo para mostrar. */
+  streakChain = 0;
+  streakBest = 0;
   /** Calor por rareza: lo suben distintas jugadas y hace más probable esa rareza en la oferta. Ver `streak.ts`. */
   heat: Heat = { ...NO_HEAT };
   private harvestLines = 0;
@@ -305,6 +312,8 @@ export class Game {
     this.hyperPending = false;
     this.hyperChoices = [];
     this.streak = 0;
+    this.streakChain = 0;
+    this.streakBest = 0;
     this.heat = { ...NO_HEAT };
     this.harvestLines = 0;
     this.lifelineReadyAt = 0;
@@ -722,6 +731,7 @@ export class Game {
     this.piecesLocked++;
     // la racha baja con cada pieza; las líneas que haga la suben después
     this.addStreak(-STREAK_DECAY * this.mods.streakDecayMult);
+    this.checkStreakEnd();
     for (const k of Object.keys(HEAT_DECAY) as (keyof Heat)[]) this.heat[k] = Math.max(0, this.heat[k] - HEAT_DECAY[k]);
 
     if (a.bomb || a.hyperBomb) {
@@ -832,7 +842,9 @@ export class Game {
     const points = this.addScore(total, true, mult);
     if (cascade === 0 && !blast) {
       const fast = this.time - this.pieceStart < STREAK_FAST_MS;
+      const tierBefore = streakTier(this.streak);
       this.addStreak(streakGain(lines, spin !== null, this.combo, perfect, fast));
+      this.noteStreakClear(tierBefore);
       const gain = heatGain(lines, spin !== null, this.combo, b2bApplied, perfect, this.hardChain);
       for (const k of Object.keys(gain) as (keyof Heat)[]) this.heat[k] = Math.min(HEAT_MAX, this.heat[k] + gain[k]);
     }
@@ -1232,6 +1244,24 @@ export class Game {
 
   private addStreak(n: number) {
     this.streak = Math.max(0, Math.min(STREAK_MAX, this.streak + n));
+  }
+
+  /** Cuenta la cadena de buena racha (solo para mostrarla) tras una limpieza. */
+  private noteStreakClear(tierBefore: number) {
+    const tier = streakTier(this.streak);
+    if (tier === 0) return this.checkStreakEnd();
+    this.streakChain++;
+    this.streakBest = Math.max(this.streakBest, this.streakChain);
+    this.events.emit('streakUp', { streak: this.streak, tier, tierUp: tier > tierBefore, chain: this.streakChain });
+  }
+
+  /** Si la racha ha caído del primer tramo, se corta la cadena. */
+  private checkStreakEnd() {
+    if (this.streakChain > 0 && streakTier(this.streak) === 0) {
+      const chain = this.streakChain;
+      this.streakChain = 0;
+      this.events.emit('streakEnd', { chain });
+    }
   }
 
   /** La elección en curso es de hiperperk, no de mejora normal. */
