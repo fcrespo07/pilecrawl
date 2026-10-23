@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#PR) Efectos de pantalla por legendaria, solo cosméticos (no cambian reglas): Eco deja postimágenes de cada pieza, Terremoto ondula la imagen, Prisma y las subidas de nivel lanzan un barrido arcoíris, Fénix y Segunda vida estallan de color al revivir, Casino brilla en cada oferta y, con una vida de reserva y la pila alta, el borde late. Con Furia y racha alta el calor ondula los márgenes y con Fénix las tres filas de abajo (muy leve; no se aplica con efectos apagados ni con movimiento reducido). Cada caída directa larga lanza una onda corta.
 
 ## 0.30.0 — 2026-10-22
 - (#70) **Cambia las reglas (`RULES_VERSION` 13): el ranking empieza de cero.** Salen Pluma, Pulso firme (se funden en Pulso tranquilo: +100 ms de fijado y caída un 6% más lenta), Ahorro y Esquina. Atajo ya no es solo «2 líneas menos»: su primera línea de cada nivel cuenta ×3, y cada subida de nivel acerca 3 piezas la basura. Cinco maldiciones nuevas que cambian cómo se juega: Cola ciega (solo ves la siguiente pieza), Sin fantasma, Pieza pesada (una gris cae al doble), Deriva (el tablero se desplaza una columna cada 8 piezas) y Ruleta (un bloque salta de columna cada 5). Propuesta completa en `planes/rework-perks.md`.

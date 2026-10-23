@@ -267,6 +267,7 @@ export class Renderer {
   private snapPiece = true;
   private overT = 0;
   private dangerAmt = 0;
+  private beat = 0;
   private skinId: SkinId = 'pixel';
   private skin: Skin = SKINS.pixel;
   private bgSprite!: Sprite;
@@ -563,12 +564,20 @@ export class Renderer {
       for (const [x, y] of lowest) {
         this.particles.emit({ x: this.cx(x), y: this.py(y) + CELL, color, count: 6, speed: 220, angle: -Math.PI / 2, spread: 2.2, life: 0.45, size: 6, gravity: 500, jitter: 10 });
       }
+      if (dist >= 10) this.shockwave(this.cx(to[0][0]), this.cy(to[0][1]), { amplitude: 6, wavelength: 110, speed: 900 });
       this.kickY = Math.min(10, 3 + dist * 0.45);
       this.shake(Math.min(0.28, 0.06 + dist * 0.012));
     });
 
-    ev.on('lock', ({ cells }) => {
+    ev.on('lock', ({ cells, color }) => {
       for (const [x, y] of cells) this.flashList.push({ x: this.px(x), y: this.py(y), w: CELL, h: CELL, color: this.skin.ink, life: 0.16, max: 0.16 });
+      // Eco: la pieza deja dos postimágenes que suben y se desvanecen
+      if (g.mods.echo > 0) {
+        for (const [x, y] of cells) {
+          this.flashList.push({ x: this.px(x), y: this.py(y) - CELL * 0.45, w: CELL, h: CELL, color, life: 0.4, max: 0.4 });
+          this.flashList.push({ x: this.px(x), y: this.py(y) - CELL * 0.9, w: CELL, h: CELL, color, life: 0.7, max: 0.7 });
+        }
+      }
     });
 
     ev.on('clear', (c) => {
@@ -648,6 +657,7 @@ export class Renderer {
     });
 
     ev.on('prism', ({ removed, points, cells }) => {
+      this.post.sweep(1);
       removed.forEach((r, i) => {
         const color = hsv((i * 0.07) % 1, 0.8, 1);
         this.particles.emit({ x: this.cx(r.x), y: this.cy(r.y), color, count: 7, speed: 420, life: 1.1, size: 8, gravity: -200, shape: 'square', jitter: 8 });
@@ -676,6 +686,7 @@ export class Renderer {
 
     ev.on('quake', ({ chain }) => {
       this.shake(0.9);
+      this.post.wobble(2.2 + Math.min(chain, 4) * 0.5);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H, { amplitude: 20, wavelength: 160, speed: 500 });
       for (let x = 0; x < COLS; x++) this.particles.emit({ x: this.cx(x), y: BOARD_Y + BOARD_H, color: 0xff8a3d, count: 6, speed: 300, angle: -Math.PI / 2, spread: 1, life: 0.8, size: 8, gravity: 600 });
       this.floatText(chain > 1 ? `TERREMOTO ×${chain}` : 'TERREMOTO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xb4541a, size: 30 });
@@ -706,6 +717,7 @@ export class Renderer {
       this.flash(accentFor(level), 0.15);
       if (!REDUCED_MOTION) this.post.pixelate(14, 0.45);
       this.post.pulse(accentFor(level), 0.35);
+      this.post.sweep(0.5);
     });
 
     ev.on('interest', ({ amount }) => {
@@ -738,6 +750,9 @@ export class Renderer {
     });
 
     ev.on('revive', () => {
+      this.post.pulse(this.game.mods.phoenix ? 0xff6a20 : 0xffffff, 0.9);
+      this.post.aberrate(0.7);
+      if (this.game.mods.phoenix) this.post.wobble(2.5);
       this.flash(this.skin.ink, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
@@ -780,6 +795,11 @@ export class Renderer {
     ev.on('gameover', () => {
       this.overT = 0;
       this.shake(0.5);
+    });
+
+    // Casino: cada oferta, y cada reroll, brilla como una tragaperras
+    ev.on('offer', () => {
+      if (this.game.mods.rerollPerLevel > 0) { this.post.pulse(0xf0c040, 0.5); this.post.aberrate(0.5); }
     });
 
     ev.on('perk', ({ perk }) => {
@@ -1124,7 +1144,17 @@ export class Renderer {
     if (!this.highQuality) return;
     this.post.aberrate(this.trauma * this.trauma * 0.5);
     const hy = this.game.hyperLeft > 0 ? 0.35 + (REDUCED_MOTION ? 0 : 0.08 * Math.sin(this.time * 9)) : 0;
-    this.post.update(sec, !REDUCED_MOTION, hy, HYPER_COLOR);
+    const g = this.game, playing = g.state === 'playing';
+    // calor de Furia (márgenes, con la racha alta) y de Fénix (filas de abajo): solo con movimiento y siempre leves
+    const margin = playing && g.mods.fury > 0 ? Math.max(0, (g.streak - 60) / 40) : 0;
+    const low = playing && g.mods.phoenix ? 1 : 0;
+    // con una vida de reserva y la pila alta, el borde late
+    this.beat -= sec;
+    if (this.beat <= 0) {
+      this.beat = 1.1;
+      if (!REDUCED_MOTION && playing && g.lives > 0 && this.dangerAmt > 0.5) this.post.pulse(0xff2040, 0.22);
+    }
+    this.post.update(sec, !REDUCED_MOTION, hy, HYPER_COLOR, margin, low);
     // si el equipo no da la talla (ratos de más de 34 ms por fotograma durante 3 s), los efectos se apagan solos
     this.slowT = dtMs > 34 && this.game.state === 'playing' ? this.slowT + sec : Math.max(0, this.slowT - sec);
     if (this.slowT > 3) {
