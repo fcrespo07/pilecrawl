@@ -259,10 +259,8 @@ kbd {
 .keys li span { min-width: 56px; }
 
 /* hiperperk: nombre, barra de carga (o de tiempo, activa) y estado */
-/* columna a la derecha de la cola: hiperperk (y, si la hay, la habilidad). Alineada con la cola y el tablero */
-.hud-side { position: absolute; left: 804px; top: 136px; width: 140px; display: flex; flex-direction: column; gap: 8px; }
-.hud-side > .panel { position: relative; }
-.p-hyper { --c: var(--hyper); }
+/* la hiperperk va justo debajo de la racha; el hueco a la derecha de la cola queda libre para la habilidad */
+.p-hyper { left: 692px; top: 524px; width: 252px; --c: var(--hyper); }
 .p-hyper > header kbd { margin-left: auto; }
 .hy-row { display: flex; align-items: center; gap: 6px; min-height: 26px; }
 .hy-ico { width: 24px; height: 24px; flex: none; color: var(--c); }
@@ -1279,8 +1277,6 @@ body.portrait .segs { margin-top: 4px; }
 body.portrait .p-level { left: 216px; top: 6px; width: 200px; }
 body.portrait .p-perks { display: none; }
 body.portrait .mini-grid > #time-box { grid-column: auto; }
-body.portrait .hud-side { display: contents; }
-body.portrait .hud-side > .panel { position: absolute; }
 body.portrait .mini-grid {
   left: 8px; right: 8px; top: auto; bottom: 120px; width: auto;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;
