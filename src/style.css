@@ -280,6 +280,19 @@ kbd {
 }
 #perks.hyper .perk-title span { color: var(--hyper); }
 
+/* habilidad activa (Pausa táctica, Comodín): una vez por nivel */
+.p-skill { left: 798px; top: 384px; width: 146px; --c: var(--hi); }
+/* con habilidad, hiperperk y racha bajan para hacerle sitio */
+body.has-skill:not(.portrait) .p-hyper { top: 474px; }
+body.has-skill:not(.portrait) .p-streak { top: 592px; }
+.p-skill[hidden] { display: none; }
+.p-skill > header kbd { margin-left: auto; }
+#skill-box[data-state='ready'] .hy-state, #skill-box[data-state='active'] .hy-state { color: var(--c); font-weight: 700; }
+#skill-box[data-state='used'] .hy-name { color: var(--muted); }
+.perk-shed { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+.perk-shed:empty { display: none; }
+.perk-shed .btn { border-color: var(--bad, #c0392b); }
+
 /* racha: barra, y lo que da ahora (cartas raras o mejores e hiperperk) */
 .p-streak { left: 798px; top: 528px; width: 146px; --c: var(--hi); }
 .p-streak > header span { color: var(--hi); }
@@ -700,7 +713,7 @@ kbd {
   .touch-pad button { width: 46px; height: 46px; font: 400 14px var(--f-display); touch-action: none; user-select: none; -webkit-user-select: none; }
   #game { touch-action: none; }
   .p-controls { display: none; }
-  .p-hyper { pointer-events: auto; }
+  .p-hyper, .p-skill { pointer-events: auto; }
 }
 
 /* ═════════════ Home (portada) ═════════════
@@ -1271,6 +1284,9 @@ body.portrait .mini-grid > :nth-child(1),
 body.portrait .mini-grid > :nth-child(5) { display: none; }
 body.portrait .p-hyper { left: 8px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
 body.portrait .p-streak { left: 276px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
+body.portrait .p-skill { left: 424px; top: 6px; width: 108px; box-sizing: border-box; }
+body.portrait .p-skill .hy-name { font-size: 12px; }
+body.portrait .p-skill .hy-state { font-size: 12px; }
 body.portrait .p-hyper .hy-name { font-size: 14px; }
 body.portrait .hy-state { font-size: 14px; }
 body.portrait .st-odds { font-size: 15px; }

@@ -26,7 +26,10 @@ function validAction(a: unknown): a is ReplayAction {
     case 'drop':
     case 'hold':
     case 'reroll':
+    case 'skill':
+    case 'skip':
     case 'hyper': return a.length === 2;
+    case 'shed': return a.length === 3 && Number.isInteger(arg) && (arg as number) >= 0 && (arg as number) < 64;
     default: return false;
   }
 }
@@ -72,6 +75,9 @@ export function replayInto(game: Game, r: Replay, upgrades: Owned = {}, unlocked
         case 'pick': game.choosePerk(a[2]); break;
         case 'reroll': game.reroll(); break;
         case 'hyper': game.activateHyper(); break;
+        case 'skill': game.useSkill(); break;
+        case 'skip': game.skipOffer(); break;
+        case 'shed': game.shedCurse(a[2]); break;
       }
     }
     if (!advanceTo(r.steps)) return { ok: false, reason: `no se llega al paso final ${r.steps}` };

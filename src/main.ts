@@ -160,6 +160,8 @@ function wireAudioAndFeel() {
   ev.on('breather', () => audio.drill());
   ev.on('lifeline', () => audio.hold());
   ev.on('harvest', () => audio.reroll());
+  ev.on('skill', () => audio.hold());
+  ev.on('erode', () => audio.garbage());
   ev.on('quake', () => audio.quake());
   ev.on('garbage', () => audio.garbage());
   ev.on('levelup', ({ level }) => {
@@ -211,6 +213,12 @@ function wireTouch() {
     if (!coarse.matches) return;
     e.preventDefault();
     input.touchDown('hyper');
+  });
+  // la tarjeta de la habilidad también es táctil
+  document.getElementById('skill-box')!.addEventListener('pointerdown', (e) => {
+    if (!coarse.matches) return;
+    e.preventDefault();
+    input.touchDown('skill');
   });
   const view = {
     rect: () => canvas.getBoundingClientRect(),
@@ -554,6 +562,7 @@ function onKeyDown(e: KeyboardEvent) {
     else if (e.code === 'Digit3' || e.code === 'Numpad3') ui.pick(2);
     else if (e.code === 'Digit4' || e.code === 'Numpad4') ui.pick(3);
     else if (e.code === 'KeyR') ui.reroll();
+    else if (e.code === 'KeyX') ui.skip();
     e.preventDefault();
     return;
   }

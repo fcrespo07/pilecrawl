@@ -66,12 +66,14 @@ export class UI {
   private segsKey = '';
   private livesKey = -1;
   private hyperKey = '';
+  private skillKey = '';
   private streakKey = '';
   private overTimer = 0;
   private shareInfo: ShareInfo | null = null;
 
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
+    $('skip').addEventListener('click', () => this.skip());
     $('b2b-ico').innerHTML = UI_ICONS.flame;
     document.querySelectorAll<HTMLElement>('[data-icon]').forEach((el) => {
       el.innerHTML = perkIcon(el.dataset.icon!);
@@ -196,12 +198,14 @@ export class UI {
 
   private renderCards() {
     const g = this.game;
-    const shownLevel = g.level - g.pendingLevelUps + 1;
+    const shownLevel = g.offerLevel();
     $('perk-level').textContent = pad2(shownLevel);
     $('perks').style.setProperty('--level', this.levelColor(shownLevel));
     $('reroll-count').textContent = String(g.rerolls);
     ($('reroll') as HTMLButtonElement).disabled = g.rerolls <= 0;
+    ($('skip') as HTMLButtonElement).hidden = !g.canSkip();
     const hyper = g.choosingHyper;
+    this.renderShed();
     $('perks').classList.toggle('hyper', hyper);
     const box = $('cards');
     box.innerHTML = '';
@@ -308,6 +312,41 @@ export class UI {
     }, 520);
   }
 
+  /** Saltar la oferta: sin carta, +1 reroll. */
+  skip() {
+    if (!this.perksOpen || this.picking || !this.game.canSkip()) return;
+    if (this.game.skipOffer()) {
+      audio.reroll();
+      if (this.game.state === 'choosing') this.renderCards();
+      else {
+        this.perksOpen = false;
+        this.hide('perks');
+      }
+    }
+  }
+
+  /** Botones para sacrificar una maldición (1 reroll) mientras eliges carta. */
+  private renderShed() {
+    const g = this.game;
+    const box = $('shed');
+    box.innerHTML = '';
+    if (g.choosingHyper || g.rerolls <= 0) return;
+    g.ownedCurses().forEach((id, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn ghost small';
+      b.textContent = `Quitar ${Game.perkDef(id).name} (−1 reroll)`;
+      b.addEventListener('click', () => {
+        if (this.picking) return;
+        if (g.shedCurse(i)) {
+          audio.reroll();
+          this.renderCards();
+        }
+      });
+      box.appendChild(b);
+    });
+  }
+
   reroll() {
     if (!this.perksOpen || this.picking) return;
     if (this.game.reroll()) {
@@ -372,6 +411,27 @@ export class UI {
     $('hyper-name').textContent = h ? h.name : 'Hiperperk';
     $('hyper-ico').innerHTML = h ? perkIcon(h.id) : '';
     $('hyper-state').textContent = text;
+  }
+
+  /** Panel de la habilidad activa: solo se ve si has cogido Pausa táctica o Comodín. */
+  private updateSkill() {
+    const g = this.game;
+    const skill = g.mods.skill;
+    const active = g.skillLeft > 0;
+    const state = !skill ? 'none' : active ? 'active' : g.skillUsedLevel === g.level ? 'used' : 'ready';
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const text = state === 'active' ? `Congelada · ${Math.ceil((g.skillLeft * STEP_MS) / 1000)} s` : state === 'used' ? 'Usada este nivel' : coarse ? 'Lista: tócala' : `Lista: ${keyName('skill')}`;
+    const key = `${skill}|${state}|${text}`;
+    if (key === this.skillKey) return;
+    this.skillKey = key;
+    const box = $('skill-box');
+    box.hidden = !skill;
+    document.body.classList.toggle('has-skill', !!skill);
+    box.dataset.state = state;
+    const id = skill;
+    $('skill-name').textContent = id ? Game.perkDef(id === 'tactic' ? 'tactic' : 'wild').name : '';
+    $('skill-ico').innerHTML = id ? perkIcon(id) : '';
+    $('skill-state').textContent = text;
   }
 
   /** Medidor de racha y calor por rareza: cada jugada calienta una rareza y se ve su probabilidad ahora. */
@@ -445,6 +505,7 @@ export class UI {
     }
 
     this.updateHyper();
+    this.updateSkill();
     this.updateStreak();
 
     const key = g.perkOrder.map((id) => `${id}${g.perkStacks(id)}`).join(',');

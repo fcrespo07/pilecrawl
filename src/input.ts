@@ -71,6 +71,7 @@ export class Input {
       case 'r180': g.rotate(2); break;
       case 'hold': g.holdPiece(); break;
       case 'hyper': g.activateHyper(); break;
+      case 'skill': g.useSkill(); break;
     }
     return true;
   }

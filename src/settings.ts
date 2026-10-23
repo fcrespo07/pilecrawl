@@ -2,7 +2,7 @@
 // Las teclas solo cambian qué tecla dispara cada acción: las acciones y las repeticiones son las de siempre.
 
 /** Acciones de juego que se pueden asignar a teclas (y que también disparan los gestos táctiles). */
-export const ACTIONS = ['left', 'right', 'down', 'hard', 'cw', 'ccw', 'r180', 'hold', 'hyper'] as const;
+export const ACTIONS = ['left', 'right', 'down', 'hard', 'cw', 'ccw', 'r180', 'hold', 'hyper', 'skill'] as const;
 export type Action = (typeof ACTIONS)[number];
 
 export const ACTION_LABEL: Record<Action, string> = {
@@ -15,6 +15,7 @@ export const ACTION_LABEL: Record<Action, string> = {
   r180: 'Girar 180°',
   hold: 'Reserva',
   hyper: 'Hiperperk',
+  skill: 'Habilidad',
 };
 
 /** Teclas por acción (códigos físicos de `KeyboardEvent.code`). */
@@ -30,6 +31,7 @@ export const DEFAULT_KEYS: Readonly<Keymap> = {
   r180: ['KeyA'],
   hold: ['KeyC', 'ShiftLeft', 'ShiftRight'],
   hyper: ['KeyD'],
+  skill: ['KeyS'],
 };
 
 /** Huecos de tecla por acción que enseña la pantalla de ajustes. */

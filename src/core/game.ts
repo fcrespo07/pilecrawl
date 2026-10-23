@@ -78,6 +78,10 @@ export interface GameEvents {
   garbage: { hole: number };
   drift: void;
   roulette: { from: [number, number]; to: [number, number] };
+  erode: { x: number; y: number; v: number };
+  skill: { skill: 'tactic' | 'wild' };
+  skip: { rerolls: number };
+  shed: { perk: PerkDef };
   garbageWarn: { progress: number };
   levelup: { level: number };
   interest: { amount: number };
@@ -107,6 +111,10 @@ export interface GameEvents {
 export const STEP_MS = 1000 / 120;
 /** Pasos tras soltar una hiperperk en los que pulsar otra vez no la corta (0,3 s). */
 export const HYPER_STOP_GRACE = 36;
+/** Pausa táctica: pasos que se congela la caída (3 s). */
+export const TACTIC_STEPS = Math.round(3000 / STEP_MS);
+/** Comodín: racha que cuesta descartar la pieza. */
+export const WILD_STREAK_COST = 25;
 /** Cada cuántos niveles se regala un reroll (al llegar al 5, 10, 15…). */
 export const REROLL_EVERY_LEVELS = 5;
 
@@ -114,7 +122,7 @@ export const REROLL_EVERY_LEVELS = 5;
 export const SOFT_DROP_MS = 40;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 13;
+export const RULES_VERSION = 14;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -142,7 +150,10 @@ export type ReplayAction =
   | [step: number, op: 'soft', on: 0 | 1]
   | [step: number, op: 'pick', index: number]
   | [step: number, op: 'reroll']
-  | [step: number, op: 'hyper'];
+  | [step: number, op: 'hyper']
+  | [step: number, op: 'skill']
+  | [step: number, op: 'skip']
+  | [step: number, op: 'shed', index: number];
 
 /** Todo lo necesario para volver a jugar una partida idéntica (ver `replay.ts`). */
 export interface Replay {
@@ -221,6 +232,11 @@ export class Game {
   hyperLeft = 0;
   /** Una subida de nivel ha traído hiperperk: su elección va antes que la carta normal. */
   hyperPending = false;
+  /** Nivel en que se usó la habilidad (una vez por nivel) y pasos que le quedan a la Pausa táctica. */
+  skillUsedLevel = -1;
+  skillLeft = 0;
+  /** Cartas extra por subir de nivel con Tahúr, aún sin elegir. */
+  bonusOffers = 0;
   /** Hiperperks que se ofrecen ahora. Si no está vacía, la elección es de hiperperk. */
   hyperChoices: HyperDef[] = [];
   /** Racha (0..STREAK_MAX): sube jugando bien y baja con cada pieza. Ver `streak.ts`. */
@@ -316,6 +332,9 @@ export class Game {
     this.cursedOffer = false;
     this.blessedOffer = false;
     this.pendingLevelUps = 0;
+    this.bonusOffers = 0;
+    this.skillUsedLevel = -1;
+    this.skillLeft = 0;
     this.sandbox = false;
     this.labGravity = 1;
     this.steps = 0;
@@ -483,6 +502,7 @@ export class Game {
 
   rotate(dir: 1 | -1 | 2): boolean {
     if (this.state !== 'playing' || !this.active) return false;
+    if (this.skillLeft > 0) return false; // Pausa táctica: sin giros mientras dura
     this.record([this.steps, 'rotate', dir]);
     const a = this.active;
     if (a.def.kicks === 'O') return false;
@@ -568,6 +588,7 @@ export class Game {
     if (this.active?.gold) speed *= 2;
     if (this.active?.heavy) speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
+    if (this.skillLeft > 0) speed *= 0.0001;
     speed *= this.labGravity;
     t /= speed;
     return Math.max(t, 1);
@@ -601,6 +622,7 @@ export class Game {
   step() {
     if (this.state !== 'playing' || !this.active) return;
     this.steps++;
+    if (this.skillLeft > 0) this.skillLeft--;
     if (this.hyperLeft > 0 && --this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: this.hyper! });
     this.update(STEP_MS);
     // si la última pieza sube de nivel justo al acabar, no se llega a elegir carta
@@ -826,6 +848,7 @@ export class Game {
     // el multiplicador se mide antes de quitar las filas: un cuádruple no debe perder Vértigo
     const mult = this.scoreMultNow();
     this.removeRows(rows);
+    if (this.mods.erosion && cascade === 0 && !blast) this.erode();
     const perfect = this.board.every((r) => r.every((v) => v === 0));
     if (perfect) total += 3500 * lvl;
 
@@ -851,6 +874,18 @@ export class Game {
         this.events.emit('quake', { chain: cascade + 1 });
         this.resolveClears(null, null, [], cascade + 1);
       }
+    }
+  }
+
+  /** Erosión: quita el bloque más alto del tablero (el de más a la izquierda de la fila más alta). */
+  private erode() {
+    for (let y = 0; y < ROWS; y++) {
+      const x = this.board[y].findIndex((v) => v !== 0);
+      if (x < 0) continue;
+      const v = this.board[y][x];
+      this.board[y][x] = 0;
+      this.events.emit('erode', { x, y, v });
+      return;
     }
   }
 
@@ -1100,6 +1135,8 @@ export class Game {
     this.hyperChoices = [];
     this.hyperLeft = 0;
     this.pendingLevelUps = 0;
+    this.bonusOffers = 0;
+    this.skillLeft = 0;
     this.state = 'over';
     this.endReason = reason;
     this.events.emit('gameover', { reason });
@@ -1122,6 +1159,7 @@ export class Game {
       this.linesIntoLevel -= this.linesNeeded();
       this.level++;
       this.pendingLevelUps++;
+      if (this.mods.gambler) this.bonusOffers++; // Tahúr: una carta extra por subida
       // Atajo: cada subida acerca la siguiente fila de basura
       if (this.mods.shortcut > 0) this.garbageCounter += SHORTCUT_GARBAGE;
       if (this.mods.rerollPerLevel > 0) this.rerolls += this.mods.rerollPerLevel;
@@ -1151,7 +1189,8 @@ export class Game {
 
   /** Nivel que se celebra en la oferta actual (con varias subidas seguidas, la primera pendiente). */
   offerLevel(): number {
-    return this.level - this.pendingLevelUps + 1;
+    // sin subidas pendientes, lo que queda son cartas extra de Tahúr del nivel actual
+    return this.pendingLevelUps > 0 ? this.level - this.pendingLevelUps + 1 : this.level;
   }
 
   /**
@@ -1181,6 +1220,7 @@ export class Game {
     if (this.state !== 'choosing' || this.choosingHyper || this.choices.length > 0) return;
     const levels = this.pendingLevelUps;
     this.pendingLevelUps = 0;
+    this.bonusOffers = 0;
     const points = this.addScore(EMPTY_OFFER_POINTS * this.level * levels, false);
     this.events.emit('emptyOffer', { points });
     this.choices = [];
@@ -1266,14 +1306,84 @@ export class Game {
     if (!perk) return;
     this.record([this.steps, 'pick', index]);
     this.grantPerk(perk);
-    this.pendingLevelUps--;
-    if (this.pendingLevelUps > 0) {
+    this.afterPick();
+  }
+
+  /** Tras coger (o saltar) una carta: la siguiente oferta pendiente, y si no quedan, a jugar. */
+  private afterPick() {
+    if (this.pendingLevelUps > 0) this.pendingLevelUps--;
+    else if (this.bonusOffers > 0) this.bonusOffers--;
+    if (this.pendingLevelUps > 0 || this.bonusOffers > 0) {
       this.newOffer();
       return;
     }
     this.choices = [];
     this.state = 'playing';
     this.spawn();
+  }
+
+  /** ¿Se puede saltar la oferta? Solo las normales: las malditas y las hiperperks hay que resolverlas. */
+  canSkip(): boolean {
+    return this.state === 'choosing' && !this.choosingHyper && !this.cursedOffer && this.choices.length > 0;
+  }
+
+  /** Saltar la oferta: no coges carta y ganas un reroll. */
+  skipOffer(): boolean {
+    if (!this.canSkip()) return false;
+    this.record([this.steps, 'skip']);
+    this.rerolls++;
+    this.events.emit('skip', { rerolls: this.rerolls });
+    this.afterPick();
+    return true;
+  }
+
+  /** Maldiciones que tienes, en el orden en que las cogiste (es el índice de `shedCurse`). */
+  ownedCurses(): string[] {
+    return this.perkOrder.filter((id) => PERK_BY_ID[id]?.curse);
+  }
+
+  /** Sacrificar una maldición: gasta un reroll y la quita (con todas sus copias menos una si hay varias). */
+  shedCurse(index: number): boolean {
+    if (this.state !== 'choosing' || this.rerolls <= 0) return false;
+    const id = this.ownedCurses()[index];
+    if (!id) return false;
+    this.record([this.steps, 'shed', index]);
+    this.rerolls--;
+    const n = this.perkStacks(id);
+    if (n > 1) this.perks.set(id, n - 1);
+    else {
+      this.perks.delete(id);
+      this.perkOrder = this.perkOrder.filter((k) => k !== id);
+    }
+    this.rebuildMods();
+    this.events.emit('shed', { perk: PERK_BY_ID[id] });
+    return true;
+  }
+
+  // ─────────────────────────── Habilidad activa ───────────────────────────
+
+  /** Hay una habilidad (Pausa táctica o Comodín) lista: sin usar este nivel y jugando. */
+  skillReady(): boolean {
+    return this.mods.skill !== '' && this.state === 'playing' && !!this.active && this.skillUsedLevel !== this.level && this.skillLeft === 0;
+  }
+
+  /** Usa la habilidad. Es una acción del jugador: se graba para la repetición. */
+  useSkill(): boolean {
+    if (!this.skillReady()) return false;
+    const skill = this.mods.skill as 'tactic' | 'wild';
+    this.record([this.steps, 'skill']);
+    this.skillUsedLevel = this.level;
+    this.events.emit('skill', { skill });
+    if (skill === 'tactic') {
+      this.skillLeft = TACTIC_STEPS;
+      return true;
+    }
+    // Comodín: la pieza actual se descarta y entra la siguiente (la reserva sigue como estaba)
+    this.addStreak(-WILD_STREAK_COST);
+    const holdUsed = this.holdUsed;
+    this.spawn();
+    this.holdUsed = holdUsed;
+    return true;
   }
 
   private grantPerk(perk: PerkDef) {

@@ -174,6 +174,7 @@ describe('ofertas', () => {
         if (prev) expect(g.choices.every((p) => p.rarity !== 'common')).toBe(true);
         prev = g.cursedOffer;
         g.pendingLevelUps = 1;
+        g.bonusOffers = 0; // Tahúr (si sale) no cambia lo que mide este test
         g.choosePerk(0);
       }
     }

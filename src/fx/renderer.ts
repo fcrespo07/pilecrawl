@@ -699,6 +699,14 @@ export class Renderer {
       this.flashList.push({ x: BOARD_X + to[0] * CELL, y: BOARD_Y + (to[1] - HIDDEN) * CELL, w: CELL, h: CELL, color: 0xffffff, life: 0.3, max: 0.3 });
     });
 
+    ev.on('erode', ({ x, y }) => {
+      this.flashList.push({ x: BOARD_X + x * CELL, y: BOARD_Y + (y - HIDDEN) * CELL, w: CELL, h: CELL, color: 0xffffff, life: 0.35, max: 0.35 });
+    });
+    ev.on('skill', ({ skill }) => {
+      this.floatText(skill === 'tactic' ? 'PAUSA' : 'COMODÍN', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x6ad1ff, size: 30 });
+      if (skill === 'tactic') this.flash(0x6ad1ff, 0.12);
+    });
+
     ev.on('levelup', ({ level }) => {
       this.accentTarget = accentFor(level);
       this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
