@@ -31,7 +31,7 @@ export const DEFAULT_KEYS: Readonly<Keymap> = {
   r180: ['KeyA'],
   hold: ['KeyC', 'ShiftLeft', 'ShiftRight'],
   hyper: ['KeyD'],
-  skill: ['KeyS'],
+  skill: ['KeyQ'],
 };
 
 /** Huecos de tecla por acción que enseña la pantalla de ajustes. */
@@ -105,6 +105,8 @@ export function loadSettings() {
       clean.forEach((c) => used.add(c));
       next[a] = clean;
     }
+    // las acciones que no estaban guardadas (nuevas desde entonces) no se quedan con una tecla que ya usa otra
+    for (const a of ACTIONS) if (!Array.isArray((k as Record<string, unknown>)[a])) next[a] = DEFAULT_KEYS[a].filter((c) => !used.has(c));
   }
   for (const a of ACTIONS) keymap[a] = next[a];
   mouseOn.value = read(MOUSE_KEY) !== false;

@@ -925,3 +925,49 @@ describe('fase 2 del rework: habilidades, Erosión, Tahúr, saltar y sacrificar'
     expect(g.shedCurse(0)).toBe(false);
   });
 });
+
+describe('correcciones de la revisión de la fase 2', () => {
+  const grant = (g: Game, id: string) => g['grantPerk'](PERK_BY_ID[id]);
+
+  it('Erosión no convierte la limpieza en tablero limpio', () => {
+    const g = playing();
+    grant(g, 'erosion');
+    g.board[ROWS - 6][3] = PIECES.T.id;
+    const before = g.score;
+    clearBottomLineWithI(g);
+    expect(g.score - before).toBeLessThan(3500);
+  });
+
+  it('el Comodín no descarta piezas especiales', () => {
+    const g = playing();
+    grant(g, 'wild');
+    g.active!.heavy = true;
+    expect(g.skillReady()).toBe(false);
+    g.active!.heavy = false;
+    g.active!.bomb = true;
+    expect(g.skillReady()).toBe(false);
+  });
+
+  it('la carta extra de Tahúr no se puede saltar', () => {
+    const g = playing();
+    grant(g, 'gambler');
+    g.pendingLevelUps = 1;
+    g.bonusOffers = 1;
+    g['beginChoice']();
+    expect(g.canSkip()).toBe(true);
+    g.choosePerk(0);
+    expect(g.state).toBe('choosing');
+    expect(g.canSkip()).toBe(false);
+  });
+
+  it('con la Pausa táctica, la flecha abajo tampoco baja la pieza', () => {
+    const g = playing();
+    grant(g, 'tactic');
+    setActive(g, PIECES.T, 4, 5);
+    g.useSkill();
+    g.softDropping = true;
+    const y = g.active!.y;
+    g.update(500);
+    expect(g.active!.y).toBe(y);
+  });
+});

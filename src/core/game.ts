@@ -651,7 +651,7 @@ export class Game {
     if (this.state !== 'playing' || !this.active) return;
     this.time += dt;
     let ms = this.gravityMs();
-    if (this.softDropping) ms = Math.min(ms, SOFT_DROP_MS);
+    if (this.softDropping && this.skillLeft === 0) ms = Math.min(ms, SOFT_DROP_MS);
     this.gravityAcc += dt;
     while (this.gravityAcc >= ms) {
       this.gravityAcc -= ms;
@@ -848,9 +848,10 @@ export class Game {
     // el multiplicador se mide antes de quitar las filas: un cuádruple no debe perder Vértigo
     const mult = this.scoreMultNow();
     this.removeRows(rows);
-    if (this.mods.erosion && cascade === 0 && !blast) this.erode();
     const perfect = this.board.every((r) => r.every((v) => v === 0));
     if (perfect) total += 3500 * lvl;
+    // Erosión va después: quitar el último bloque suelto no convierte la limpieza en tablero limpio
+    if (this.mods.erosion && cascade === 0 && !blast) this.erode();
 
     const points = this.addScore(total, true, mult);
     if (cascade === 0 && !blast) {
@@ -1206,7 +1207,7 @@ export class Game {
     }
     this.blessedOffer = this.cursedOffer;
     const cursed =
-      this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE;
+      this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE + this.mods.curseChance;
     this.cursedOffer = cursed;
     this.rollChoices();
     this.skipEmptyOffer();
@@ -1324,7 +1325,8 @@ export class Game {
 
   /** ¿Se puede saltar la oferta? Solo las normales: las malditas y las hiperperks hay que resolverlas. */
   canSkip(): boolean {
-    return this.state === 'choosing' && !this.choosingHyper && !this.cursedOffer && this.choices.length > 0;
+    // las cartas extra de Tahúr no se saltan: sería un reroll gratis por nivel
+    return this.state === 'choosing' && !this.choosingHyper && !this.cursedOffer && this.choices.length > 0 && this.pendingLevelUps > 0;
   }
 
   /** Saltar la oferta: no coges carta y ganas un reroll. */
@@ -1364,7 +1366,10 @@ export class Game {
 
   /** Hay una habilidad (Pausa táctica o Comodín) lista: sin usar este nivel y jugando. */
   skillReady(): boolean {
-    return this.mods.skill !== '' && this.state === 'playing' && !!this.active && this.skillUsedLevel !== this.level && this.skillLeft === 0;
+    if (this.mods.skill === '' || this.state !== 'playing' || !this.active || this.skillUsedLevel === this.level || this.skillLeft > 0) return false;
+    // el Comodín no descarta piezas especiales (bomba, prisma, oro, pesada): se perderían
+    const a = this.active;
+    return !(this.mods.skill === 'wild' && (a.bomb || a.prism || a.gold || a.heavy || a.hyperBomb));
   }
 
   /** Usa la habilidad. Es una acción del jugador: se graba para la repetición. */

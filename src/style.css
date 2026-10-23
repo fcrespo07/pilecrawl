@@ -494,7 +494,7 @@ body.has-skill:not(.portrait) .p-streak { top: 592px; }
   height: 344px;
   cursor: pointer;
   animation: deal 0.5s cubic-bezier(0.2, 1.1, 0.35, 1) both;
-  animation-delay: calc(var(--i) * 0.08s);
+  animation-delay: calc(var(--i) * var(--step, 0.9s));
 }
 .card-tilt {
   width: 100%;
@@ -508,8 +508,8 @@ body.has-skill:not(.portrait) .p-streak { top: 592px; }
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  animation: flip 0.55s cubic-bezier(0.3, 1.3, 0.5, 1) both;
-  animation-delay: calc(0.3s + var(--i) * 0.14s);
+  animation: flip 0.7s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  animation-delay: calc(0.45s + var(--i) * var(--step, 0.9s));
 }
 .card-face {
   position: absolute;

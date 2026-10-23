@@ -19,6 +19,11 @@ export const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABE
 const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
+/** Ms entre carta y carta al destapar una oferta nueva, y tras un reroll. */
+const REVEAL_STEP_MS = 900;
+const REVEAL_FAST_MS = 280;
+/** Lo que tarda una carta en estar boca arriba desde que se pintan (su turno aparte): 450 ms de espera y 700 de vuelta. */
+const REVEAL_FLIP_MS = 1150;
 
 function $(id: string) {
   return document.getElementById(id)!;
@@ -59,6 +64,9 @@ export class UI {
   private perksOpen = false;
   private picking = false;
   private choiceDelay = 0;
+  /** Cuándo se pintaron las cartas y cada cuánto se da la vuelta una (ms): no se puede elegir una carta aún boca abajo. */
+  private revealStart = 0;
+  private revealStep = REVEAL_STEP_MS;
   /** Fecha del desafío diario que se está jugando (AAAA-MM-DD, UTC). */
   private date = '';
   private timedKey = '';
@@ -196,8 +204,12 @@ export class UI {
     this.choiceDelay = 380;
   }
 
-  private renderCards() {
+  /** `fast`: tras un reroll las cartas se destapan deprisa; la primera vez, una a una para dar expectación. */
+  private renderCards(fast = false) {
     const g = this.game;
+    this.revealStep = fast ? REVEAL_FAST_MS : REVEAL_STEP_MS;
+    this.revealStart = performance.now();
+    $('cards').style.setProperty('--step', `${this.revealStep}ms`);
     const shownLevel = g.offerLevel();
     $('perk-level').textContent = pad2(shownLevel);
     $('perks').style.setProperty('--level', this.levelColor(shownLevel));
@@ -296,6 +308,8 @@ export class UI {
     const hyper = g.choosingHyper;
     const choice = hyper ? g.hyperChoices[i] : g.choices[i];
     if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !choice) return;
+    // la carta tiene que estar ya boca arriba
+    if (performance.now() - this.revealStart < REVEAL_FLIP_MS + i * this.revealStep) return;
     this.picking = true;
     const perk = choice as PerkDef;
     audio.pick(hyper ? 3 : perk.curse ? 0 : RARITY_RANK[perk.rarity]);
@@ -314,7 +328,9 @@ export class UI {
 
   /** Saltar la oferta: sin carta, +1 reroll. */
   skip() {
-    if (!this.perksOpen || this.picking || !this.game.canSkip()) return;
+    if (!this.perksOpen || this.picking || this.choiceDelay > 0 || !this.game.canSkip()) return;
+    // no se salta una oferta sin haberla visto entera (y así una pulsación suelta al subir de nivel no la salta)
+    if (performance.now() - this.revealStart < REVEAL_FLIP_MS + (this.game.choices.length - 1) * this.revealStep) return;
     if (this.game.skipOffer()) {
       audio.reroll();
       if (this.game.state === 'choosing') this.renderCards();
@@ -340,7 +356,7 @@ export class UI {
         if (this.picking) return;
         if (g.shedCurse(i)) {
           audio.reroll();
-          this.renderCards();
+          this.renderCards(true);
         }
       });
       box.appendChild(b);
@@ -351,7 +367,7 @@ export class UI {
     if (!this.perksOpen || this.picking) return;
     if (this.game.reroll()) {
       audio.reroll();
-      this.renderCards();
+      this.renderCards(true);
     }
   }
 

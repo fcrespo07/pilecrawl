@@ -562,7 +562,7 @@ function onKeyDown(e: KeyboardEvent) {
     else if (e.code === 'Digit3' || e.code === 'Numpad3') ui.pick(2);
     else if (e.code === 'Digit4' || e.code === 'Numpad4') ui.pick(3);
     else if (e.code === 'KeyR') ui.reroll();
-    else if (e.code === 'KeyX') ui.skip();
+    else if (e.code === 'KeyK') ui.skip();
     e.preventDefault();
     return;
   }

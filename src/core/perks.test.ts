@@ -120,14 +120,21 @@ describe('probabilidades de rareza', () => {
 });
 
 describe('ofertas', () => {
-  it('las tres cartas de una oferta son de la misma rareza', () => {
+  it('las cartas de una oferta son distintas y cada una tiene su propia rareza', () => {
     const r = makeRng(5);
+    let mixed = 0;
     for (let i = 0; i < 300; i++) {
       const picks = rollOffer(new Map(), 0, 3, Infinity, r);
       expect(picks).toHaveLength(3);
-      expect(new Set(picks.map((p) => p.rarity)).size).toBe(1);
       expect(new Set(picks.map((p) => p.id)).size).toBe(3);
+      if (new Set(picks.map((p) => p.rarity)).size > 1) mixed++;
     }
+    expect(mixed).toBeGreaterThan(100);
+  });
+
+  it('tras una maldición, todas las cartas son raras o mejores', () => {
+    const r = makeRng(8);
+    for (let i = 0; i < 200; i++) for (const p of rollOffer(new Map(), 0, 3, Infinity, r, true)) expect(p.rarity).not.toBe('common');
   });
 
   it('sin progreso solo salen ofertas comunes y raras', () => {
