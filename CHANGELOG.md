@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.35.3 — 2026-10-25
+- Quita la onda que salía al soltar una pieza con espacio, también en caídas largas. El resto de efectos no cambia.
+
 ## 0.35.2 — 2026-10-25
 - (#77) Sonido con más peso: limpiar líneas suena más fuerte cuanta más cantidad (de 1 a 4), subir de tramo de racha tiene un arpegio que crece, la subida de nivel abre con un golpe grave, la hiperperk activada barre el sonido y cada carta de la oferta da un tic al destapar. Solo sonido: no cambia reglas.
 
