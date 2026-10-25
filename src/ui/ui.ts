@@ -8,6 +8,7 @@ import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { perkName } from '../core/expedition';
+import { STAGE_LEVELS, stageOf } from '../core/bosses';
 import { loadBest, submitScore } from '../records';
 import { keyName } from '../settings';
 import { shareRun, type ShareInfo } from '../share';
@@ -266,20 +267,40 @@ export class UI {
     // oferta maldita: aviso claro en el título y el color de las maldiciones
     const cursed = !hyper && g.cursedOffer;
     $('perks').classList.toggle('cursed', cursed);
-    $('perk-stripe').textContent = hyper ? 'Hiperperk por racha' : cursed ? 'Oferta maldita' : 'Subida de nivel';
+    $('perk-stripe').textContent = hyper ? 'Hiperperk por racha' : cursed ? 'Oferta maldita' : g.bossOffer ? 'Jefe derrotado' : 'Subida de nivel';
     $('perk-sub').textContent = hyper
       ? 'Tu racha ha traído una hiperperk: elige una, solo hay una por partida'
       : cursed
         ? 'Todas son malas: elige la menos mala. El reroll saca otras maldiciones; la siguiente oferta será rara o mejor'
         : g.blessedOffer
           ? 'Recompensa por la maldición: rara o mejor'
-          : 'Elige una mejora';
+          : g.bossOffer
+            ? 'Recompensa del jefe: épica o mejor. Ganas un reroll y se limpian 2 filas de abajo'
+            : 'Elige una mejora';
     $('perk-odds').innerHTML = cursed || hyper ? '' : this.oddsHTML();
     // re-dispara la animación del título
     const title = document.querySelector<HTMLElement>('.perk-title')!;
     title.style.animation = 'none';
     void title.offsetWidth;
     title.style.animation = '';
+  }
+
+  private stageKey = '';
+  /** Tramo actual: tres puntos (el último es el jefe) y el nombre del jefe cuando toca. */
+  private updateStage(g: Game) {
+    const el = $('lvl-stage');
+    const bosses = MODES[g.mode].bosses === true;
+    el.hidden = !bosses;
+    if (!bosses) return;
+    const key = `${g.level}`;
+    if (key === this.stageKey) return;
+    this.stageKey = key;
+    const pos = (g.level - 1) % STAGE_LEVELS; // 0..2
+    const boss = g.bossNow();
+    $('lvl-stage-name').textContent = boss ? boss.name.toUpperCase() : `TRAMO ${stageOf(g.level)}`;
+    el.classList.toggle('boss', !!boss);
+    el.title = boss ? boss.rule : 'El último nivel de cada tramo es un jefe con una regla rara. Superarlo da una oferta épica o mejor.';
+    $('lvl-stage-pips').innerHTML = Array.from({ length: STAGE_LEVELS }, (_, i) => `<i class="${i < pos ? 'on' : i === pos ? 'cur' : ''} ${i === STAGE_LEVELS - 1 ? 'b' : ''}"></i>`).join('');
   }
 
   /** Racha y probabilidad de cada rareza: es lo que decide el reroll de esta oferta. */
@@ -550,6 +571,7 @@ export class UI {
     }
     document.documentElement.style.setProperty('--level', this.levelColor(g.level));
 
+    this.updateStage(g);
     const need = g.linesNeeded();
     $('lvl-progress').textContent = `${g.linesIntoLevel}/${need}`;
     const segsKey = `${need}|${g.linesIntoLevel}`;

@@ -66,6 +66,7 @@ describe('niveles y gravedad', () => {
 
   it('la gravedad nunca sube al avanzar de nivel', () => {
     const g = new Game();
+    g.mode = 'timed'; // sin jefes: Gravedad duplica la caída en su nivel
     let prev = Infinity;
     for (let lvl = 1; lvl <= 30; lvl++) {
       g.level = lvl;
@@ -244,6 +245,7 @@ describe('perks nuevos', () => {
 
   it('regala un reroll al llegar a los niveles 5, 10, 15…', () => {
     const g = playing();
+    g.mode = 'timed'; // sin jefes: superar uno también da un reroll
     const r = g.rerolls;
     g.level = 3;
     g['addLevelProgress'](g.linesNeeded());
@@ -994,5 +996,71 @@ describe('correcciones de la revisión de la fase 2', () => {
     const y = g.active!.y;
     g.update(500);
     expect(g.active!.y).toBe(y);
+  });
+});
+
+describe('jefes', () => {
+  const atLevel = (level: number, mode: 'normal' | 'timed' = 'normal') => {
+    const g = new Game();
+    g.start(7, mode);
+    g.level = level;
+    return g;
+  };
+
+  it('el nivel 3 es jefe y el 2 no; sin jefes en contrarreloj', () => {
+    expect(atLevel(2).bossNow()).toBeNull();
+    expect(atLevel(3).bossNow()?.id).toBe('drip');
+    expect(atLevel(6).bossNow()?.id).toBe('gravity');
+    expect(atLevel(9).bossNow()?.id).toBe('magnet');
+    expect(atLevel(12).bossNow()?.id).toBe('drip');
+    expect(atLevel(3, 'timed').bossNow()).toBeNull();
+  });
+
+  it('Gravedad duplica la caída y las limpiezas de 2 o más líneas cuentan doble', () => {
+    const g = atLevel(6);
+    const plain = atLevel(5).gravityMs();
+    expect(g.gravityMs()).toBeLessThan(plain);
+    g['addLevelProgress'](2);
+    expect(g.linesIntoLevel).toBe(4);
+    g['addLevelProgress'](1);
+    expect(g.linesIntoLevel).toBe(5);
+  });
+
+  it('Imán prohíbe una columna: nada entra y cuenta como llena', () => {
+    const g = atLevel(9);
+    g['syncBoss']();
+    const col = g.magnetCol;
+    expect(col).toBeGreaterThanOrEqual(0);
+    expect(g.collides(PIECES.I, col, 5, 0) || g.collides(PIECES.O, col, 5, 0)).toBe(true);
+    // fila llena salvo la columna prohibida
+    g.board[ROWS - 1] = Array.from({ length: COLS }, (_, x) => (x === col ? 0 : 1));
+    expect(g['findFullRows']()).toContain(ROWS - 1);
+  });
+
+  it('Gota deja caer un bloque suelto cada 6 piezas', () => {
+    const g = atLevel(3);
+    g.piecesLocked = 6;
+    const before = g.board.flat().filter((v) => v !== 0).length;
+    g['bossAfterLock']();
+    expect(g.board.flat().filter((v) => v !== 0).length).toBe(before + 1);
+    g.piecesLocked = 7;
+    g['bossAfterLock']();
+    expect(g.board.flat().filter((v) => v !== 0).length).toBe(before + 1);
+  });
+
+  it('superar un jefe da un reroll y una oferta épica o mejor, sin maldición', () => {
+    const g = atLevel(3);
+    g.bestLevel = Infinity;
+    const r = g.rerolls;
+    const downs: number[] = [];
+    g.events.on('bossDown', ({ level }) => downs.push(level));
+    g['addLevelProgress'](g.linesNeeded());
+    expect(downs).toEqual([3]);
+    expect(g.rerolls).toBe(r + 1);
+    g['beginChoice']();
+    expect(g.bossOffer).toBe(true);
+    expect(g.cursedOffer).toBe(false);
+    expect(g.choices.length).toBeGreaterThan(0);
+    expect(g.choices.every((c) => c.rarity === 'epic' || c.rarity === 'legendary')).toBe(true);
   });
 });

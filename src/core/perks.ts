@@ -608,11 +608,16 @@ function drawUniform(pool: PerkDef[], n: number, rand: () => number): PerkDef[] 
 }
 
 /** Rarezas que pueden salir en una oferta y su peso: por carta (con la suerte) × cartas disponibles. */
-function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>, heat: Heat) {
+function offerRarities(owned: Map<string, number>, luck: number, bestLevel: number, blessed: boolean, locked: ReadonlySet<string>, heat: Heat, minRarity?: Rarity) {
   const avail = PERKS.filter((p) => (owned.get(p.id) ?? 0) < p.max && isUnlocked(p, bestLevel) && !locked.has(p.id) && !skillTaken(owned, p));
   const byRarity = (r: Rarity) => avail.filter((p) => p.rarity === r);
   let rarities = RARITIES.filter((r) => byRarity(r).length > 0);
   if (blessed && rarities.some((r) => r !== 'common')) rarities = rarities.filter((r) => r !== 'common');
+  if (minRarity) {
+    const floor = RARITIES.indexOf(minRarity);
+    const high = rarities.filter((r) => RARITIES.indexOf(r) >= floor);
+    if (high.length > 0) rarities = high;
+  }
   const weights = rarities.map((r) => rarityWeight(r, luck, heat, byRarity(r)));
   return { rarities, weights, byRarity };
 }
@@ -649,8 +654,10 @@ export function rollOffer(
   blessed = false,
   locked: ReadonlySet<string> = NO_LOCKED,
   heat: Heat = NO_HEAT,
+  /** Oferta de jefe: solo esta rareza o mejor (si hay alguna disponible). */
+  minRarity?: Rarity,
 ): PerkDef[] {
-  const { rarities, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked, heat);
+  const { rarities, byRarity } = offerRarities(owned, luck, bestLevel, blessed, locked, heat, minRarity);
   const pools = new Map<Rarity, PerkDef[]>(rarities.map((r) => [r, [...byRarity(r)]]));
   const picks: PerkDef[] = [];
   while (picks.length < n) {

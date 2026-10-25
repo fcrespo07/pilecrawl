@@ -7,6 +7,7 @@ import {
 } from './streak';
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
+import { bossForLevel, DRIP_EVERY, isBossLevel, MAGNET_COLS, MAGNET_EVERY, type BossDef } from './bosses';
 import { makeRng, randomSeed, type Rng } from './rng';
 import { applyUpgrades, level as expLevel, lockedPerks, type Owned } from './expedition';
 
@@ -84,6 +85,14 @@ export interface GameEvents {
   shed: { perk: PerkDef };
   garbageWarn: { progress: number };
   levelup: { level: number };
+  /** Empieza un nivel jefe (o termina: boss null). */
+  boss: { boss: BossDef | null; level: number };
+  /** Se supera un nivel jefe: recompensa en camino. */
+  bossDown: { boss: BossDef; level: number };
+  /** Gota deja caer un bloque suelto. */
+  bossDrop: { x: number; y: number };
+  /** Imán cambia la columna prohibida (-1: ninguna). */
+  bossMagnet: { col: number };
   /** Una limpieza deja la racha en buena racha (tramo 1 o más). Solo informa: no cambia reglas. */
   streakUp: { streak: number; tier: number; tierUp: boolean; chain: number };
   /** La racha baja del primer tramo y la cadena se corta. */
@@ -126,7 +135,7 @@ export const REROLL_EVERY_LEVELS = 5;
 export const SOFT_DROP_MS = 40;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 14;
+export const RULES_VERSION = 15;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -262,6 +271,12 @@ export class Game {
   cursedOffer = false;
   /** La oferta actual es la recompensa de una maldita: rara o mejor. */
   blessedOffer = false;
+  /** La oferta actual premia haber superado un nivel jefe: épica o mejor, sin maldiciones. */
+  bossOffer = false;
+  /** Se acaba de superar un jefe: en cuanto se fije la pieza hay respiro y oferta de jefe. */
+  private bossBeaten = false;
+  /** Columna prohibida de Imán (-1: ninguna). */
+  magnetCol = -1;
   pendingLevelUps = 0;
   /** El laboratorio se ha usado en esta partida: no puntúa en récords ni rankings (ver `lab*`). */
   sandbox = false;
@@ -340,6 +355,9 @@ export class Game {
     this.choices = [];
     this.cursedOffer = false;
     this.blessedOffer = false;
+    this.bossOffer = false;
+    this.bossBeaten = false;
+    this.magnetCol = -1;
     this.pendingLevelUps = 0;
     this.bonusOffers = 0;
     this.skillUsedLevel = -1;
@@ -441,7 +459,7 @@ export class Game {
     for (const [cx, cy] of def.shapes[rot]) {
       const bx = x + cx;
       const by = y + cy;
-      if (bx < 0 || bx >= COLS || by >= ROWS) return true;
+      if (bx < 0 || bx >= COLS || by >= ROWS || bx === this.magnetCol) return true;
       if (by >= 0 && this.board[by][bx] !== 0) return true;
     }
     return false;
@@ -596,6 +614,7 @@ export class Game {
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     if (this.active?.heavy) speed *= 2;
+    if (this.bossNow()?.id === 'gravity') speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
     if (this.skillLeft > 0) speed *= 0.0001;
     speed *= this.labGravity;
@@ -777,7 +796,8 @@ export class Game {
 
   private findFullRows(): number[] {
     const rows: number[] = [];
-    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v) => v !== 0)) rows.push(y);
+    const m = this.magnetCol;
+    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v, x) => v !== 0 || x === m)) rows.push(y);
     return rows;
   }
 
@@ -1033,12 +1053,16 @@ export class Game {
       }
     }
 
+    this.bossAfterLock();
+
     // Deriva y Ruleta (maldiciones): cambian el tablero cada cierto número de piezas
     if (m.driftEvery > 0 && this.piecesLocked % m.driftEvery === 0) this.driftBoard();
     if (m.rouletteEvery > 0 && this.piecesLocked % m.rouletteEvery === 0) this.spinRoulette();
 
     if (this.pendingLevelUps > 0) {
       if (m.levelClearRows > 0) this.breathe(m.levelClearRows * this.pendingLevelUps);
+      if (this.bossBeaten) this.breathe(2);
+      this.bossBeaten = false;
       this.beginChoice();
       return;
     }
@@ -1097,6 +1121,43 @@ export class Game {
       this.rerolls += gained;
       this.events.emit('harvest', { rerolls: gained });
     }
+  }
+
+  /** Jefe activo en el nivel actual (null si no es nivel jefe o el modo no tiene jefes). */
+  bossNow(): BossDef | null {
+    return MODES[this.mode].bosses ? bossForLevel(this.level) : null;
+  }
+
+  /** Al cambiar de nivel: prepara (o quita) lo que dura el nivel jefe. */
+  private syncBoss() {
+    const boss = this.bossNow();
+    this.magnetCol = -1;
+    if (boss?.id === 'magnet') this.pickMagnetCol();
+    this.events.emit('boss', { boss, level: this.level });
+  }
+
+  private pickMagnetCol() {
+    const options = MAGNET_COLS.filter((c) => c !== this.magnetCol);
+    this.magnetCol = options[Math.floor(this.rng() * options.length)];
+    this.events.emit('bossMagnet', { col: this.magnetCol });
+  }
+
+  /** Efectos de jefe tras fijar una pieza. */
+  private bossAfterLock() {
+    const boss = this.bossNow();
+    if (!boss) return;
+    if (boss.id === 'drip' && this.piecesLocked % DRIP_EVERY === 0) {
+      const x = Math.floor(this.rng() * COLS);
+      let top = 0;
+      while (top < ROWS && this.board[top][x] === 0) top++;
+      const y = top - 1;
+      // no llena la columna hasta arriba: el jefe aprieta, no mata de golpe
+      if (y >= HIDDEN + 2) {
+        this.board[y][x] = GARBAGE_ID;
+        this.events.emit('bossDrop', { x, y });
+      }
+    }
+    if (boss.id === 'magnet' && this.piecesLocked % MAGNET_EVERY === 0) this.pickMagnetCol();
   }
 
   garbageInterval(): number {
@@ -1167,10 +1228,17 @@ export class Game {
   private addLevelProgress(n: number) {
     // Atajo: la primera línea de cada nivel vale más
     if (this.mods.shortcut > 0 && this.linesIntoLevel === 0 && n > 0) n += 2 * this.mods.shortcut;
+    if (n >= 2 && this.bossNow()?.id === 'gravity') n *= 2;
     this.linesIntoLevel += n;
     while (this.linesIntoLevel >= this.linesNeeded()) {
       this.linesIntoLevel -= this.linesNeeded();
+      const beaten = this.bossNow();
       this.level++;
+      if (beaten) {
+        this.rerolls++;
+        this.bossBeaten = true;
+        this.events.emit('bossDown', { boss: beaten, level: this.level - 1 });
+      }
       this.pendingLevelUps++;
       if (this.mods.gambler) this.bonusOffers++; // Tahúr: una carta extra por subida
       // Atajo: cada subida acerca la siguiente fila de basura
@@ -1192,6 +1260,7 @@ export class Game {
         this.events.emit('interest', { amount });
       }
       this.events.emit('levelup', { level: this.level });
+      this.syncBoss();
     }
   }
 
@@ -1218,7 +1287,10 @@ export class Game {
       return;
     }
     this.blessedOffer = this.cursedOffer;
+    // oferta de jefe: la primera tras superar un nivel jefe (offerLevel es el nivel al que subes)
+    this.bossOffer = this.pendingLevelUps > 0 && MODES[this.mode].bosses === true && isBossLevel(this.offerLevel() - 1);
     const cursed =
+      !this.bossOffer &&
       this.offerLevel() >= CURSE_FROM_LEVEL && !this.cursedOffer && this.perkRng() < CURSE_CHANCE + this.mods.curseChance;
     this.cursedOffer = cursed;
     this.rollChoices();
@@ -1262,7 +1334,7 @@ export class Game {
       if (this.choices.length > 0) return;
       this.cursedOffer = false; // todas las maldiciones al máximo: oferta normal
     }
-    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer, this.lockedPerks, this.heat);
+    this.choices = rollOffer(this.perks, this.offerLuck(), n, this.bestLevel, this.perkRng, this.blessedOffer, this.lockedPerks, this.heat, this.bossOffer ? 'epic' : undefined);
   }
 
   /** Suerte de las ofertas: la de los perks (Trébol) más la de la racha. */
@@ -1610,6 +1682,7 @@ export class Game {
     this.sandbox = true;
     if (v.level !== undefined) {
       this.level = Math.max(1, Math.min(99, Math.round(v.level)));
+      this.syncBoss();
       this.linesIntoLevel = 0;
     }
     if (v.lives !== undefined) this.lives = Math.max(0, Math.min(9, Math.round(v.lives)));

@@ -163,6 +163,8 @@ function wireAudioAndFeel() {
   ev.on('skill', () => audio.hold());
   ev.on('erode', () => audio.garbage());
   ev.on('quake', () => audio.quake());
+  ev.on('boss', ({ boss }) => boss && audio.quake());
+  ev.on('bossDown', () => audio.levelUp());
   ev.on('garbage', () => audio.garbage());
   ev.on('levelup', ({ level }) => {
     setTimeout(() => audio.levelUp(), 120);
