@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.35.2 — 2026-10-25
+- (#77) Sonido con más peso: limpiar líneas suena más fuerte cuanta más cantidad (de 1 a 4), subir de tramo de racha tiene un arpegio que crece, la subida de nivel abre con un golpe grave, la hiperperk activada barre el sonido y cada carta de la oferta da un tic al destapar. Solo sonido: no cambia reglas.
+
 ## 0.35.1 — 2026-10-25
 - Retoques: al subir de nivel las cartas se destapan en 0,3 s cada una (antes 0,9 s) y un clic o una tecla las muestra todas sin elegir. La onda al soltar una pieza solo sale en caídas muy largas. El menú de pausa tiene botones para la música y el sonido.
 
