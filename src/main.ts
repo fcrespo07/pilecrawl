@@ -172,6 +172,8 @@ function wireAudioAndFeel() {
     if (game.mode !== 'tutorial' && !MODES[game.mode].expedition && !game.sandbox) recordBestLevel(level);
   });
   ev.on('revive', () => audio.revive());
+  ev.on('streakUp', ({ tier, tierUp }) => { if (tierUp) audio.streakTier(tier); });
+  ev.on('hyper', () => audio.hyperOn());
   ev.on('gameover', () => {
     endLock.arm();
     audio.stopMusic();
