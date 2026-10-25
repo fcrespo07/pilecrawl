@@ -644,7 +644,8 @@ export class Renderer {
       for (const [x, y] of lowest) {
         this.particles.emit({ x: this.cx(x), y: this.py(y) + CELL, color, count: 6, speed: 220, angle: -Math.PI / 2, spread: 2.2, life: 0.45, size: 6, gravity: 500, jitter: 10 });
       }
-      if (dist >= 10) this.shockwave(this.cx(to[0][0]), this.cy(to[0][1]), { amplitude: 6, wavelength: 110, speed: 900 });
+      // solo caídas muy largas (casi todo el tablero): en las normales la onda molestaba
+      if (dist >= 16) this.shockwave(this.cx(to[0][0]), this.cy(to[0][1]), { amplitude: 4, wavelength: 110, speed: 900 });
       this.kickY = Math.min(10, 3 + dist * 0.45);
       this.shake(Math.min(0.28, 0.06 + dist * 0.012));
     });

@@ -311,6 +311,7 @@ const canSave = () => currentRun !== null && !game.sandbox && game.mode !== 'tut
 
 function setPaused(p: boolean) {
   ui.setPaused(p);
+  if (p) syncAudioButtons();
   disarmQuit();
   pauseMsg.hidden = true;
   if (p) saveExitBtn.hidden = !canSave();
@@ -488,6 +489,16 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
 }
 
 const fxToggle = document.getElementById('fx-toggle')!;
+const pauseMusic = document.getElementById('pause-music')!;
+const pauseSound = document.getElementById('pause-sound')!;
+
+/** Botones de música y sonido del menú de pausa: se redibujan con M, N o desde Ajustes. */
+function syncAudioButtons() {
+  pauseMusic.setAttribute('aria-pressed', String(audio.musicOn));
+  pauseMusic.querySelector('span')!.textContent = audio.musicOn ? 'Música: sí' : 'Música: no';
+  pauseSound.setAttribute('aria-pressed', String(!audio.muted));
+  pauseSound.querySelector('span')!.textContent = audio.muted ? 'Sonido: no' : 'Sonido: sí';
+}
 
 /** Efectos de pantalla (shaders): se guardan, y un equipo lento los apaga solo. */
 function setEffects(on: boolean, save = true) {
@@ -515,8 +526,8 @@ function onKeyDown(e: KeyboardEvent) {
   if (rankingUI.isOpen || (e.target as HTMLElement | null)?.closest?.('input, textarea, #publish')) return;
 
   // globales
-  if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); return; }
-  if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); return; }
+  if (e.code === 'KeyM' && !e.repeat) { audio.toggleMusic(); syncAudioButtons(); return; }
+  if (e.code === 'KeyN' && !e.repeat) { audio.toggleMute(); syncAudioButtons(); return; }
   if (e.code === 'KeyF' && !e.repeat) {
     setEffects(!renderer.highQuality);
     return;
@@ -557,6 +568,12 @@ function onKeyDown(e: KeyboardEvent) {
 
   if (st === 'choosing') {
     if (e.repeat) return;
+    // con las cartas destapándose, cualquier tecla solo las muestra todas
+    if (ui.revealing) {
+      ui.revealAll();
+      e.preventDefault();
+      return;
+    }
     if (e.code === 'Digit1' || e.code === 'Numpad1') ui.pick(0);
     else if (e.code === 'Digit2' || e.code === 'Numpad2') ui.pick(1);
     else if (e.code === 'Digit3' || e.code === 'Numpad3') ui.pick(2);
@@ -594,6 +611,12 @@ async function boot() {
   setEffects(fxOn, false);
   renderer.onAutoOff = () => setEffects(false, false);
   fxToggle.addEventListener('click', () => { setEffects(!renderer.highQuality); fxToggle.blur(); });
+  pauseMusic.addEventListener('click', () => { audio.toggleMusic(); syncAudioButtons(); pauseMusic.blur(); });
+  pauseSound.addEventListener('click', () => { audio.toggleMute(); syncAudioButtons(); pauseSound.blur(); });
+  // Ajustes cambia lo mismo: sus botones se escuchan después de que actualicen el audio
+  document.getElementById('set-music')!.addEventListener('click', syncAudioButtons);
+  document.getElementById('set-mute')!.addEventListener('click', syncAudioButtons);
+  syncAudioButtons();
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', (e) => input.keyUp(e));
   window.addEventListener('blur', () => {
