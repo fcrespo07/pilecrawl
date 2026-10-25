@@ -236,6 +236,8 @@ export class Renderer {
   private boardBg = new Graphics();
   private panels = new Graphics();
   private frame = new Graphics();
+  /** Columna prohibida del jefe Imán. */
+  private magnet = new Graphics();
   private cellLayer = new Container();
   private fxLayer = new Container();
   private textLayer = new Container();
@@ -327,7 +329,7 @@ export class Renderer {
 
     this.world.pivot.set(W / 2, H / 2);
     this.world.position.set(W / 2, H / 2);
-    this.world.addChild(this.boardBg, this.panels, this.cellLayer, this.frame, this.fxLayer, this.textLayer);
+    this.world.addChild(this.boardBg, this.panels, this.cellLayer, this.magnet, this.frame, this.fxLayer, this.textLayer);
 
     this.cells = new Pool(this.cellLayer, this.tex.cell);
     this.ghosts = new Pool(this.cellLayer, this.tex.ghost);
@@ -825,6 +827,27 @@ export class Renderer {
       this.post.sweep(0.5);
     });
 
+    ev.on('boss', ({ boss, level }) => {
+      if (!boss) return;
+      const cx = BOARD_X + BOARD_W / 2;
+      const cy = BOARD_Y + BOARD_H / 2;
+      this.floatText(`JEFE ${boss.name.toUpperCase()}`, cx, cy - 70, { color: 0xd23a3a, size: 40, life: 2.6, vy: -6, delay: 1.1 });
+      boss.tip.forEach((line, i) => this.floatText(line, cx, cy - 8 + i * 20, { color: this.skin.ink, size: 14, life: 2.6, vy: -4, delay: 1.2 }));
+      this.shockwave(cx, cy, { amplitude: 16, wavelength: 160, speed: 600 });
+      this.flash(0xd23a3a, 0.2);
+      void level;
+    });
+
+    ev.on('bossDown', () => {
+      const cx = BOARD_X + BOARD_W / 2;
+      this.floatText('JEFE DERROTADO', cx, BOARD_Y + BOARD_H / 2 - 70, { color: GOLD_TEXT, size: 34, life: 2, vy: -12 });
+      this.flash(0xffd24a, 0.25);
+    });
+
+    ev.on('bossDrop', ({ x, y }) => {
+      this.shockwave(this.cx(x), this.cy(y), { amplitude: 6, wavelength: 70, speed: 400 });
+    });
+
     ev.on('interest', ({ amount }) => {
       this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
     });
@@ -927,6 +950,7 @@ export class Renderer {
     this.updateBackground(sec);
     this.updatePanels();
     this.drawFrame();
+    this.drawMagnet();
 
     this.cells.begin();
     this.ghosts.begin();
@@ -951,6 +975,17 @@ export class Renderer {
     this.vignette.tint = instinct ? 0x30a0ff : 0xff1e3c;
     this.vignette.alpha = this.dangerAmt * (0.35 + 0.15 * Math.sin(this.time * (instinct ? 2 : 6)));
     this.screenFlash.alpha *= Math.exp(-sec * 6);
+  }
+
+  /** Imán: la columna prohibida se ve en gris, con franjas que respiran. */
+  private drawMagnet() {
+    const col = this.game.magnetCol;
+    this.magnet.clear();
+    if (col < 0) return;
+    const x = this.px(col);
+    this.magnet.rect(x, BOARD_Y, CELL, BOARD_H).fill({ color: 0x7c8199, alpha: 0.38 + 0.08 * Math.sin(this.time * 4) });
+    for (let y = BOARD_Y; y < BOARD_Y + BOARD_H; y += CELL) this.magnet.rect(x + 2, y + CELL / 2 - 1, CELL - 4, 2).fill({ color: 0xdfe3f2, alpha: 0.35 });
+    this.magnet.rect(x, BOARD_Y, CELL, BOARD_H).stroke({ color: 0xdfe3f2, width: 2, alpha: 0.7 });
   }
 
   private updateBackground(sec: number) {

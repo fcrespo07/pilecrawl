@@ -1452,3 +1452,14 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   opacity: 0.45;
 }
 .link-code { font-family: 'Press Start 2P', monospace; font-size: 14px; letter-spacing: 2px; color: var(--hot); user-select: all; }
+
+/* Tramo y jefe: van en la cabecera del panel de nivel */
+.lvl-stage { white-space: nowrap; font-size: 9px; display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-body, inherit); font-style: normal; letter-spacing: 0; }
+.lvl-stage em { font-style: normal; }
+.lvl-stage.boss { color: #ff6b6b; }
+.lvl-stage .pips { display: inline-flex; gap: 3px; font-weight: normal; }
+.lvl-stage .pips i { width: 7px; height: 7px; background: var(--raise); }
+.lvl-stage .pips i.on { background: var(--pro); }
+.lvl-stage .pips i.cur { background: var(--text); }
+.lvl-stage .pips i.b { outline: 2px solid #ff6b6b; }
+.lvl-stage[hidden] { display: none; }
