@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.36.0 — 2026-10-25
 - (#79) **Cambia las reglas (`RULES_VERSION` 15): el ranking empieza de cero.** La partida se divide en tramos de 3 niveles y el último de cada tramo es un **jefe** con una regla rara durante todo el nivel (en Partida y en el desafío diario; no en contrarreloj, tutorial ni Expedición): **Gota** (cada 6 piezas cae un bloque suelto de basura), **Gravedad** (caída al doble, pero las limpiezas de 2 o más líneas cuentan doble) e **Imán** (una columna prohibida que cuenta como llena, salvo en filas de basura, y cambia cada 8 piezas). Los jefes rotan en ese orden. Al superar uno ganas un reroll y sale una oferta de cartas épicas o mejores, sin maldiciones. El nivel muestra el tramo y el jefe, con un cartel al empezar. Propuesta completa (8 jefes, final de partida y victoria, en próximos PR) en `planes/jefes-y-tramos.md`.
 
 ## 0.35.3 — 2026-10-25
