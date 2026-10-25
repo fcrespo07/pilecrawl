@@ -227,12 +227,17 @@ export class SoundEngine {
   clear(lines: number, combo: number, big: boolean) {
     const root = 57 + Math.min(combo, 12);
     const n = Math.max(2, lines + 1);
+    // peso de 1 a 4 líneas: el golpe grave y el ruido crecen con cada línea
+    const w = Math.min(4, Math.max(1, lines));
+    this.tone(midi(root - 24), 0.16 + 0.06 * w, { type: 'sine', gain: 0.1 + 0.08 * w, slide: 0.55 });
     for (let i = 0; i < n; i++) {
       const note = noteInScale(root, i * 2);
       this.tone(midi(note), 0.35, { type: 'sawtooth', gain: 0.07, at: i * 0.045, cutoff: 3200, echo: true });
       this.tone(midi(note + 12), 0.25, { type: 'triangle', gain: 0.05, at: i * 0.045, echo: true });
     }
-    this.noise(0.25, { gain: 0.12, from: 800, to: 8000, type: 'bandpass', q: 1.5 });
+    // con tres líneas o más, una quinta encima para que se note
+    if (w >= 3) [0, 4, 7].forEach((s) => this.tone(midi(root + s + 12), 0.5, { type: 'triangle', gain: 0.04, at: 0.02, echo: true }));
+    this.noise(0.25, { gain: 0.08 + 0.04 * w, from: 800, to: 8000, type: 'bandpass', q: 1.5 });
     if (big) {
       [0, 4, 7, 11, 14].forEach((s, i) =>
         this.tone(midi(root + s), 1.1, { type: 'sawtooth', gain: 0.06, at: 0.08 + i * 0.02, cutoff: 5000, echo: true }),
@@ -271,11 +276,34 @@ export class SoundEngine {
   }
 
   levelUp() {
+    // golpe grave al empezar, para que la subida de nivel pese
+    this.tone(midi(40), 0.9, { type: 'sine', gain: 0.45, slide: 0.5 });
+    this.noise(0.5, { gain: 0.14, from: 2000, to: 100 });
     [0, 4, 7, 12, 16, 19].forEach((s, i) =>
       this.tone(midi(64 + s), 0.5, { type: 'square', gain: 0.05, at: i * 0.06, cutoff: 4000, echo: true }),
     );
     this.noise(1.2, { gain: 0.15, from: 300, to: 10000, type: 'bandpass', q: 1 });
   }
+
+  /** Sube de tramo de racha: arpegio ascendente que tiene una nota más por tramo. */
+  streakTier(tier: number) {
+    const top = Math.min(4, Math.max(1, tier));
+    [0, 4, 7, 12, 16, 19, 24].slice(0, top + 3).forEach((s, i) =>
+      this.tone(midi(60 + s), 0.3, { type: 'triangle', gain: 0.07, at: i * 0.05, echo: true }),
+    );
+    this.tone(midi(48), 0.4, { type: 'sine', gain: 0.2, slide: 1.2 });
+    this.noise(0.15, { gain: 0.06, from: 9000, to: 5000, type: 'highpass' });
+  }
+
+  /** Hiperperk activada: barrido grave que sube y un acorde brillante encima. */
+  hyperOn() {
+    this.tone(90, 0.9, { type: 'sawtooth', gain: 0.1, slide: 6, cutoff: 3000, echo: true });
+    [0, 4, 7, 12].forEach((s, i) => this.tone(midi(69 + s), 0.6, { type: 'triangle', gain: 0.07, at: 0.12 + i * 0.04, echo: true }));
+    this.noise(0.5, { gain: 0.12, from: 300, to: 9000, type: 'bandpass', q: 1 });
+  }
+
+  /** Tic al destapar una carta; sube un poco con cada una. */
+  reveal(i: number) { this.tone(1100 + i * 90, 0.04, { type: 'square', gain: 0.03, cutoff: 4000 }); }
 
   hover() { this.tone(1200, 0.03, { type: 'sine', gain: 0.03 }); }
 

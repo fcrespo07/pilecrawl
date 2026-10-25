@@ -73,6 +73,7 @@ export class UI {
   /** Cuándo se pintaron las cartas y cada cuánto se da la vuelta una (ms): no se puede elegir una carta aún boca abajo. */
   private revealStart = 0;
   private revealStep = REVEAL_STEP_MS;
+  private revealGen = 0;
   /** Instante en que la última carta de la oferta termina de destaparse. */
   private revealEnd = 0;
   /** Fecha del desafío diario que se está jugando (AAAA-MM-DD, UTC). */
@@ -252,6 +253,10 @@ export class UI {
     box.innerHTML = '';
     const n = hyper ? g.hyperChoices.length : g.choices.length;
     this.revealEnd = this.revealStart + REVEAL_FLIP_MS + (n - 1) * this.revealStep;
+    // un tic al destapar cada carta; si una nueva oferta empieza antes, los tics viejos no suenan
+    const gen = ++this.revealGen;
+    for (let i = 0; i < n; i++)
+      setTimeout(() => { if (gen === this.revealGen && this.revealing) audio.reveal(i); }, REVEAL_FLIP_MS + i * this.revealStep);
     box.classList.toggle('four', n > 3);
     $('key4').hidden = n < 4;
     if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, '', hyperFoot(h))));
