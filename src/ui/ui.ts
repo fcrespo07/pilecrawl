@@ -231,6 +231,8 @@ export class UI {
     $('cards').classList.add('revealed');
     this.revealStart = -1e9;
     this.revealEnd = 0;
+    // los tics que quedan de esta oferta ya no suenan
+    this.revealGen++;
   }
 
   /** `fast`: tras un reroll las cartas se destapan deprisa; la primera vez, una a una para dar expectación. */
@@ -256,7 +258,7 @@ export class UI {
     // un tic al destapar cada carta; si una nueva oferta empieza antes, los tics viejos no suenan
     const gen = ++this.revealGen;
     for (let i = 0; i < n; i++)
-      setTimeout(() => { if (gen === this.revealGen && this.revealing) audio.reveal(i); }, REVEAL_FLIP_MS + i * this.revealStep);
+      setTimeout(() => { if (gen === this.revealGen && this.perksOpen) audio.reveal(i); }, REVEAL_FLIP_MS + i * this.revealStep);
     box.classList.toggle('four', n > 3);
     $('key4').hidden = n < 4;
     if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, '', hyperFoot(h))));
