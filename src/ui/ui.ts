@@ -275,7 +275,7 @@ export class UI {
         : g.blessedOffer
           ? 'Recompensa por la maldición: rara o mejor'
           : g.bossOffer
-            ? 'Recompensa del jefe: épica o mejor. Ganas un reroll y se limpian 2 filas de abajo'
+            ? 'Recompensa del jefe: épica o mejor, y ganas un reroll'
             : 'Elige una mejora';
     $('perk-odds').innerHTML = cursed || hyper ? '' : this.oddsHTML();
     // re-dispara la animación del título

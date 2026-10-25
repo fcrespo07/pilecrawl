@@ -273,8 +273,6 @@ export class Game {
   blessedOffer = false;
   /** La oferta actual premia haber superado un nivel jefe: épica o mejor, sin maldiciones. */
   bossOffer = false;
-  /** Se acaba de superar un jefe: en cuanto se fije la pieza hay respiro y oferta de jefe. */
-  private bossBeaten = false;
   /** Columna prohibida de Imán (-1: ninguna). */
   magnetCol = -1;
   pendingLevelUps = 0;
@@ -356,7 +354,6 @@ export class Game {
     this.cursedOffer = false;
     this.blessedOffer = false;
     this.bossOffer = false;
-    this.bossBeaten = false;
     this.magnetCol = -1;
     this.pendingLevelUps = 0;
     this.bonusOffers = 0;
@@ -797,7 +794,7 @@ export class Game {
   private findFullRows(): number[] {
     const rows: number[] = [];
     const m = this.magnetCol;
-    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v, x) => v !== 0 || x === m)) rows.push(y);
+    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v, x) => v !== 0 || (x === m && !this.board[y].includes(GARBAGE_ID)))) rows.push(y);
     return rows;
   }
 
@@ -1061,8 +1058,6 @@ export class Game {
 
     if (this.pendingLevelUps > 0) {
       if (m.levelClearRows > 0) this.breathe(m.levelClearRows * this.pendingLevelUps);
-      if (this.bossBeaten) this.breathe(2);
-      this.bossBeaten = false;
       this.beginChoice();
       return;
     }
@@ -1236,7 +1231,6 @@ export class Game {
       this.level++;
       if (beaten) {
         this.rerolls++;
-        this.bossBeaten = true;
         this.events.emit('bossDown', { boss: beaten, level: this.level - 1 });
       }
       this.pendingLevelUps++;

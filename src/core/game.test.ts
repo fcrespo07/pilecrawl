@@ -1064,3 +1064,15 @@ describe('jefes', () => {
     expect(g.choices.every((c) => c.rarity === 'epic' || c.rarity === 'legendary')).toBe(true);
   });
 });
+
+describe('jefes: Imán y basura', () => {
+  it('una fila de basura con el hueco en la columna prohibida no se limpia gratis', () => {
+    const g = new Game();
+    g.start(7, 'normal');
+    g.level = 9;
+    g['syncBoss']();
+    const col = g.magnetCol;
+    g.board[ROWS - 1] = Array.from({ length: COLS }, (_, x) => (x === col ? 0 : GARBAGE_ID));
+    expect(g['findFullRows']()).not.toContain(ROWS - 1);
+  });
+});
