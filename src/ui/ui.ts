@@ -20,10 +20,10 @@ const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
 /** Ms entre carta y carta al destapar una oferta nueva, y tras un reroll. */
-const REVEAL_STEP_MS = 900;
+const REVEAL_STEP_MS = 300;
 const REVEAL_FAST_MS = 280;
-/** Lo que tarda una carta en estar boca arriba desde que se pintan (su turno aparte): 450 ms de espera y 700 de vuelta. */
-const REVEAL_FLIP_MS = 1150;
+/** Lo que tarda una carta en estar boca arriba desde que se pintan (su turno aparte): 150 ms de espera y 400 de vuelta. */
+const REVEAL_FLIP_MS = 550;
 
 function $(id: string) {
   return document.getElementById(id)!;
@@ -73,6 +73,8 @@ export class UI {
   /** Cuándo se pintaron las cartas y cada cuánto se da la vuelta una (ms): no se puede elegir una carta aún boca abajo. */
   private revealStart = 0;
   private revealStep = REVEAL_STEP_MS;
+  /** Instante en que la última carta de la oferta termina de destaparse. */
+  private revealEnd = 0;
   /** Fecha del desafío diario que se está jugando (AAAA-MM-DD, UTC). */
   private date = '';
   private timedKey = '';
@@ -88,6 +90,13 @@ export class UI {
   constructor(private game: Game) {
     $('reroll').addEventListener('click', () => this.reroll());
     $('skip').addEventListener('click', () => this.skip());
+    // con las cartas destapándose, un clic solo las muestra todas (no elige ni salta)
+    $('perks').addEventListener('click', (e) => {
+      if (!this.revealing) return;
+      e.stopPropagation();
+      e.preventDefault();
+      this.revealAll();
+    }, true);
     $('b2b-ico').innerHTML = UI_ICONS.flame;
     document.querySelectorAll<HTMLElement>('[data-icon]').forEach((el) => {
       el.innerHTML = perkIcon(el.dataset.icon!);
@@ -210,12 +219,26 @@ export class UI {
     this.choiceDelay = 380;
   }
 
+  /** Mientras las cartas se destapan una a una. Un clic o una tecla las muestra todas (ver `revealAll`). */
+  get revealing() {
+    return this.perksOpen && performance.now() < this.revealEnd;
+  }
+
+  /** Destapa todas las cartas de golpe; no elige nada. */
+  revealAll() {
+    if (!this.revealing) return;
+    $('cards').classList.add('revealed');
+    this.revealStart = -1e9;
+    this.revealEnd = 0;
+  }
+
   /** `fast`: tras un reroll las cartas se destapan deprisa; la primera vez, una a una para dar expectación. */
   private renderCards(fast = false) {
     const g = this.game;
     this.revealStep = fast ? REVEAL_FAST_MS : REVEAL_STEP_MS;
     this.revealStart = performance.now();
     $('cards').style.setProperty('--step', `${this.revealStep}ms`);
+    $('cards').classList.remove('revealed');
     const shownLevel = g.offerLevel();
     $('perk-level').textContent = pad2(shownLevel);
     $('perks').style.setProperty('--level', this.levelColor(shownLevel));
@@ -228,6 +251,7 @@ export class UI {
     const box = $('cards');
     box.innerHTML = '';
     const n = hyper ? g.hyperChoices.length : g.choices.length;
+    this.revealEnd = this.revealStart + REVEAL_FLIP_MS + (n - 1) * this.revealStep;
     box.classList.toggle('four', n > 3);
     $('key4').hidden = n < 4;
     if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, '', hyperFoot(h))));

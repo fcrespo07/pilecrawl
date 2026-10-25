@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.35.1 — 2026-10-25
+- Retoques: al subir de nivel las cartas se destapan en 0,3 s cada una (antes 0,9 s) y un clic o una tecla las muestra todas sin elegir. La onda al soltar una pieza solo sale en caídas muy largas. El menú de pausa tiene botones para la música y el sonido.
+
 ## 0.35.0 — 2026-10-23
 - (#74) Efectos de pantalla por legendaria, solo cosméticos (no cambian reglas): Eco deja postimágenes de cada pieza, Terremoto ondula la imagen, Prisma y las subidas de nivel lanzan un barrido arcoíris, Fénix y Segunda vida estallan de color al revivir, Casino brilla en cada oferta y, con una vida de reserva y la pila alta, el borde late. Con Furia y racha alta el calor ondula los márgenes y con Fénix, a ratos y solo con la pila baja, las tres filas de abajo (muy leve; no se aplica con efectos apagados ni con movimiento reducido). Cada caída directa larga lanza una onda corta.
 
