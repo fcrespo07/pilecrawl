@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.37.0 — 2026-10-26
+- (#81) **Cambia las reglas (`RULES_VERSION` 16): el ranking del arcade no cambia de reglas, pero Partida y desafío diario vuelven a no tener jefes.** Los jefes (Gota, Gravedad, Imán) salen solo en **Expedición**, que es donde van los sistemas de progresión. Partida, desafío diario y contrarreloj se quedan como antes de los jefes. Sin cambios en la presentación de los jefes.
+
 ## 0.36.1 — 2026-10-26
 - (#80) Los jefes se presentan: al empezar el nivel jefe sale un cartel breve (2,8 s) en la parte de arriba del tablero con su nombre, la regla y cuántas líneas hay que hacer; mientras dura, una barra de vida sobre el tablero baja con las líneas que faltan (con la regla resumida), y al vencerlo sale un cartel con la recompensa. Solo presentación: no cambia reglas.
 

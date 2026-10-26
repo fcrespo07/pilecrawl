@@ -66,7 +66,6 @@ describe('niveles y gravedad', () => {
 
   it('la gravedad nunca sube al avanzar de nivel', () => {
     const g = new Game();
-    g.mode = 'timed'; // sin jefes: Gravedad duplica la caída en su nivel
     let prev = Infinity;
     for (let lvl = 1; lvl <= 30; lvl++) {
       g.level = lvl;
@@ -245,7 +244,6 @@ describe('perks nuevos', () => {
 
   it('regala un reroll al llegar a los niveles 5, 10, 15…', () => {
     const g = playing();
-    g.mode = 'timed'; // sin jefes: superar uno también da un reroll
     const r = g.rerolls;
     g.level = 3;
     g['addLevelProgress'](g.linesNeeded());
@@ -1000,20 +998,21 @@ describe('correcciones de la revisión de la fase 2', () => {
 });
 
 describe('jefes', () => {
-  const atLevel = (level: number, mode: 'normal' | 'timed' = 'normal') => {
+  const atLevel = (level: number, mode: 'expedition' | 'normal' | 'timed' = 'expedition') => {
     const g = new Game();
     g.start(7, mode);
     g.level = level;
     return g;
   };
 
-  it('el nivel 3 es jefe y el 2 no; sin jefes en contrarreloj', () => {
+  it('el nivel 3 es jefe y el 2 no; solo en Expedición', () => {
     expect(atLevel(2).bossNow()).toBeNull();
     expect(atLevel(3).bossNow()?.id).toBe('drip');
     expect(atLevel(6).bossNow()?.id).toBe('gravity');
     expect(atLevel(9).bossNow()?.id).toBe('magnet');
     expect(atLevel(12).bossNow()?.id).toBe('drip');
     expect(atLevel(3, 'timed').bossNow()).toBeNull();
+    expect(atLevel(3, 'normal').bossNow()).toBeNull();
   });
 
   it('Gravedad duplica la caída y las limpiezas de 2 o más líneas cuentan doble', () => {
@@ -1068,7 +1067,7 @@ describe('jefes', () => {
 describe('jefes: Imán y basura', () => {
   it('una fila de basura con el hueco en la columna prohibida no se limpia gratis', () => {
     const g = new Game();
-    g.start(7, 'normal');
+    g.start(7, 'expedition');
     g.level = 9;
     g['syncBoss']();
     const col = g.magnetCol;
