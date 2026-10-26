@@ -1,6 +1,6 @@
 name: CI
 
-# Los minutos de Actions son limitados (repo privado): solo master y PR, sin repetir y sin lanzarse por cambios de texto.
+# Los minutos de Actions son limitados (planes de pago por minuto): solo master y PR, sin repetir y sin lanzarse por cambios de texto.
 on:
   push:
     branches: [master]
