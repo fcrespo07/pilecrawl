@@ -1,7 +1,5 @@
 /// <reference types="vite/client" />
 declare const __APP_VERSION__: string;
-/** Enlace al repositorio público (VITE_REPO_URL o el valor por defecto de vite.config.ts). */
-declare const __REPO_URL__: string;
 
 /** Variables públicas del build (`VITE_*`): acaban dentro del JavaScript, así que nada secreto. */
 interface ImportMetaEnv {

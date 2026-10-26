@@ -6,6 +6,7 @@ name: Vista previa
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths-ignore: ['**.md', 'docs/**', '.github/ISSUE_TEMPLATE/**']
 
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
