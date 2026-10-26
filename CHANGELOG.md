@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.37.0 — 2026-10-26
+- (#82) **Cambia las reglas (`RULES_VERSION` 16): reinicia los marcadores.** Los jefes (Gota, Gravedad, Imán) salen solo en Expedición. Partida y desafío diario vuelven a no tener jefes.
+
 ## 0.36.1 — 2026-10-26
 - (#80) Los jefes se presentan: al empezar el nivel jefe sale un cartel breve (2,8 s) en la parte de arriba del tablero con su nombre, la regla y cuántas líneas hay que hacer; mientras dura, una barra de vida sobre el tablero baja con las líneas que faltan (con la regla resumida), y al vencerlo sale un cartel con la recompensa. Solo presentación: no cambia reglas.
 
