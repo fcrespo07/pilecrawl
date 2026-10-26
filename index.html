@@ -150,6 +150,17 @@
 
       <!-- ═════════════ HUD ═════════════ -->
       <div id="hud">
+        <div id="boss-bar" class="boss-bar" hidden>
+          <div class="bb-top"><b id="bb-name"></b><span id="bb-left"></span></div>
+          <div class="bb-track"><i id="bb-fill"></i></div>
+          <div id="bb-rule" class="bb-rule"></div>
+        </div>
+        <div id="boss-intro" class="boss-intro" hidden>
+          <small id="bi-tag">Nivel jefe</small>
+          <strong id="bi-name"></strong>
+          <span id="bi-rule"></span>
+          <em id="bi-goal"></em>
+        </div>
         <section class="panel p-score">
           <header>Puntos</header>
           <div id="score" class="num-big">0</div>

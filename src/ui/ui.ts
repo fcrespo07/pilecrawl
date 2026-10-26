@@ -3,7 +3,7 @@ import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks
 import type { HyperDef } from '../core/hypers';
 import { STREAK_MAX, STREAK_TIER_NAMES, streakTier } from '../core/streak';
 import { audio } from '../fx/audio';
-import { accentFor, hex } from '../fx/layout';
+import { accentFor, BOARD_W, BOARD_X, BOARD_Y, hex, PORTRAIT } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
@@ -90,6 +90,9 @@ export class UI {
   private shareInfo: ShareInfo | null = null;
 
   constructor(private game: Game) {
+    // jefes: aviso de entrada grande y aviso al vencerlos (la barra de vida se pinta en `update`)
+    game.events.on('boss', ({ boss }) => boss && this.bossIntro('Nivel jefe', boss.name, boss.rule, `Sobrevive: ${game.linesNeeded()} líneas`, false));
+    game.events.on('bossDown', ({ boss }) => this.bossIntro('Jefe derrotado', boss.name, 'Recompensa: oferta épica o mejor y un reroll', '', true));
     $('reroll').addEventListener('click', () => this.reroll());
     $('skip').addEventListener('click', () => this.skip());
     // con las cartas destapándose, un clic solo las muestra todas (no elige ni salta)
@@ -283,6 +286,46 @@ export class UI {
     title.style.animation = 'none';
     void title.offsetWidth;
     title.style.animation = '';
+  }
+
+  private introTimer = 0;
+  /** Cartel grande sobre el tablero: al empezar un jefe (rojo) y al vencerlo (dorado). No para la partida. */
+  private bossIntro(tag: string, name: string, rule: string, goal: string, won: boolean) {
+    const el = $('boss-intro');
+    $('bi-tag').textContent = tag;
+    $('bi-name').textContent = name.toUpperCase();
+    $('bi-rule').textContent = rule;
+    $('bi-goal').textContent = goal;
+    el.classList.toggle('won', won);
+    this.placeOverBoard(el, PORTRAIT ? 120 : 140);
+    el.hidden = false;
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+    clearTimeout(this.introTimer);
+    this.introTimer = window.setTimeout(() => (el.hidden = true), won ? 3200 : 4200);
+  }
+
+  private placeOverBoard(el: HTMLElement, y: number) {
+    el.style.left = `${BOARD_X}px`;
+    el.style.width = `${BOARD_W}px`;
+    el.style.top = `${BOARD_Y + y}px`;
+  }
+
+  /** Barra del jefe sobre el tablero: su «vida» son las líneas que faltan para pasar el nivel. */
+  private updateBossBar(g: Game) {
+    const bar = $('boss-bar');
+    const boss = g.state === 'over' ? null : g.bossNow();
+    bar.hidden = !boss;
+    if (!boss) return;
+    const need = g.linesNeeded();
+    const left = Math.max(0, need - g.linesIntoLevel);
+    // sobre el tablero cuando hay hueco (escritorio); en vertical, dentro del tablero, arriba
+    this.placeOverBoard(bar, PORTRAIT ? 6 : -72);
+    $('bb-name').textContent = `JEFE ${boss.name.toUpperCase()}`;
+    $('bb-left').textContent = left === 1 ? 'Falta 1 línea' : `Faltan ${left} líneas`;
+    $('bb-rule').textContent = boss.tip.join(' ');
+    ($('bb-fill') as HTMLElement).style.width = `${(left / need) * 100}%`;
   }
 
   private stageKey = '';
@@ -572,6 +615,7 @@ export class UI {
     document.documentElement.style.setProperty('--level', this.levelColor(g.level));
 
     this.updateStage(g);
+    this.updateBossBar(g);
     const need = g.linesNeeded();
     $('lvl-progress').textContent = `${g.linesIntoLevel}/${need}`;
     const segsKey = `${need}|${g.linesIntoLevel}`;

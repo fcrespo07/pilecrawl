@@ -827,21 +827,16 @@ export class Renderer {
       this.post.sweep(0.5);
     });
 
-    ev.on('boss', ({ boss, level }) => {
+    // el cartel y la barra del jefe viven en el DOM (ui.ts); aquí solo el golpe de pantalla
+    ev.on('boss', ({ boss }) => {
       if (!boss) return;
-      const cx = BOARD_X + BOARD_W / 2;
-      const cy = BOARD_Y + BOARD_H / 2;
-      this.floatText(`JEFE ${boss.name.toUpperCase()}`, cx, cy - 70, { color: 0xd23a3a, size: 40, life: 2.6, vy: -6, delay: 1.1 });
-      boss.tip.forEach((line, i) => this.floatText(line, cx, cy - 8 + i * 20, { color: this.skin.ink, size: 14, life: 2.6, vy: -4, delay: 1.2 }));
-      this.shockwave(cx, cy, { amplitude: 16, wavelength: 160, speed: 600 });
-      this.flash(0xd23a3a, 0.2);
-      void level;
+      this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 16, wavelength: 160, speed: 600 });
+      this.flash(0xd23a3a, 0.25);
     });
 
     ev.on('bossDown', () => {
-      const cx = BOARD_X + BOARD_W / 2;
-      this.floatText('JEFE DERROTADO', cx, BOARD_Y + BOARD_H / 2 - 70, { color: GOLD_TEXT, size: 34, life: 2, vy: -12 });
-      this.flash(0xffd24a, 0.25);
+      this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
+      this.flash(0xffd24a, 0.3);
     });
 
     ev.on('bossDrop', ({ x, y }) => {
