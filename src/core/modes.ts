@@ -21,7 +21,7 @@ export interface ModeDef {
   tutorial?: boolean;
   /** Progresión entre partidas (`expedition.ts`): sin ranking ni récords del arcade, y no sale en el selector. */
   expedition?: boolean;
-  /** Tiene niveles jefe (cada tercer nivel) y su oferta de recompensa. */
+  /** Tiene niveles jefe (cada tercer nivel) y su oferta de recompensa. Solo Expedición: el arcade no los tiene. */
   bosses?: boolean;
 }
 
@@ -32,7 +32,6 @@ export const MODES: Record<ModeId, ModeDef> = {
     desc: 'Sube de nivel hasta que el tablero se llene.',
     timeLimitMs: 0,
     starterPerk: false,
-    bosses: true,
   },
   daily: {
     id: 'daily',
@@ -41,7 +40,6 @@ export const MODES: Record<ModeId, ModeDef> = {
     timeLimitMs: 0,
     fixedBestLevel: 9999,
     starterPerk: true,
-    bosses: true,
   },
   timed: {
     id: 'timed',
@@ -67,6 +65,7 @@ export const MODES: Record<ModeId, ModeDef> = {
     timeLimitMs: 0,
     starterPerk: false,
     expedition: true,
+    bosses: true,
   },
 };
 
