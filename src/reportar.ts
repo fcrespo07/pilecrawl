@@ -1,4 +1,4 @@
-// Enlace de reportar.html: abre la plantilla de GitHub con la versión y el navegador ya rellenos.
+// Enlace de reportar.html: abre un correo con la versión y el navegador ya rellenos.
 // Solo lee el navegador; no hace peticiones (la página no carga nada externo).
 // En iOS, Chrome, Firefox y Edge usan otros nombres de marca en el navegador
 const BROWSERS: Record<string, string> = { Edg: 'Edge', EdgiOS: 'Edge', OPR: 'Opera', Firefox: 'Firefox', FxiOS: 'Firefox', Chrome: 'Chrome', CriOS: 'Chrome' };
@@ -23,12 +23,9 @@ const version = document.body.dataset.version ?? '';
 const navegador = browserName(navigator.userAgent);
 const dispositivo = systemName(navigator.userAgent);
 
-const params = new URLSearchParams({
-  template: 'bug_report.yml',
-  title: '[Bug] ',
-  version,
-  navegador,
-  dispositivo,
-});
-link.href = `${__REPO_URL__}/issues/new?${params.toString()}`;
-info.textContent = `El formulario llevará: versión ${version}, navegador ${navegador}, sistema ${dispositivo}.`;
+const body = `Qué hice:\n\nQué esperaba:\n\nQué pasó:\n\n---\nVersión: ${version}\nNavegador: ${navegador}\nSistema: ${dispositivo}`;
+const params = `subject=${encodeURIComponent('[Bug] Pilecrawl ' + version)}&body=${encodeURIComponent(body)}`;
+// sin correo configurado (VITE_CONTACT_EMAIL) el enlace queda sin destinatario
+if (link.getAttribute('href') === 'mailto:') link.removeAttribute('href');
+else link.href = `${link.getAttribute('href')}?${params}`;
+info.textContent = `El correo llevará: versión ${version}, navegador ${navegador}, sistema ${dispositivo}.`;

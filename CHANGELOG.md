@@ -4,6 +4,10 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.36.2 — 2026-10-26
+- (#81) «Reportar un bug» se envía por correo (el repositorio ya es privado).
+- [interno] (#81) Se retira el workflow Imagen (la imagen se construye en la Pi) y el CI se lanza una sola vez por cambio, se cancela si llega otro push y no corre con cambios solo de texto.
+
 ## 0.36.1 — 2026-10-26
 - (#80) Los jefes se presentan: al empezar el nivel jefe sale un cartel breve (2,8 s) en la parte de arriba del tablero con su nombre, la regla y cuántas líneas hay que hacer; mientras dura, una barra de vida sobre el tablero baja con las líneas que faltan (con la regla resumida), y al vencerlo sale un cartel con la recompensa. Solo presentación: no cambia reglas.
 

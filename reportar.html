@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reportar un bug · Pilecrawl</title>
-    <meta name="description" content="Cómo reportar un error de Pilecrawl en GitHub." />
+    <meta name="description" content="Cómo reportar un error de Pilecrawl por correo." />
     <link rel="stylesheet" href="/src/legal.css" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
@@ -16,19 +16,17 @@
     <main>
       <nav><a href="/">Jugar</a><a href="/guia.html">Guía</a><a href="/perks.html">Mejoras</a><a href="/novedades.html">Novedades</a><a href="/acerca.html">Acerca de y contacto</a></nav>
       <h1><img class="logo" src="/logo.png" alt="" width="40" height="40" />Reportar un bug</h1>
-      <p>Si algo se rompe o no hace lo que debería, cuéntanoslo en GitHub. El formulario ya lleva la versión del juego y tu navegador.</p>
-      <p><a class="btn" id="bug-link" href="{{REPO_URL}}/issues/new?template=bug_report.yml">Abrir el formulario en GitHub</a></p>
+      <p>Si algo se rompe o no hace lo que debería, escríbenos. El correo ya lleva la versión del juego y tu navegador.</p>
+      <p><a class="btn" id="bug-link" href="mailto:{{EMAIL_ADDR}}">Escribir el correo</a></p>
       <p class="note" id="bug-info"></p>
 
       <h2>Antes de enviarlo</h2>
       <ul>
-        <li>Hace falta una cuenta de GitHub (es gratis). El informe es público: cualquiera puede leerlo.</li>
         <li>Di qué hiciste, qué esperabas y qué pasó. Una captura o un vídeo ayudan mucho.</li>
         <li>No pegues tu código de recuperación del ranking ni datos personales.</li>
       </ul>
 
-      <h2>Otra vía</h2>
-      <p>Un problema con tus datos o con tu código de recuperación no va en GitHub: escríbelo a {{EMAIL}}.</p>
+      <p class="note">También puedes escribir directamente a {{EMAIL}}.</p>
     </main>
     <script type="module" src="/src/reportar.ts"></script>
   </body>

@@ -1,8 +1,16 @@
 name: CI
 
+# Los minutos de Actions son limitados (repo privado): solo master y PR, sin repetir y sin lanzarse por cambios de texto.
 on:
   push:
+    branches: [master]
+    paths-ignore: ['**.md', 'docs/**', '.github/ISSUE_TEMPLATE/**']
   pull_request:
+    paths-ignore: ['**.md', 'docs/**', '.github/ISSUE_TEMPLATE/**']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
@@ -17,3 +25,4 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: npm run build:server
