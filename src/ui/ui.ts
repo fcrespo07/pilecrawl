@@ -297,13 +297,13 @@ export class UI {
     $('bi-rule').textContent = rule;
     $('bi-goal').textContent = goal;
     el.classList.toggle('won', won);
-    this.placeOverBoard(el, PORTRAIT ? 120 : 140);
+    this.placeOverBoard(el, PORTRAIT ? 78 : 8);
     el.hidden = false;
     el.style.animation = 'none';
     void el.offsetWidth;
     el.style.animation = '';
     clearTimeout(this.introTimer);
-    this.introTimer = window.setTimeout(() => (el.hidden = true), won ? 3200 : 4200);
+    this.introTimer = window.setTimeout(() => (el.hidden = true), won ? 2400 : 2800);
   }
 
   private placeOverBoard(el: HTMLElement, y: number) {
