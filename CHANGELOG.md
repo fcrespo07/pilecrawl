@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
 - (#88) **Expedición: Presión.** Antes de jugar puedes activar hasta 4 condiciones que endurecen la partida (basura desde el nivel 2, sin reserva, dos cartas por subida y cola de una pieza). Cada una vale 1 punto y suma un 25 % a los fragmentos. Para tener la Presión N hace falta llegar al nivel 6 con la N-1. Solo Expedición; el resultado sale en la pantalla de fin de partida.
 - (#85) [interno] Código: `game.ts` deja de declarar tipos y constantes, que pasan a `types.ts` y `constants.ts` (sin cambio de reglas ni de comportamiento).
 
