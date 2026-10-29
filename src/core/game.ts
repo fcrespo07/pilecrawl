@@ -439,7 +439,8 @@ export class Game {
   // ─────────────────────────── Bucle ───────────────────────────
 
   gravityMs(): number {
-    let t = GRAVITY_MS[Math.min(this.level, GRAVITY_MS.length) - 1];
+    const cap = MODES[this.mode].gravityCap ?? GRAVITY_MS.length;
+    let t = GRAVITY_MS[Math.min(this.level, cap, GRAVITY_MS.length) - 1];
     let speed = this.mods.gravitySpeed;
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
@@ -628,7 +629,7 @@ export class Game {
   private findFullRows(): number[] {
     const rows: number[] = [];
     const m = this.magnetCol;
-    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v, x) => v !== 0 || (x === m && !this.board[y].includes(GARBAGE_ID)))) rows.push(y);
+    for (let y = 0; y < ROWS; y++) if (this.board[y].every((v, x) => v !== 0 || x === m)) rows.push(y);
     return rows;
   }
 
@@ -975,9 +976,15 @@ export class Game {
     this.events.emit('boss', { boss, level: this.level });
   }
 
+  /** Imán elige columna. Nunca una que tenga un hueco de basura: ahí ninguna pieza podría cerrar la fila. */
   private pickMagnetCol() {
-    const options = MAGNET_COLS.filter((c) => c !== this.magnetCol);
-    this.magnetCol = options[Math.floor(this.rng() * options.length)];
+    const holes = new Set<number>();
+    for (const row of this.board) {
+      if (!row.includes(GARBAGE_ID)) continue;
+      row.forEach((v, x) => { if (v === 0) holes.add(x); });
+    }
+    const options = MAGNET_COLS.filter((c) => c !== this.magnetCol && !holes.has(c));
+    this.magnetCol = options.length > 0 ? options[Math.floor(this.rng() * options.length)] : -1;
     this.events.emit('bossMagnet', { col: this.magnetCol });
   }
 
@@ -1034,7 +1041,9 @@ export class Game {
   private addGarbage(): boolean {
     // si hay bloques en la fila de arriba, subir el tablero los empujaría fuera
     if (this.board[0].some((v) => v !== 0) && !this.topOut()) return false;
-    const hole = this.rng() < 0.7 ? this.lastHole : Math.floor(this.rng() * COLS);
+    let hole = this.rng() < 0.7 ? this.lastHole : Math.floor(this.rng() * COLS);
+    // con Imán, el hueco nunca cae en su columna prohibida (quedaría sin cerrar)
+    if (hole === this.magnetCol) hole = hole === 0 ? 1 : hole - 1;
     this.lastHole = hole;
     this.board.shift();
     const row = new Array(COLS).fill(GARBAGE_ID);
@@ -1080,7 +1089,8 @@ export class Game {
   linesNeeded(): number {
     if (MODES[this.mode].tutorial) return TUTORIAL_LINES;
     // 8 líneas al principio, +1 cada 2 niveles (tope 16)
-    const base = Math.min(16, 8 + Math.floor((this.level - 1) / 2));
+    const cap = MODES[this.mode].linesCap ?? 16;
+    const base = Math.min(cap, 8 + Math.floor((this.level - 1) / 2));
     return Math.max(4, base - this.mods.linesReduction);
   }
 

@@ -23,6 +23,10 @@ export interface ModeDef {
   expedition?: boolean;
   /** Tiene niveles jefe (cada tercer nivel) y su oferta de recompensa. Solo Expedición: el arcade no los tiene. */
   bosses?: boolean;
+  /** Nivel a partir del cual la velocidad ya no sube (curva propia del modo). */
+  gravityCap?: number;
+  /** Tope de líneas por nivel (curva propia del modo). */
+  linesCap?: number;
 }
 
 export const MODES: Record<ModeId, ModeDef> = {
@@ -66,6 +70,9 @@ export const MODES: Record<ModeId, ModeDef> = {
     starterPerk: false,
     expedition: true,
     bosses: true,
+    // curva propia: la velocidad se planta en el nivel 12 y cada nivel pide como mucho 8 líneas
+    gravityCap: 12,
+    linesCap: 8,
   },
 };
 
