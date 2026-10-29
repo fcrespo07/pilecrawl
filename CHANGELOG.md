@@ -4,6 +4,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 - (#85) [interno] Código: `game.ts` deja de declarar tipos y constantes, que pasan a `types.ts` y `constants.ts` (sin cambio de reglas ni de comportamiento).
+- (#89) En móvil vertical, el tutorial ya no tapa el marcador, la reserva ni la cola: durante el tutorial se ocultan puntos y nivel y el consejo se ciñe arriba.
 
 ## 0.37.3 — 2026-10-29
 - (#86) Portada y Expedición sin textos de relleno: «Arcade» pasa a «Modos», «Catálogo» en una línea, «Contacto» pasa a «Acerca de», el ranking mundial dice que aún no está activo y la nota de beta de Expedición se entiende. Las etiquetas Beta y Nuevo se leen mejor.
