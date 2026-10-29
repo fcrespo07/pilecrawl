@@ -725,6 +725,10 @@ kbd {
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
+/* Victoria: la pantalla de fin se vuelve dorada en vez del rojo de la derrota */
+#over.win .stripe-title { color: var(--hi2); }
+#over.win .stripe-title::before, #over.win .stripe-title::after { background: repeating-linear-gradient(90deg, var(--hi2) 0 6px, transparent 6px 12px); }
+#over.win .big-title { color: var(--hi2); text-shadow: 4px 4px 0 var(--hot); }
 .over-best { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 .over-best.record { font-family: var(--f-display); font-weight: 800; letter-spacing: 0.02em; font-size: 18px; color: var(--accent); animation: pulse 0.7s infinite alternate; }
 @keyframes pulse { to { transform: scale(1.08); } }
