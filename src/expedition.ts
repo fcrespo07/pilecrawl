@@ -1,7 +1,7 @@
 // Partida guardada de la Expedición en localStorage: fragmentos, mejoras compradas, retos y Presión.
 // Es del jugador y no cuenta para ningún ranking, así que no hace falta validarla en el servidor.
 import { buy, CHALLENGE_PERKS, newUnlocks, RENAMED_CHALLENGE_PERKS, shardsFor, UPGRADE_BY_ID, UPGRADES, VICTORY_SHARDS, type ExpeditionSave, type Owned, type RunStats, type UpgradeId } from './core/expedition';
-import { allowedPoints, cleanPressure, PRESSURE_BY_ID, pressureMult, type PressureId } from './core/pressure';
+import { allowedPoints, cleanPressure, PRESSURE, PRESSURE_BY_ID, pressureMult, type PressureId } from './core/pressure';
 
 const KEY = 'blockrogue.exp';
 
@@ -25,8 +25,10 @@ export function loadExpedition(): ExpeditionSave {
     // los retos cambiados conservan su cumplimiento: el perk nuevo queda abierto
     const kept = Array.isArray(p.unlocked) ? (p.unlocked as unknown[]).map((id) => (typeof id === 'string' && RENAMED_CHALLENGE_PERKS[id]) || id) : [];
     const unlocked = CHALLENGE_PERKS.filter((id) => kept.includes(id));
-    const pressure = Array.isArray(p.pressure) ? cleanPressure(p.pressure) : [];
     const pressureWins = Array.isArray(p.pressureWins) ? p.pressureWins.map(clean) : [];
+    // solo las condiciones ya desbloqueadas: si faltan victorias, no quedan activas a escondidas
+    const open = PRESSURE.map((x) => x.id).slice(0, allowedPoints(pressureWins));
+    const pressure = Array.isArray(p.pressure) ? cleanPressure(p.pressure).filter((id) => open.includes(id)) : [];
     return { shards: clean(p.shards), owned, unlocked, runs: clean(p.runs), bestLevel: clean(p.bestLevel), wins: clean(p.wins), pressure, pressureWins };
   } catch {
     /* sin almacenamiento o JSON roto: se empieza de cero */

@@ -129,8 +129,8 @@ describe('expedición', () => {
 
   it('Suerte y Reserva extra cambian las reglas base', () => {
     const m = baseMods();
-    applyUpgrades(m, { suerte: 2, reserva: 1 });
-    expect(m.luck).toBe(2);
+    applyUpgrades(m, { suerte: 1, reserva: 1 });
+    expect(m.luck).toBe(1);
     expect(m.holdSlots).toBe(2);
     expect(VICTORY_SHARDS).toBeGreaterThan(0);
   });

@@ -26,7 +26,7 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'ritmo', name: 'Ritmo', desc: 'Cada nivel pide 1 línea menos.', costs: [90, 200] },
   { id: 'vida', name: 'Vida de repuesto', desc: 'Empiezas con una vida extra.', costs: [220] },
   { id: 'arranque', name: 'Buen arranque', desc: 'Empiezas con una mejora común o rara al azar.', costs: [150] },
-  { id: 'suerte', name: 'Suerte', desc: '+1 de suerte en las ofertas: más mejoras raras y épicas.', costs: [80, 160] },
+  { id: 'suerte', name: 'Suerte', desc: '+1 de suerte en las ofertas: más mejoras raras y épicas.', costs: [120] },
   { id: 'reserva', name: 'Reserva extra', desc: 'Una pieza más cabe en la reserva.', costs: [180] },
 ];
 
