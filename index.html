@@ -120,26 +120,26 @@
     </main>
 
     <!-- ═════════════ Catálogo: página aparte, se abre desde la portada ═════════════ -->
-    <main id="catalog" class="home hidden" tabindex="-1" aria-label="Catálogo y puntuación">
+    <main id="catalog" class="home hidden" tabindex="-1" data-i18n-attr="aria-label=catalog.aria">
       <div class="home-inner">
         <header class="cat-head">
-          <button id="catalog-back" class="home-btn" type="button">Volver</button>
-          <h1 class="home-title cat-title">Catálogo</h1>
+          <button id="catalog-back" class="home-btn" type="button" data-i18n="nav.back">Volver</button>
+          <h1 class="home-title cat-title" data-i18n="home.catalog">Catálogo</h1>
         </header>
         <div id="catalog-body" class="cat-body-all"></div>
       </div>
     </main>
 
-    <main id="expedition" class="home hidden" tabindex="-1" aria-label="Expedición">
+    <main id="expedition" class="home hidden" tabindex="-1" data-i18n-attr="aria-label=mode.expedition.name">
       <div class="home-inner">
         <header class="cat-head">
-          <button id="exp-back" class="home-btn" type="button">Volver</button>
-          <h1 class="home-title cat-title">Expedición<i class="new-tag">Beta</i></h1>
+          <button id="exp-back" class="home-btn" type="button" data-i18n="nav.back">Volver</button>
+          <h1 class="home-title cat-title"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></h1>
         </header>
         <section class="home-card">
-          <p class="home-lead">Fragmentos: <b id="exp-shards">0</b> · Expediciones: <b id="exp-runs">0</b> · Mejor nivel: <b id="exp-best">0</b> · Victorias: <b id="exp-wins">0</b></p>
-          <p class="home-note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
-          <button id="exp-play" class="home-btn" type="button">Jugar Expedición <kbd>Enter</kbd></button>
+          <p class="home-lead"><span data-i18n="exp.shards">Fragmentos</span>: <b id="exp-shards">0</b> · <span data-i18n="exp.runs">Expediciones</span>: <b id="exp-runs">0</b> · <span data-i18n="exp.best">Mejor nivel</span>: <b id="exp-best">0</b> · <span data-i18n="exp.wins">Victorias</span>: <b id="exp-wins">0</b></p>
+          <p class="home-note" data-i18n="exp.note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
+          <button id="exp-play" class="home-btn" type="button"><span data-i18n="exp.play">Jugar Expedición</span> <kbd>Enter</kbd></button>
         </section>
         <div id="exp-body"></div>
       </div>

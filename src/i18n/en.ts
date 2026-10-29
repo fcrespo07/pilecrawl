@@ -164,4 +164,13 @@ export const en: Record<Key, string> = {
   "over.victory": "Victory",
   "over.pressure": "Pressure",
   "over.perkOpened": "Upgrade unlocked",
+  // catálogo y Expedición (pantalla)
+  "nav.back": "Back",
+  "catalog.aria": "Catalog and scoring",
+  "exp.play": "Play Expedition",
+  "exp.shards": "Shards",
+  "exp.runs": "Expeditions",
+  "exp.best": "Best level",
+  "exp.wins": "Wins",
+  "exp.note": "Beta: costs and challenges may change. It is a normal game with the upgrades you buy. When it ends you earn shards based on level and lines. Not in the ranking.",
 };

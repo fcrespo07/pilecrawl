@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.40.2 — 2026-10-29
+- (#98) Inglés en el catálogo y en la cabecera de Expedición (títulos, cifras y botón). El cuerpo del catálogo, la presión, las mejoras permanentes y los nombres de las mejoras siguen en español por ahora.
+
 ## 0.40.1 — 2026-10-29
 - (#96) Inglés en la pantalla de partida: marcador, mejoras, racha, hiperperk, elección de cartas, pausa y fin de partida se ven en inglés (con el idioma del navegador o el que elijas en Ajustes). Pendiente: nombres y textos de las mejoras, catálogo, Expedición, tutorial y el resto de ajustes.
 
