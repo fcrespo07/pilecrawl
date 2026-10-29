@@ -5,7 +5,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.38.0 — 2026-10-29
-- (#85) **Cambia las reglas (`RULES_VERSION` 17).** Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (izquierda y derecha cambiadas en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes.
+- (#87) **Cambia las reglas (`RULES_VERSION` 17).** Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (izquierda y derecha cambiadas en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes.
 
 ## 0.37.2 — 2026-10-26
 - (#84) «Reportar un bug» vuelve a abrir el formulario de GitHub (el repositorio es público otra vez).
