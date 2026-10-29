@@ -7,6 +7,10 @@ declare const __REPO_URL__: string;
 interface ImportMetaEnv {
   /** «1» activa el ranking en línea. Sin ello el juego es solo local. */
   readonly VITE_RANKING?: string;
+  /** Portal de juegos del build: «crazygames» activa su SDK. Sin ello no se carga nada de portales. */
+  readonly VITE_PORTAL?: string;
+  /** «1» permite anuncios del portal (apagados por defecto). */
+  readonly VITE_PORTAL_ADS?: string;
   /** Dirección del servidor si no es el mismo dominio que el juego (p. ej. dentro de un portal). */
   readonly VITE_API_URL?: string;
   /** Proveedor de anuncios: «adsense» o vacío (sin anuncios). */

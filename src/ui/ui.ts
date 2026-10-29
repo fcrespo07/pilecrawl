@@ -196,7 +196,8 @@ export class UI {
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
     // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
     const prevBest = Number.isFinite(g.bestLevel) ? g.bestLevel : Infinity;
-    const unlocked = (Object.keys(UNLOCK_LEVEL) as Rarity[])
+    // la Expedición no guarda el mejor nivel del arcade: ahí no desbloquea rarezas, así que no las anuncia
+    const unlocked = (g.mode === 'expedition' ? [] : (Object.keys(UNLOCK_LEVEL) as Rarity[]))
       .filter((r) => UNLOCK_LEVEL[r] > prevBest && UNLOCK_LEVEL[r] <= g.level)
       .map((r) => RARITY_LABEL[r]);
     $('over-stats').innerHTML =

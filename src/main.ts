@@ -23,6 +23,8 @@ import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } fro
 import type { Owned } from './core/expedition';
 import type { PressureId } from './core/pressure';
 import { UI } from './ui/ui';
+import { applyLang, t } from './i18n';
+import { initPortal, portal } from './portal/portal';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
 import { postStats, StatsCollector } from './net/stats';
@@ -168,6 +170,7 @@ function wireAudioAndFeel() {
   ev.on('bossDown', () => audio.levelUp());
   ev.on('garbage', () => audio.garbage());
   ev.on('levelup', ({ level }) => {
+    portal.happytime();
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
     // el tutorial y el laboratorio no cuentan para desbloquear rarezas
@@ -179,6 +182,7 @@ function wireAudioAndFeel() {
   ev.on('hyper', () => audio.hyperOn());
   ev.on('gameover', () => {
     endLock.arm();
+    portal.gameplayStop();
     audio.stopMusic();
     audio.gameOver();
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
@@ -263,6 +267,7 @@ function showHome(show: boolean) {
   expScreen.classList.add('hidden');
   home.classList.toggle('hidden', !show);
   if (show) {
+    portal.gameplayStop();
     tutorial.stop();
     audio.stopMusic();
     document.querySelector<HTMLElement>('#home-tutorial .new-tag')!.hidden = loadTutorialDone();
@@ -316,6 +321,8 @@ const canSave = () => currentRun !== null && !game.sandbox && game.mode !== 'tut
 
 function setPaused(p: boolean) {
   ui.setPaused(p);
+  if (p) portal.gameplayStop();
+  else portal.gameplayStart();
   if (p) syncAudioButtons();
   disarmQuit();
   pauseMsg.hidden = true;
@@ -331,7 +338,7 @@ function renderResume(note?: string) {
   resumeBox.hidden = !saved;
   if (saved) {
     document.getElementById('home-resume-text')!.innerHTML =
-      `Continuar partida<small>${MODES[modeOf(saved)].name} · nivel ${saved.level} · ${fmtNum(saved.score)} puntos</small>`;
+      `${t('home.resume')}<small>${MODES[modeOf(saved)].name} · nivel ${saved.level} · ${fmtNum(saved.score)} puntos</small>`;
   }
   if (note !== undefined) {
     saveNote.textContent = note;
@@ -489,6 +496,7 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   const exp = mode === 'expedition' ? loadExpedition() : null;
   stats.begin();
   game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? [], exp?.pressure ?? []);
+  portal.gameplayStart();
   currentRun = { mode, date, runId: ranked?.runId, startedAt: Date.now(), exp: exp ? { owned: exp.owned, unlocked: [...exp.unlocked], pressure: exp.pressure } : undefined };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
@@ -597,6 +605,13 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 async function boot() {
+  applyLang();
+  window.addEventListener('langchange', () => {
+    renderResume();
+    refreshPanels();
+  });
+  // el SDK de un portal (si lo hay) arranca en paralelo; sin portal no hace nada
+  void initPortal().then(() => portal.loadingStop());
   await Promise.allSettled([
     document.fonts.load('16px "Press Start 2P"'),
     document.fonts.load('16px VT323'),

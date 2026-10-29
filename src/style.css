@@ -1396,6 +1396,7 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 .set-sec h3 { margin: 0; font-family: var(--f-display); font-size: 11px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .set-row { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 12px; font-size: 20px; color: var(--ink); }
 .set-row input[type="range"] { width: 100%; min-width: 0; accent-color: var(--hi); cursor: pointer; }
+.set-row select { width: 100%; min-width: 0; font: inherit; font-size: 20px; color: var(--ink); background: var(--panel-hi); border: 2px solid var(--line); padding: 4px 8px; cursor: pointer; }
 .set-row output { font-family: var(--f-display); font-size: 10px; color: var(--hi); text-align: right; }
 .set-toggles { display: flex; flex-wrap: wrap; gap: 10px; }
 .set-hint { margin: 0; font-size: 17px; color: var(--muted); line-height: 1.3; }

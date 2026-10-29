@@ -38,21 +38,21 @@
             <div class="home-center">
               <header class="home-hero">
                 <canvas class="home-logo" data-src="/logo.png" aria-hidden="true"></canvas>
-                <p class="home-kicker">Roguelite de bloques</p>
+                <p class="home-kicker" data-i18n="home.kicker">Roguelite de bloques</p>
                 <h1 class="home-title">Pilecrawl</h1>
               </header>
-              <h2 id="h-arcade" class="home-mode-label">Modos</h2>
+              <h2 id="h-arcade" class="home-mode-label" data-i18n="home.modes">Modos</h2>
               <div id="mode-select" class="mode-select"></div>
               <div id="home-resume-box" class="resume-box" hidden>
-                <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text">Continuar partida</span></button>
-                <button id="home-resume-drop" class="rank-link" type="button">Descartar partida guardada</button>
+                <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text"><span data-i18n="home.resume">Continuar partida</span></span></button>
+                <button id="home-resume-drop" class="rank-link" type="button" data-i18n="home.resumeDrop">Descartar partida guardada</button>
               </div>
               <p id="home-save-note" class="home-note save-note" role="status" hidden></p>
-              <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
-              <button id="home-exp" class="home-btn ghost" type="button">Expedición<i class="new-tag">Beta</i></button>
-              <button id="catalog-open" class="home-btn home-link ghost" type="button">Catálogo</button>
-              <button id="settings-open-home" class="home-btn home-link ghost" type="button">Ajustes</button>
-              <button id="install-btn" class="home-btn home-link ghost" type="button" hidden>Instalar en este dispositivo</button>
+              <button id="home-play" class="home-btn" type="button"><span data-i18n="home.play">Jugar</span> <kbd>Enter</kbd></button>
+              <button id="home-exp" class="home-btn ghost" type="button"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></button>
+              <button id="catalog-open" class="home-btn home-link ghost" type="button" data-i18n="home.catalog">Catálogo</button>
+              <button id="settings-open-home" class="home-btn home-link ghost" type="button" data-i18n="home.settings">Ajustes</button>
+              <button id="install-btn" class="home-btn home-link ghost" type="button" hidden data-i18n="home.install">Instalar en este dispositivo</button>
               <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
                    Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
               <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
@@ -60,61 +60,61 @@
 
             <aside id="panel-right" class="home-panel panel-right" aria-label="Desafío diario"></aside>
           </div>
-          <button class="home-more-hint" id="home-more-link" type="button">Cómo se juega y más<span aria-hidden="true">&#9660;</span></button>
+          <button class="home-more-hint" id="home-more-link" type="button"><span data-i18n="home.moreHint">Cómo se juega y más</span><span aria-hidden="true">&#9660;</span></button>
         </section>
 
         <div id="home-more" class="home-more">
-          <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
+          <p class="home-lead" data-i18n="home.lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
 
           <!-- Expedición y Rankings -->
           <div class="home-menu">
             <section class="home-entry" aria-labelledby="h-story">
-              <h2 id="h-story">Expedición<i class="new-tag">Beta</i></h2>
-              <p class="home-entry-desc">Cada partida da fragmentos para comprar mejoras permanentes. Sin ranking.</p>
-              <button id="exp-open" class="home-btn small" type="button">Abrir</button>
+              <h2 id="h-story"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></h2>
+              <p class="home-entry-desc" data-i18n="home.expDesc">Cada partida da fragmentos para comprar mejoras permanentes. Sin ranking.</p>
+              <button id="exp-open" class="home-btn small" type="button" data-i18n="home.open">Abrir</button>
             </section>
 
             <section id="home-rank" class="home-entry is-locked" aria-labelledby="h-rank">
               <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
-              <p class="home-entry-desc">Las mejores puntuaciones de cada modo.</p>
-              <p class="home-soon">Próximamente</p>
+              <p class="home-entry-desc" data-i18n="home.rankDesc">Las mejores puntuaciones de cada modo.</p>
+              <p class="home-soon" data-i18n="home.soon">Próximamente</p>
               <button id="rank-open" class="home-btn small" type="button" hidden>Ver rankings</button>
             </section>
           </div>
 
           <!-- Accesos secundarios (tutorial): van en esta fila, no en la primera pantalla -->
           <div class="home-links" id="home-links">
-            <button id="home-tutorial" class="home-btn home-link ghost" type="button">Tutorial<i class="new-tag" hidden>Nuevo</i></button>
+            <button id="home-tutorial" class="home-btn home-link ghost" type="button"><span data-i18n="home.tutorial">Tutorial</span><i class="new-tag" data-i18n="tag.new" hidden>Nuevo</i></button>
           </div>
 
         <section class="home-card" aria-labelledby="h-how">
-          <h2 id="h-how">Cómo se juega</h2>
+          <h2 id="h-how" data-i18n="home.howTitle">Cómo se juega</h2>
           <ol class="home-steps">
-            <li><b>Limpia líneas.</b> Tablero de 11×18, rotación con rebotes, reserva y giros.</li>
-            <li><b>Sube de nivel.</b> Cada pocas líneas. La basura sube desde el nivel 4.</li>
-            <li><b>Elige una mejora.</b> Ventajas con desventajas que cambian las reglas y se combinan.</li>
-            <li><b>Mantén la racha.</b> Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.</li>
+            <li><b data-i18n="home.step1b">Limpia líneas.</b> <span data-i18n="home.step1">Tablero de 11×18, rotación con rebotes, reserva y giros.</span></li>
+            <li><b data-i18n="home.step2b">Sube de nivel.</b> <span data-i18n="home.step2">Cada pocas líneas. La basura sube desde el nivel 4.</span></li>
+            <li><b data-i18n="home.step3b">Elige una mejora.</b> <span data-i18n="home.step3">Ventajas con desventajas que cambian las reglas y se combinan.</span></li>
+            <li><b data-i18n="home.step4b">Mantén la racha.</b> <span data-i18n="home.step4">Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.</span></li>
           </ol>
         </section>
 
         <section class="home-card" aria-labelledby="h-keys">
-          <h2 id="h-keys">Controles</h2>
+          <h2 id="h-keys" data-i18n="home.keysTitle">Controles</h2>
           <ul class="home-keys">
-            <li><span data-keys="left right"></span>mover</li>
-            <li><span data-keys="down"></span>bajar</li>
-            <li><span data-keys="hard"></span>soltar</li>
-            <li><span data-keys="cw" data-max="2"></span>girar</li>
-            <li><span data-keys="ccw"></span>girar al revés</li>
-            <li><span data-keys="r180"></span>180°</li>
-            <li><span data-keys="hold"></span>reserva</li>
-            <li><span data-keys="hyper"></span>hiperperk</li>
-            <li><span data-keys="skill"></span>habilidad</li>
-            <li><span><kbd>Esc</kbd></span>pausa</li>
+            <li><span data-keys="left right"></span><span data-i18n="keys.move">mover</span></li>
+            <li><span data-keys="down"></span><span data-i18n="keys.down">bajar</span></li>
+            <li><span data-keys="hard"></span><span data-i18n="keys.hard">soltar</span></li>
+            <li><span data-keys="cw" data-max="2"></span><span data-i18n="keys.cw">girar</span></li>
+            <li><span data-keys="ccw"></span><span data-i18n="keys.ccw">girar al revés</span></li>
+            <li><span data-keys="r180"></span><span data-i18n="keys.r180">180°</span></li>
+            <li><span data-keys="hold"></span><span data-i18n="keys.hold">reserva</span></li>
+            <li><span data-keys="hyper"></span><span data-i18n="keys.hyper">hiperperk</span></li>
+            <li><span data-keys="skill"></span><span data-i18n="keys.skill">habilidad</span></li>
+            <li><span><kbd>Esc</kbd></span><span data-i18n="keys.pause">pausa</span></li>
           </ul>
-          <p class="home-note">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
+          <p class="home-note" data-i18n-html="home.keysNoteHtml">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
-        <footer class="home-foot">Pilecrawl · versión <span data-version></span> <a class="rank-link" href="/guia.html">Guía</a> · <a class="rank-link" href="/perks.html">Mejoras</a> · <a class="rank-link" href="/privacidad.html">Privacidad</a> · <a class="rank-link" href="/acerca.html">Acerca de</a> · <a class="rank-link" href="/novedades.html">Novedades</a> · <a class="rank-link" href="/reportar.html">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
+        <footer class="home-foot">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span><a class="rank-link" href="/guia.html" data-i18n="foot.guide">Guía</a> · <a class="rank-link" href="/perks.html" data-i18n="foot.perks">Mejoras</a> · <a class="rank-link" href="/privacidad.html" data-i18n="foot.privacy">Privacidad</a> · <a class="rank-link" href="/acerca.html" data-i18n="foot.about">Acerca de</a> · <a class="rank-link" href="/novedades.html" data-i18n="foot.news">Novedades</a> · <a class="rank-link" href="/reportar.html" data-i18n="foot.bug">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
         </div>
       </div>
     </main>
@@ -368,9 +368,19 @@
     <div id="settings" class="rank-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
       <div class="rank-panel settings-panel">
         <header>
-          <h2 id="settings-title">Ajustes</h2>
-          <button id="settings-close" class="rank-x" type="button" aria-label="Cerrar">X</button>
+          <h2 id="settings-title" data-i18n="settings.title">Ajustes</h2>
+          <button id="settings-close" class="rank-x" type="button" data-i18n-attr="aria-label=settings.close">X</button>
         </header>
+
+        <section class="set-sec" aria-label="Idioma" data-i18n-attr="aria-label=settings.language">
+          <label class="set-row"><span data-i18n="settings.language">Idioma</span>
+            <select id="set-lang-select">
+              <option value="auto" data-i18n="lang.auto">Automático (del navegador)</option>
+              <option value="es" data-i18n="lang.es">Español</option>
+              <option value="en" data-i18n="lang.en">English</option>
+            </select>
+          </label>
+        </section>
 
         <section class="set-sec" aria-labelledby="set-sound">
           <h3 id="set-sound">Sonido</h3>
