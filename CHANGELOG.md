@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#PR) Pausa en móvil: los controles son gestos (arrastrar, tocar, tirón, deslizar) en vez de teclas, y los botones de la pausa tienen margen en el borde. Solo presentación.
 - Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
 
 ## 0.39.0 — 2026-10-29

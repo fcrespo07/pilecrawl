@@ -1359,6 +1359,18 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   .coach-m .coach-text { font-size: 16px; margin: 2px 0 4px; }
 }
 .touch-only { display: none; }
+/* controles de la pausa: en pantalla táctil, los gestos en vez de las teclas */
+.pause-keys .tc-keys { display: none; }
+@media (pointer: coarse) {
+  .pause-keys .kb-keys { display: none; }
+  .pause-keys .tc-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .pause-keys .tc-keys li { font-size: 14px; }
+  .pause-keys .tc-keys li span { min-width: 118px; color: var(--hi); }
+  .pause-actions kbd { display: none; }
+}
+@media (pointer: coarse) and (orientation: portrait) {
+  .pause-actions { padding: 0 16px; box-sizing: border-box; flex-wrap: wrap; }
+}
 @media (pointer: coarse) { .touch-only { display: inline-flex; } }
 
 /* Expedición: pantalla de mejoras permanentes */
