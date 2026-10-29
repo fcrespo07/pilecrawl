@@ -240,7 +240,7 @@ export const PERKS: PerkDef[] = [
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
     pros: () => ['La basura tarda <b>3 piezas más</b> en subir'],
-    cons: () => ['Pierdes <b>1 cambio de cartas</b>'],
+    cons: () => ['Pierdes <b>hasta 1 cambio de cartas</b>'],
     apply: (m, g) => { m.garbageDelay += 3; g.rerolls = Math.max(0, g.rerolls - 1); },
   },
   {
