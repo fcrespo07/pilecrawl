@@ -5,7 +5,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.37.3 — 2026-10-29
-- (#86) Portada y Expedición sin textos de relleno: «Arcade» pasa a «Modos», «Catálogo» en una línea, «Contacto» pasa a «Acerca de», el ranking sin conexión dice que no está disponible y la nota de beta de Expedición se entiende. Las etiquetas Beta y Nuevo se leen mejor.
+- (#86) Portada y Expedición sin textos de relleno: «Arcade» pasa a «Modos», «Catálogo» en una línea, «Contacto» pasa a «Acerca de», el ranking mundial dice que aún no está activo y la nota de beta de Expedición se entiende. Las etiquetas Beta y Nuevo se leen mejor.
 
 ## 0.37.2 — 2026-10-26
 - (#84) «Reportar un bug» vuelve a abrir el formulario de GitHub (el repositorio es público otra vez).
