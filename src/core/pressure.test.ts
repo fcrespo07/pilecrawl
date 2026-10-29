@@ -10,16 +10,16 @@ describe('Presión: multiplicador y desbloqueo', () => {
     expect(pressureMult(PRESSURE.length)).toBe(2);
   });
 
-  it('la Presión N solo se abre llegando al nivel 6 con la N-1', () => {
+  it('la Presión N solo se abre ganando con la N-1', () => {
     expect(allowedPoints([])).toBe(0);
-    expect(allowedPoints([5])).toBe(0);
-    expect(allowedPoints([6])).toBe(1);
-    expect(allowedPoints([6, 5, 9])).toBe(1);
-    expect(allowedPoints([6, 6, 6])).toBe(3);
+    expect(allowedPoints([0])).toBe(0);
+    expect(allowedPoints([1])).toBe(1);
+    expect(allowedPoints([1, 0, 3])).toBe(1);
+    expect(allowedPoints([1, 1, 1])).toBe(3);
   });
 
   it('no pasa del número de condiciones que existen', () => {
-    expect(allowedPoints([6, 6, 6, 6, 6, 6])).toBe(PRESSURE.length);
+    expect(allowedPoints([1, 1, 1, 1, 1, 1])).toBe(PRESSURE.length);
   });
 
   it('descarta ids que no existen y no repite', () => {

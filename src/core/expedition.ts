@@ -7,7 +7,7 @@ import type { Mods } from './perks';
 import { PERK_BY_ID } from './perks';
 import type { PressureId } from './pressure';
 
-export type UpgradeId = 'reroll' | 'vista' | 'aguante' | 'calma' | 'ritmo' | 'vida' | 'arranque';
+export type UpgradeId = 'reroll' | 'vista' | 'aguante' | 'calma' | 'ritmo' | 'vida' | 'arranque' | 'suerte' | 'reserva';
 
 export interface UpgradeDef {
   id: UpgradeId;
@@ -26,6 +26,8 @@ export const UPGRADES: UpgradeDef[] = [
   { id: 'ritmo', name: 'Ritmo', desc: 'Cada nivel pide 1 línea menos.', costs: [90, 200] },
   { id: 'vida', name: 'Vida de repuesto', desc: 'Empiezas con una vida extra.', costs: [220] },
   { id: 'arranque', name: 'Buen arranque', desc: 'Empiezas con una mejora común o rara al azar.', costs: [150] },
+  { id: 'suerte', name: 'Suerte', desc: '+1 de suerte en las ofertas: más mejoras raras y épicas.', costs: [120] },
+  { id: 'reserva', name: 'Reserva extra', desc: 'Una pieza más cabe en la reserva.', costs: [180] },
 ];
 
 export const UPGRADE_BY_ID = Object.fromEntries(UPGRADES.map((u) => [u.id, u])) as Record<UpgradeId, UpgradeDef>;
@@ -46,8 +48,8 @@ export interface ExpeditionSave {
   wins: number;
   /** Condiciones de Presión elegidas para la próxima partida. */
   pressure: PressureId[];
-  /** Mejor nivel con cada número de puntos de Presión (índice = puntos). */
-  pressureBest: number[];
+  /** Victorias con cada número de puntos de Presión (índice = puntos). Ganar abre la Presión siguiente. */
+  pressureWins: number[];
 }
 
 export const level = (owned: Owned, id: UpgradeId): number => Math.min(owned[id] ?? 0, UPGRADE_BY_ID[id].costs.length);
@@ -75,7 +77,12 @@ export function applyUpgrades(mods: Mods, owned: Owned) {
   mods.lockDelay += 60 * level(owned, 'aguante');
   mods.garbageDelay += level(owned, 'calma');
   mods.linesReduction += level(owned, 'ritmo');
+  mods.luck += level(owned, 'suerte');
+  mods.holdSlots += level(owned, 'reserva');
 }
+
+/** Fragmentos extra por cada victoria (además de los de la partida). */
+export const VICTORY_SHARDS = 150;
 
 // ─────────────────────────── Retos ───────────────────────────
 

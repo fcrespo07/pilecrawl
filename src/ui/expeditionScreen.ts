@@ -1,6 +1,6 @@
 // Pantalla de la Expedición: fragmentos, mejoras permanentes y el botón de jugar.
 import { CHALLENGES, level, nextCost, perkName, UPGRADES } from '../core/expedition';
-import { PRESSURE, PRESSURE_UNLOCK_LEVEL, pressureMult } from '../core/pressure';
+import { PRESSURE, pressureMult } from '../core/pressure';
 import { buyUpgrade, loadExpedition, pressureAllowed, togglePressure } from '../expedition';
 
 const fmt = (n: number) => n.toLocaleString('es-ES');
@@ -38,7 +38,7 @@ export function renderExpedition(root: HTMLElement) {
   const pressure = PRESSURE.map((p, i) => {
     const on = save.pressure.includes(p.id);
     const locked = i >= allowed;
-    const hint = i === allowed ? `Se abre al llegar al nivel ${PRESSURE_UNLOCK_LEVEL} con ${i} ${i === 1 ? 'condición' : 'condiciones'}` : '';
+    const hint = i === allowed ? (i === 0 ? 'Se abre al ganar una Expedición sin condiciones' : `Se abre al ganar con ${i} ${i === 1 ? 'condición' : 'condiciones'}`) : '';
     return `<button type="button" class="cat-item exp-item exp-press${on ? ' exp-on' : ''}${locked ? ' exp-locked' : ''}" data-press="${p.id}" aria-pressed="${on}"${locked ? ' disabled' : ''}>
       <div class="cat-body">
         <div class="b-name">${p.name}<small>${on ? 'Activa' : locked ? 'Bloqueada' : 'Inactiva'}</small></div>
@@ -51,8 +51,9 @@ export function renderExpedition(root: HTMLElement) {
   root.querySelector('#exp-shards')!.textContent = fmt(save.shards);
   root.querySelector('#exp-runs')!.textContent = fmt(save.runs);
   root.querySelector('#exp-best')!.textContent = String(save.bestLevel);
+  root.querySelector('#exp-wins')!.textContent = fmt(save.wins);
   root.querySelector('#exp-body')!.innerHTML =
-    `<section class="home-card"><h2>Presión <small>${chosen}/${allowed} · fragmentos ${mult}</small></h2><p class="home-note">Antes de jugar puedes endurecer la partida. Cada condición activa vale 1 punto y cada punto suma un 25 % a los fragmentos que das. Solo afecta a la Expedición.</p><div class="cat-grid">${pressure}</div></section>` +
+    `<section class="home-card"><h2>Presión <small>${chosen}/${allowed} · fragmentos ${mult}</small></h2><p class="home-note">Antes de jugar puedes endurecer la partida. Cada condición activa vale 1 punto y cada punto suma un 25 % a los fragmentos que das. Ganar con unas condiciones abre la siguiente. Solo afecta a la Expedición.</p><div class="cat-grid">${pressure}</div></section>` +
     `<section class="home-card"><h2>Mejoras permanentes</h2><div class="cat-grid">${items}</div></section>` +
     `<section class="home-card"><h2>Retos <small>${save.unlocked.length}/${CHALLENGES.length}</small></h2><p class="home-note">Cada reto abre un perk para las ofertas de la Expedición. Se cumplen dentro de una sola partida. En el arcade no hacen falta.</p><div class="cat-grid">${retos}</div></section>`;
 }
