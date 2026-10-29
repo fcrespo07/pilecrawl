@@ -66,3 +66,29 @@ describe('Presión: reglas', () => {
     expect(g.pressure).toEqual([]);
   });
 });
+
+describe('Presión y mejoras: el orden y las reconstrucciones', () => {
+  it('Cola corta deja la cola en 1 aunque haya Vista larga', () => {
+    const g = new Game();
+    g.start(7, 'expedition', { vista: 1 }, [], ['onepiece']);
+    expect(g.mods.preview).toBe(1);
+  });
+
+  it('las mejoras y la Presión sobreviven a reconstruir los mods (p. ej. al quitar una maldición)', () => {
+    const g = new Game();
+    g.start(7, 'expedition', { vista: 1 }, [], ['onepiece', 'nohold']);
+    g.labAddPerk('calm');
+    g.labRemovePerk('calm');
+    expect(g.mods.preview).toBe(1);
+    expect(g.mods.noHold).toBe(true);
+  });
+
+  it('sin Presión, Vista larga da una pieza más en la cola', () => {
+    const g = new Game();
+    g.start(7, 'expedition', { vista: 1 }, [], []);
+    expect(g.mods.preview).toBe(4);
+    g.labAddPerk('calm');
+    g.labRemovePerk('calm');
+    expect(g.mods.preview).toBe(4);
+  });
+});

@@ -48,6 +48,8 @@ export class Game {
   spins = 0;
   /** Condiciones de Presión de esta partida (solo Expedición). */
   pressure: PressureId[] = [];
+  /** Reglas de base de la partida (mejoras y Presión de la Expedición): se reaplican cada vez que se reconstruyen los mods. */
+  private baseRules: (m: Mods) => void = () => {};
   /** Perks bloqueados en esta partida (solo Expedición, hasta cumplir su reto). */
   lockedPerks: ReadonlySet<string> = new Set();
   /** Bonus acumulado de Fénix (+0,25 por cada vez que revives). */
@@ -150,6 +152,7 @@ export class Game {
     this.spins = 0;
     this.lockedPerks = new Set();
     this.pressure = [];
+    this.baseRules = () => {};
     this.phoenixBonus = 0;
     this.hyper = null;
     this.hyperCharge = 0;
@@ -199,8 +202,12 @@ export class Game {
     // Expedición: las mejoras permanentes solo cuentan en ese modo (el resto no las ve)
     if (def.expedition) {
       this.pressure = [...pressure];
-      applyPressure(this.mods, pressure);
-      applyUpgrades(this.mods, upgrades);
+      // primero las mejoras y luego la Presión, que puede dejar la cola en 1 pieza aunque haya Vista larga
+      this.baseRules = (m) => {
+        applyUpgrades(m, upgrades);
+        applyPressure(m, pressure);
+      };
+      this.baseRules(this.mods);
       this.lockedPerks = lockedPerks(unlocked);
       this.rerolls += expLevel(upgrades, 'reroll');
       this.lives += expLevel(upgrades, 'vida');
@@ -1438,6 +1445,7 @@ export class Game {
     // algunos perks tocan también vidas o rerolls: esos valores los controla el laboratorio
     const { lives, rerolls } = this;
     this.mods = baseMods();
+    this.baseRules(this.mods);
     for (const id of this.perkOrder) for (let i = 0; i < this.perkStacks(id); i++) PERK_BY_ID[id].apply(this.mods, this);
     this.lives = lives;
     this.rerolls = rerolls;
