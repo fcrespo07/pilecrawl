@@ -188,7 +188,7 @@ function wireAudioAndFeel() {
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
     const prize =
       game.mode === 'expedition' && !game.sandbox
-        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time }, game.pressure)
+        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time }, game.pressure, game.endReason === 'victory')
         : null;
     if (game.mode !== 'tutorial') ui.showGameOver(prize);
     modeSelect.refresh();
@@ -215,6 +215,10 @@ function wireTouch() {
   document.querySelector<HTMLButtonElement>('[data-touch="pause"]')!.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     togglePause();
+  });
+  // en vertical táctil, la franja de mejoras bajo el tablero también abre la pausa
+  document.querySelector<HTMLElement>('.p-perks')!.addEventListener('pointerdown', () => {
+    if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) togglePause();
   });
   // la tarjeta de la hiperperk es también su botón táctil
   const hyper = document.getElementById('hyper-box')!;
@@ -491,6 +495,8 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   stepAcc = 0;
   renderer.reset();
   game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
+  // la Expedición tiene su propio mejor nivel: decide qué rarezas salen en sus ofertas
+  if (mode === 'expedition') game.bestLevel = loadExpedition().bestLevel;
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
   const exp = mode === 'expedition' ? loadExpedition() : null;

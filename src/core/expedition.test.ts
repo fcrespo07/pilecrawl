@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buy, CHALLENGES, level, lockedPerks, newUnlocks, nextCost, shardsFor, UPGRADES, type ExpeditionSave, type RunStats } from './expedition';
+import { CHALLENGE_PERKS, EXPEDITION_EXCLUDED, buy, CHALLENGES, level, lockedPerks, newUnlocks, nextCost, shardsFor, UPGRADES, type ExpeditionSave, type RunStats } from './expedition';
 import { PERK_BY_ID } from './perks';
 import { Game } from './game';
 import { runReplay } from './replay';
 import { isRankedMode } from '../../server/validate';
 
-const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0, pressure: [], pressureBest: [] });
+const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0, bestLevel: 0, wins: 0, pressure: [], pressureBest: [] });
 const stats = (o: Partial<RunStats> = {}): RunStats => ({ quads: 0, spins: 0, maxCombo: 0, level: 1, lines: 0, timeMs: 0, ...o });
 
 describe('expedición', () => {
@@ -67,16 +67,30 @@ describe('expedición', () => {
     for (const c of CHALLENGES) expect(PERK_BY_ID[c.perk]).toBeDefined();
   });
 
+  it('ningún reto abre un perk de puntos (esos no salen en la Expedición)', () => {
+    for (const c of CHALLENGES) expect(EXPEDITION_EXCLUDED).not.toContain(c.perk);
+  });
+
+  it('los perks de puntos están fuera de la Expedición aunque se hayan desbloqueado todos los retos', () => {
+    const open = lockedPerks(CHALLENGE_PERKS);
+    for (const id of EXPEDITION_EXCLUDED) expect(open.has(id)).toBe(true);
+  });
+
+  it('los perks que antes eran retos siguen fuera desde la primera partida', () => {
+    const locked = lockedPerks([]);
+    for (const id of ['cross', 'allspin', 'interest', 'eternal']) expect(locked.has(id)).toBe(true);
+  });
+
   it('un reto se cumple y no se repite', () => {
-    expect(newUnlocks([], stats({ quads: 3 }))).toEqual(['cross']);
-    expect(newUnlocks(['cross'], stats({ quads: 3 }))).toEqual([]);
+    expect(newUnlocks([], stats({ quads: 3 }))).toEqual(['erosion']);
+    expect(newUnlocks(['erosion'], stats({ quads: 3 }))).toEqual([]);
     expect(newUnlocks([], stats())).toEqual([]);
   });
 
   it('los perks bloqueados no salen en las ofertas de la Expedición y sí en el arcade', () => {
     const locked = lockedPerks([]);
-    expect(locked.has('cross')).toBe(true);
-    expect(lockedPerks(['cross']).has('cross')).toBe(false);
+    expect(locked.has('erosion')).toBe(true);
+    expect(lockedPerks(['erosion']).has('erosion')).toBe(false);
     for (let seed = 1; seed <= 40; seed++) {
       const g = new Game();
       g.start(seed, 'expedition', {}, []);
@@ -108,6 +122,6 @@ describe('expedición', () => {
       }
       return out;
     };
-    expect(offers([])).toEqual(offers(['cross', 'bomb']));
+    expect(offers([])).toEqual(offers(['erosion', 'bomb']));
   });
 });

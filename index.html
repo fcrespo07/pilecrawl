@@ -111,7 +111,7 @@
             <li><span data-keys="skill"></span><span data-i18n="keys.skill">habilidad</span></li>
             <li><span><kbd>Esc</kbd></span><span data-i18n="keys.pause">pausa</span></li>
           </ul>
-          <p class="home-note" data-i18n-html="home.keysNoteHtml">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
+          <p class="home-note" data-i18n-html="home.keysNoteHtml">Las teclas se cambian en Ajustes. <span class="kb-only">Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos.</span> En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
         <footer class="home-foot">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span><a class="rank-link" href="/guia.html" data-i18n="foot.guide">Guía</a> · <a class="rank-link" href="/perks.html" data-i18n="foot.perks">Mejoras</a> · <a class="rank-link" href="/privacidad.html" data-i18n="foot.privacy">Privacidad</a> · <a class="rank-link" href="/acerca.html" data-i18n="foot.about">Acerca de</a> · <a class="rank-link" href="/novedades.html" data-i18n="foot.news">Novedades</a> · <a class="rank-link" href="/reportar.html" data-i18n="foot.bug">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
@@ -137,7 +137,7 @@
           <h1 class="home-title cat-title">Expedición<i class="new-tag">Beta</i></h1>
         </header>
         <section class="home-card">
-          <p class="home-lead">Fragmentos: <b id="exp-shards">0</b> · Expediciones: <b id="exp-runs">0</b></p>
+          <p class="home-lead">Fragmentos: <b id="exp-shards">0</b> · Expediciones: <b id="exp-runs">0</b> · Mejor nivel: <b id="exp-best">0</b></p>
           <p class="home-note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
           <button id="exp-play" class="home-btn" type="button">Jugar Expedición <kbd>Enter</kbd></button>
         </section>
@@ -244,7 +244,16 @@
         </div>
         <div class="build pause-keys">
           <header>Controles</header>
-          <ul class="keys">
+          <ul class="keys tc-keys" aria-label="Gestos en pantalla táctil">
+            <li><span>arrastrar</span>mover</li>
+            <li><span>arrastrar lento</span>bajar</li>
+            <li><span>tirón abajo</span>soltar</li>
+            <li><span>tocar</span>girar</li>
+            <li><span>deslizar arriba</span>reserva</li>
+            <li><span>tocar Hiper</span>hiperperk</li>
+            <li><span>tocar panel</span>habilidad</li>
+          </ul>
+          <ul class="keys kb-keys">
             <li><span data-keys="left right"></span>mover</li>
             <li><span data-keys="down"></span>bajar</li>
             <li><span data-keys="hard"></span>soltar</li>

@@ -8,6 +8,7 @@ import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { perkName } from '../core/expedition';
+import { loadExpedition } from '../expedition';
 import { pressureMult } from '../core/pressure';
 import { STAGE_LEVELS, stageOf } from '../core/bosses';
 import { loadBest, submitScore } from '../records';
@@ -178,10 +179,10 @@ export class UI {
   }
 
   /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
-  showGameOver(prize: { shards: number; unlocked: string[]; points: number } | null = null) {
+  showGameOver(prize: { shards: number; unlocked: string[]; points: number; newBest: boolean } | null = null) {
     const g = this.game;
-    // el laboratorio falsea la partida: ni récord ni ranking
-    const isBest = !g.sandbox && submitScore(g.mode, this.date, g.score);
+    // el laboratorio falsea la partida: ni récord ni ranking. La Expedición no puntúa: su récord es el nivel.
+    const isBest = !g.sandbox && !prize && g.mode !== 'expedition' && submitScore(g.mode, this.date, g.score);
     const best = loadBest(g.mode, this.date);
     const timeUp = g.endReason === 'time';
     $('over-mode').textContent = this.modeTitle();
@@ -191,8 +192,14 @@ export class UI {
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
     const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';
-    $('over-best').textContent = g.sandbox ? 'Laboratorio: no puntúa' : isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
-    $('over-best').classList.toggle('record', isBest);
+    const expBest = prize ? loadExpedition().bestLevel : 0;
+    const newRecord = isBest || (prize?.newBest ?? false);
+    $('over-best').textContent = g.sandbox
+      ? 'Laboratorio: no puntúa'
+      : prize
+        ? prize.newBest ? '¡Nuevo mejor nivel!' : `Mejor nivel ${expBest}`
+        : isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
+    $('over-best').classList.toggle('record', newRecord);
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
     // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
     const prevBest = Number.isFinite(g.bestLevel) ? g.bestLevel : Infinity;
@@ -206,7 +213,7 @@ export class UI {
       stat('Cuádruples', g.quads) +
       stat('Combo máx.', Math.max(0, g.maxCombo)) +
       stat('Tiempo', clock(g.time)) +
-      stat('Mejor nivel', loadMeta().bestLevel) +
+      (prize ? '' : stat('Mejor nivel', loadMeta().bestLevel)) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
       (prize ? stat('Fragmentos', `+${fmt(prize.shards)}`) : '') +
       (prize?.points ? stat('Presión', `${prize.points} · ×${pressureMult(prize.points).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) : '') +

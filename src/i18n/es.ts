@@ -30,7 +30,7 @@ export const es = {
   'home.step4b': 'Mantén la racha.',
   'home.step4': 'Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.',
   'home.keysTitle': 'Controles',
-  'home.keysNoteHtml': 'Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.',
+  'home.keysNoteHtml': 'Las teclas se cambian en Ajustes. <span class="kb-only">Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos.</span> En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.',
   'keys.move': 'mover',
   'keys.down': 'bajar',
   'keys.hard': 'soltar',

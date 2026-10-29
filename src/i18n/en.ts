@@ -31,7 +31,7 @@ export const en: Record<Key, string> = {
   'home.step4b': 'Keep your streak.',
   'home.step4': 'Several lines at once, combos and fast play fill the streak: better cards come up and, with luck, a hyper perk that changes the screen while it lasts.',
   'home.keysTitle': 'Controls',
-  'home.keysNoteHtml': 'Change keys in Settings. Shortcuts: <kbd>M</kbd> music, <kbd>N</kbd> sound, <kbd>F</kbd> effects. On mobile, play with gestures: drag to move, tap to rotate, flick down to drop and swipe up to hold.',
+  'home.keysNoteHtml': 'Change keys in Settings. <span class="kb-only">Shortcuts: <kbd>M</kbd> music, <kbd>N</kbd> sound, <kbd>F</kbd> effects.</span> On mobile, play with gestures: drag to move, tap to rotate, flick down to drop and swipe up to hold.',
   'keys.move': 'move',
   'keys.down': 'fall faster',
   'keys.hard': 'drop now',

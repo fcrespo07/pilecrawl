@@ -5,6 +5,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## Sin publicar
 
 ## 0.40.0 — 2026-10-29
+- (#92) En móvil vertical, las mejoras se ven bajo el tablero en una franja (tocarla abre la pausa). Pausa en móvil: los controles son gestos (arrastrar, tocar, tirón, deslizar) en vez de teclas, los botones de la pausa tienen margen en el borde, y en táctil se quitan las pistas de tecla de cartas, fin de partida y portada. Solo presentación.
+- Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
+- (#91) **Expedición: se juega por sus propias reglas.** Los perks de puntos (Codicia, Cadena, Fuego cruzado, Vértigo, Reflejos…) ya no salen en la Expedición: allí los puntos no valen nada. Los retos abren perks que sí salen (Cruz pasa a Erosión, Maestro del giro a Experiencia, Combo eterno a Tahúr, Interés compuesto a Eco). Expedición lleva su propio mejor nivel, que decide las rarezas de sus ofertas, y la pantalla de fin muestra ese récord y no el del arcade.
 - (#93) Pilecrawl en **inglés**: la portada, el selector de modos, los paneles y el pie se traducen. Se elige en Ajustes → Idioma (por defecto, el del navegador). El resto del juego sigue en español por ahora. Además, adaptador del SDK de **CrazyGames** que solo se activa en el build de portal (`VITE_PORTAL=crazygames`); en pilecrawl.fun no cambia nada. En Expedición, el aviso «Desbloqueado» ya no anuncia rarezas que esa modalidad no desbloquea.
 
 ## 0.39.0 — 2026-10-29
