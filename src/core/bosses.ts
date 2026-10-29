@@ -23,7 +23,7 @@ const SIMPLE: BossDef[] = [
   { id: 'gravity', name: 'Gravedad', rule: 'Las piezas caen el doble de rápido, pero las limpiezas de 2 o más líneas cuentan doble.', tip: ['Caen el doble de rápido;', '2+ líneas cuentan doble'], rules: ['gravity'] },
   { id: 'magnet', name: 'Imán', rule: 'Una columna queda prohibida (cuenta como llena) y cambia cada 8 piezas.', tip: ['Columna prohibida', 'Cambia cada 8 piezas'], rules: ['magnet'] },
   { id: 'fog', name: 'Niebla', rule: 'Solo ves la siguiente pieza y el fantasma está apagado.', tip: ['Solo ves la siguiente', 'y no hay fantasma'], rules: ['fog'] },
-  { id: 'mirror', name: 'Espejo', rule: 'Los giros de izquierda y derecha se invierten en las 5 primeras piezas de cada tanda de 10.', tip: ['Izquierda y derecha', 'cambiadas 5 de cada 10'], rules: ['mirror'] },
+  { id: 'mirror', name: 'Espejo', rule: 'Los movimientos a izquierda y derecha se invierten en las 5 primeras piezas de cada tanda de 10.', tip: ['Izquierda y derecha', 'invertidas 5 de cada 10'], rules: ['mirror'] },
   { id: 'alud', name: 'Alud', rule: 'Cada 4 piezas se desprende la fila más alta del montón.', tip: ['Cada 4 piezas se', 'desprende la fila alta'], rules: ['alud'] },
   { id: 'countdown', name: 'Cuenta atrás', rule: 'Cada 10 segundos de juego sube una fila de basura. La pausa no cuenta.', tip: ['Sube una fila', 'cada 10 segundos'], rules: ['countdown'] },
 ];
