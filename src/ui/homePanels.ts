@@ -97,7 +97,7 @@ export function renderHomePanels(left: HTMLElement, right: HTMLElement, force = 
       <li><span>Contrarreloj</span><b>${score(loadBest('timed', date))}</b></li>
       <li><span>Diario de hoy</span><b>${score(loadBest('daily', date))}</b></li>
     </ol>
-    ${online ? `<h2>Partida, semana</h2>${boardHtml(boards.weekly)}` : '<p class="rank-note">El ranking mundial llegará pronto.</p>'}`;
+    ${online ? `<h2>Partida, semana</h2>${boardHtml(boards.weekly)}` : '<p class="rank-note">El ranking mundial no está disponible sin conexión.</p>'}`;
   right.innerHTML = `<h2>Diario <i>#${dailyNumber(date)}</i></h2>
     <p class="rank-big">${score(loadBest('daily', date))}</p>
     <p class="rank-note">Tu mejor de hoy. Mismas piezas y cartas para todos.</p>
