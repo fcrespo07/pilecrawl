@@ -212,6 +212,10 @@ function wireTouch() {
     e.preventDefault();
     togglePause();
   });
+  // en vertical táctil, la franja de mejoras bajo el tablero también abre la pausa
+  document.querySelector<HTMLElement>('.p-perks')!.addEventListener('pointerdown', () => {
+    if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) togglePause();
+  });
   // la tarjeta de la hiperperk es también su botón táctil
   const hyper = document.getElementById('hyper-box')!;
   hyper.addEventListener('pointerdown', (e) => {

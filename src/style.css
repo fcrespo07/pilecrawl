@@ -1308,7 +1308,16 @@ body.portrait .p-score .sub { display: none; }
 body.portrait .lvl { font-size: 30px; }
 body.portrait .segs { margin-top: 4px; }
 body.portrait .p-level { left: 216px; top: 6px; width: 200px; }
+/* vertical: franja de mejoras bajo el tablero (en táctil, tocarla abre la pausa; ver main.ts) */
 body.portrait .p-perks { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  body.portrait .p-perks { display: flex; flex-direction: row; align-items: center; gap: 8px; left: 8px; right: 8px; top: auto; bottom: 116px; width: auto; height: 26px; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
+  body.portrait .p-perks > header { flex: none; font-size: 8px; }
+  body.portrait #perk-list { display: flex; flex-direction: row; gap: 6px; overflow-x: auto; overflow-y: hidden; min-width: 0; flex: 1; padding: 0; scrollbar-width: none; }
+  body.portrait #perk-list .prow { flex: none; height: 20px; font-size: 14px; border-left-width: 2px; white-space: nowrap; }
+  body.portrait #perk-list .prow .pn { font-size: 14px; }
+  body.portrait #perk-list .empty { display: none; }
+}
 body.portrait .hud-side { display: contents; }
 body.portrait .hud-side > .panel { position: absolute; }
 body.portrait .mini-grid > #time-box { grid-column: auto; }
@@ -1368,7 +1377,7 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   .pause-keys .tc-keys li span { min-width: 118px; color: var(--hi); }
   .pause-actions kbd { display: none; }
   /* sin teclado: se quitan las pistas de tecla de cartas, fin de partida y portada */
-  #reroll kbd, #skip kbd, #cards .hint, #retry-btn kbd, #home-play kbd, #exp-play kbd, .home-note kbd { display: none; }
+  #reroll kbd, #skip kbd, #cards .hint, #retry-btn kbd, #home-play kbd, #exp-play kbd, .kb-only { display: none; }
 }
 @media (pointer: coarse) and (orientation: portrait) {
   .pause-actions { padding: 0 16px; box-sizing: border-box; flex-wrap: wrap; }
