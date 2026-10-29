@@ -21,6 +21,7 @@ import { renderKeyHints, SettingsUI } from './ui/settings';
 import { replayInto } from './core/replay';
 import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } from './savedrun';
 import type { Owned } from './core/expedition';
+import type { PressureId } from './core/pressure';
 import { UI } from './ui/ui';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
@@ -183,7 +184,7 @@ function wireAudioAndFeel() {
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
     const prize =
       game.mode === 'expedition' && !game.sandbox
-        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time })
+        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time }, game.pressure)
         : null;
     if (game.mode !== 'tutorial') ui.showGameOver(prize);
     modeSelect.refresh();
@@ -280,7 +281,7 @@ function showHome(show: boolean) {
 }
 
 /** Partida en curso: lo que hace falta para publicarla al acabar. */
-let currentRun: { mode: ModeId; date: string; runId?: string; startedAt: number; exp?: { owned: Owned; unlocked: string[] }; unranked?: string; noRank?: boolean } | null = null;
+let currentRun: { mode: ModeId; date: string; runId?: string; startedAt: number; exp?: { owned: Owned; unlocked: string[]; pressure: PressureId[] }; unranked?: string; noRank?: boolean } | null = null;
 let starting = false;
 
 function offerPublish() {
@@ -356,6 +357,7 @@ function saveAndExit() {
     runId: r.runId,
     upgrades: r.exp?.owned,
     unlocked: r.exp?.unlocked,
+    pressure: r.exp?.pressure,
     startedAt: r.startedAt,
     savedAt: Date.now(),
     score: game.score,
@@ -411,7 +413,7 @@ function resumeRun() {
   renderer.reset();
   stats.discard();
   ui.startGame(run.date);
-  const res = replayInto(game, run.replay, run.upgrades ?? {}, run.unlocked ?? []);
+  const res = replayInto(game, run.replay, run.upgrades ?? {}, run.unlocked ?? [], run.pressure ?? []);
   if (!res.ok) {
     clearSave();
     game.reset();
@@ -438,7 +440,7 @@ function resumeRun() {
     date: run.date,
     runId: stale ? undefined : run.runId,
     startedAt: run.startedAt,
-    exp: run.upgrades ? { owned: run.upgrades, unlocked: run.unlocked ?? [] } : undefined,
+    exp: run.upgrades ? { owned: run.upgrades, unlocked: run.unlocked ?? [], pressure: run.pressure ?? [] } : undefined,
     unranked,
     noRank: oldDaily,
   };
@@ -486,8 +488,8 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
   const exp = mode === 'expedition' ? loadExpedition() : null;
   stats.begin();
-  game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? []);
-  currentRun = { mode, date, runId: ranked?.runId, startedAt: Date.now(), exp: exp ? { owned: exp.owned, unlocked: [...exp.unlocked] } : undefined };
+  game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? [], exp?.pressure ?? []);
+  currentRun = { mode, date, runId: ranked?.runId, startedAt: Date.now(), exp: exp ? { owned: exp.owned, unlocked: [...exp.unlocked], pressure: exp.pressure } : undefined };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
 }

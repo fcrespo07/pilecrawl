@@ -5,6 +5,7 @@ import { RULES_VERSION, type Replay } from './core/game';
 import { checkReplay } from './core/replay';
 import { isModeId, MODES, type ModeId } from './core/modes';
 import type { Owned } from './core/expedition';
+import type { PressureId } from './core/pressure';
 
 const KEY = 'blockrogue.save';
 /** El servidor da por caducada una partida con ranking a las 6 h de pedirla (server/app.ts, START_TTL). */
@@ -24,6 +25,8 @@ export interface SavedRun {
   /** Mejoras de la Expedición con las que empezó la partida. */
   upgrades?: Owned;
   unlocked?: string[];
+  /** Condiciones de Presión de la Expedición. */
+  pressure?: PressureId[];
   /** Cuándo se pidió la partida al servidor (decide si su runId sigue valiendo). */
   startedAt: number;
   savedAt: number;

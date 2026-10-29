@@ -5,6 +5,7 @@
 
 import type { Mods } from './perks';
 import { PERK_BY_ID } from './perks';
+import type { PressureId } from './pressure';
 
 export type UpgradeId = 'reroll' | 'vista' | 'aguante' | 'calma' | 'ritmo' | 'vida' | 'arranque';
 
@@ -39,6 +40,10 @@ export interface ExpeditionSave {
   unlocked: string[];
   /** Partidas de Expedición terminadas. */
   runs: number;
+  /** Condiciones de Presión elegidas para la próxima partida. */
+  pressure: PressureId[];
+  /** Mejor nivel con cada número de puntos de Presión (índice = puntos). */
+  pressureBest: number[];
 }
 
 export const level = (owned: Owned, id: UpgradeId): number => Math.min(owned[id] ?? 0, UPGRADE_BY_ID[id].costs.length);

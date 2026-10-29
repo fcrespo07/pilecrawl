@@ -1,3 +1,4 @@
+import type { PressureId } from './pressure';
 import { Game, RULES_VERSION, type Replay, type ReplayAction } from './game';
 import type { Owned } from './expedition';
 import { isModeId, MODES } from './modes';
@@ -45,14 +46,14 @@ export function checkReplay(r: Replay): string | null {
 
 /**
  * Vuelve a jugar `r` sobre `game` (sin avisar a nadie) y lo deja en el paso final. Antes hay que pasar `checkReplay`.
- * `upgrades` y `unlocked` solo importan en la Expedición: la repetición no los lleva, así que quien guarde
+ * `upgrades`, `unlocked` y `pressure` solo importan en la Expedición: la repetición no los lleva, así que quien guarde
  * una partida de ese modo tiene que guardarlos aparte.
  */
-export function replayInto(game: Game, r: Replay, upgrades: Owned = {}, unlocked: readonly string[] = []): { ok: boolean; reason?: string } {
+export function replayInto(game: Game, r: Replay, upgrades: Owned = {}, unlocked: readonly string[] = [], pressure: readonly PressureId[] = []): { ok: boolean; reason?: string } {
   game.events.silent = true;
   try {
     game.bestLevel = r.bestLevel;
-    game.start(r.seed, r.mode ?? 'normal', upgrades, unlocked);
+    game.start(r.seed, r.mode ?? 'normal', upgrades, unlocked, pressure);
 
     const advanceTo = (step: number): boolean => {
       while (game.steps < step) {
