@@ -118,7 +118,7 @@ export const CHALLENGES: Challenge[] = [
 ];
 
 /** Retos de versiones anteriores: su perk se cambió y el jugador conserva el reto cumplido. */
-export const RENAMED_CHALLENGE_PERKS: Record<string, string> = { cross: 'erosion', allspin: 'exp', eternal: 'gambler', interest: 'doublehold' };
+export const RENAMED_CHALLENGE_PERKS: Record<string, string> = { cross: 'erosion', allspin: 'exp', eternal: 'gambler', interest: 'doublehold', echo: 'doublehold' };
 
 /**
  * Perks que la Expedición no ofrece: su efecto son los puntos, que aquí no valen nada. Sus contrapartidas

@@ -21,6 +21,12 @@ export interface Mods {
   quadMult: number;
   linesReduction: number; // puede ser negativo (= más líneas por nivel)
   garbageDelay: number; // piezas extra entre filas de basura (negativo = antes)
+  /** piezas de basura que acerca cada cambio de cartas (Cosecha) */
+  rerollGarbage: number;
+  /** piezas de basura que acerca cada bomba que sale (Bomba) */
+  bombGarbage: number;
+  /** racha que quita cada cambio de cartas (Dados) */
+  rerollStreak: number;
   hardDropMult: number;
   softDropPoints: boolean;
   bombEvery: number; // 0 = desactivado
@@ -105,6 +111,9 @@ export function baseMods(): Mods {
     quadMult: 1,
     linesReduction: 0,
     garbageDelay: 0,
+    rerollGarbage: 0,
+    bombGarbage: 0,
+    rerollStreak: 0,
     hardDropMult: 1,
     softDropPoints: true,
     bombEvery: 0,
@@ -207,8 +216,8 @@ export const PERKS: PerkDef[] = [
     // el comodín sin tope: la oferta nunca se queda sin cartas (ver perks.test.ts)
     id: 'dice', name: 'Dados', rarity: 'common', max: 99,
     pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
-    cons: () => ['Las <b>ofertas malditas</b> salen un 3 % más a menudo'],
-    apply: (m, g) => { g.rerolls += 2; m.curseChance = Math.min(0.3, m.curseChance + 0.03); },
+    cons: () => ['Cada cambio de cartas te quita <b>3 de racha</b>'],
+    apply: (m, g) => { g.rerolls += 2; m.rerollStreak += 3; },
   },
   {
     id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
@@ -225,8 +234,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'chain', name: 'Cadena', rarity: 'common', max: 5,
     pros: () => ['El bonus de combo sube un <b>60%</b>'],
-    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
-    apply: (m) => { m.comboMult += 0.6; m.gravitySpeed *= 1.04; },
+    cons: () => ['Las piezas se fijan <b>40 ms</b> antes'],
+    apply: (m) => { m.comboMult += 0.6; m.lockDelay -= 40; },
   },
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
@@ -243,8 +252,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'harvest', name: 'Cosecha', rarity: 'common', max: 2,
     pros: (s) => [`Cada <b>${s > 1 ? 6 : 10} líneas</b> que limpias ganas <b>+1 reroll</b>`],
-    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
-    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; m.gravitySpeed *= 1.04; },
+    cons: () => ['Cada cambio de cartas acerca la basura <b>1 pieza</b>'],
+    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; m.rerollGarbage += 1; },
   },
   {
     id: 'reflex', name: 'Reflejos', rarity: 'common', max: 3,
@@ -286,8 +295,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'bomb', name: 'Bomba', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[12, 9, 6][s - 1]} piezas</b> sale una bomba`, 'Al fijarse revienta un área de <b>5×5</b>'],
-    cons: () => ['Las piezas caen un <b>5 %</b> más rápido'],
-    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; m.gravitySpeed *= 1.05; },
+    cons: () => ['Cada bomba que sale acerca la basura <b>1 pieza</b>'],
+    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; m.bombGarbage += 1; },
   },
   {
     id: 'drill', name: 'Taladro', rarity: 'rare', max: 3,
@@ -364,8 +373,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'shortbar', name: 'Barra corta', rarity: 'rare', max: 2,
     pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
-    cons: () => ['Las <b>ofertas malditas</b> salen un 2 % más a menudo'],
-    apply: (m) => { m.extraPieces.push('I3'); m.curseChance = Math.min(0.3, m.curseChance + 0.02); },
+    cons: () => ['La basura sube <b>1 pieza</b> antes'],
+    apply: (m) => { m.extraPieces.push('I3'); m.garbageDelay -= 1; },
   },
   // ───────── Épicas ─────────
   {
@@ -389,8 +398,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
     pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
-    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
-    apply: (m) => { m.b2bMult += 1; m.gravitySpeed *= 1.04; },
+    cons: () => ['Guardar una pieza cuesta <b>20 puntos</b> por nivel'],
+    apply: (m) => { m.b2bMult += 1; m.holdCost += 20; },
   },
   {
     id: 'eternal', name: 'Combo eterno', rarity: 'epic', max: 2,
