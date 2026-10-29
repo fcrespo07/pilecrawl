@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#PR) **Expedición: se juega por sus propias reglas.** Los perks de puntos (Codicia, Cadena, Fuego cruzado, Vértigo, Reflejos…) ya no salen en la Expedición: allí los puntos no valen nada. Los retos abren perks que sí salen (Cruz pasa a Erosión, Maestro del giro a Experiencia, Combo eterno a Tahúr, Interés compuesto a Eco). Expedición lleva su propio mejor nivel, que decide las rarezas de sus ofertas, y la pantalla de fin muestra ese récord y no el del arcade.
 
 ## 0.39.0 — 2026-10-29
 - (#87) **Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (los movimientos a izquierda y derecha se invierten en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes y sin cambios de reglas.
