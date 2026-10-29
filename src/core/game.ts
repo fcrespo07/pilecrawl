@@ -10,6 +10,7 @@ import { MODES, type ModeId } from './modes';
 import { ALUD_EVERY, bossForLevel, COUNTDOWN_STEPS, DRIP_EVERY, isBossLevel, MAGNET_COLS, MAGNET_EVERY, MIRROR_BURST, MIRROR_FLIPPED, type BossDef, type RuleId } from './bosses';
 import { makeRng, randomSeed, type Rng } from './rng';
 import { applyUpgrades, level as expLevel, lockedPerks, type Owned } from './expedition';
+import { applyPressure, type PressureId } from './pressure';
 import { COLS, ROWS, HIDDEN, VISIBLE, GOLD_BIT, cellType, isGold, STEP_MS, HYPER_STOP_GRACE, TACTIC_STEPS, WILD_STREAK_COST, REROLL_EVERY_LEVELS, SOFT_DROP_MS, RULES_VERSION, CURSE_FROM_LEVEL, EMPTY_OFFER_POINTS, GARBAGE_MIN_INTERVAL, CURSE_CHANCE, SHORTCUT_GARBAGE, TUTORIAL_HOLE, TUTORIAL_PIECES, TUTORIAL_LINES, TUTORIAL_HYPER_CHARGE, GRAVITY_MS, LINE_SCORES, SPIN_SCORES, MINI_SCORES } from './constants';
 import type { PieceSpec, ActivePiece, SpinKind, Cell, GameState, EndReason, GameEvents, ReplayAction, Replay } from './types';
 
@@ -45,6 +46,10 @@ export class Game {
   quads = 0;
   /** Giros que han limpiado líneas (los cuentan los retos de la Expedición). */
   spins = 0;
+  /** Condiciones de Presión de esta partida (solo Expedición). */
+  pressure: PressureId[] = [];
+  /** Reglas de base de la partida (mejoras y Presión de la Expedición): se reaplican cada vez que se reconstruyen los mods. */
+  private baseRules: (m: Mods) => void = () => {};
   /** Perks bloqueados en esta partida (solo Expedición, hasta cumplir su reto). */
   lockedPerks: ReadonlySet<string> = new Set();
   /** Bonus acumulado de Fénix (+0,25 por cada vez que revives). */
@@ -150,6 +155,8 @@ export class Game {
     this.quads = 0;
     this.spins = 0;
     this.lockedPerks = new Set();
+    this.pressure = [];
+    this.baseRules = () => {};
     this.phoenixBonus = 0;
     this.hyper = null;
     this.hyperCharge = 0;
@@ -188,7 +195,7 @@ export class Game {
   }
 
   /** Empieza una partida. Sin semilla se elige una al azar. */
-  start(seed = randomSeed(), mode: ModeId = 'normal', upgrades: Owned = {}, unlocked: readonly string[] = []) {
+  start(seed = randomSeed(), mode: ModeId = 'normal', upgrades: Owned = {}, unlocked: readonly string[] = [], pressure: readonly PressureId[] = []) {
     this.reset();
     this.seed = seed >>> 0;
     this.mode = mode;
@@ -200,7 +207,13 @@ export class Game {
     this.lastHole = Math.floor(this.rng() * COLS);
     // Expedición: las mejoras permanentes solo cuentan en ese modo (el resto no las ve)
     if (def.expedition) {
-      applyUpgrades(this.mods, upgrades);
+      this.pressure = [...pressure];
+      // primero las mejoras y luego la Presión, que puede dejar la cola en 1 pieza aunque haya Vista larga
+      this.baseRules = (m) => {
+        applyUpgrades(m, upgrades);
+        applyPressure(m, pressure);
+      };
+      this.baseRules(this.mods);
       this.lockedPerks = lockedPerks(unlocked);
       this.rerolls += expLevel(upgrades, 'reroll');
       this.lives += expLevel(upgrades, 'vida');
@@ -398,7 +411,7 @@ export class Game {
 
   holdPiece() {
     if (this.state !== 'playing' || !this.active) return;
-    if (this.holdUsed && !this.mods.infiniteHold) return;
+    if (this.mods.noHold || (this.holdUsed && !this.mods.infiniteHold)) return;
     this.record([this.steps, 'hold']);
     const a = this.active;
     const spec: PieceSpec = { def: a.hyperFrom ?? a.def, bomb: a.bomb, prism: a.prism, gold: a.gold, ...(a.heavy ? { heavy: true } : {}) };
@@ -861,7 +874,7 @@ export class Game {
 
     // Ancla: con un combo de dos o más piezas seguidas, la basura no avanza
     const anchored = (m.anchor && this.combo >= 1) || this.hyperActive('slowmo');
-    if (this.level >= 4 && !anchored && !MODES[this.mode].tutorial) {
+    if (this.level >= this.mods.garbageFrom && !anchored && !MODES[this.mode].tutorial) {
       this.garbageCounter++;
       const interval = this.garbageInterval();
       this.events.emit('garbageWarn', { progress: this.garbageCounter / interval });
@@ -1012,7 +1025,7 @@ export class Game {
   }
 
   garbageProgress(): number {
-    if (this.level < 4) return 0;
+    if (this.level < this.mods.garbageFrom) return 0;
     return this.garbageCounter / this.garbageInterval();
   }
 
@@ -1472,6 +1485,7 @@ export class Game {
     // algunos perks tocan también vidas o rerolls: esos valores los controla el laboratorio
     const { lives, rerolls } = this;
     this.mods = baseMods();
+    this.baseRules(this.mods);
     for (const id of this.perkOrder) for (let i = 0; i < this.perkStacks(id); i++) PERK_BY_ID[id].apply(this.mods, this);
     this.lives = lives;
     this.rerolls = rerolls;

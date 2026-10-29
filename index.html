@@ -41,7 +41,7 @@
                 <p class="home-kicker">Roguelite de bloques</p>
                 <h1 class="home-title">Pilecrawl</h1>
               </header>
-              <h2 id="h-arcade" class="home-mode-label">Arcade</h2>
+              <h2 id="h-arcade" class="home-mode-label">Modos</h2>
               <div id="mode-select" class="mode-select"></div>
               <div id="home-resume-box" class="resume-box" hidden>
                 <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text">Continuar partida</span></button>
@@ -50,7 +50,7 @@
               <p id="home-save-note" class="home-note save-note" role="status" hidden></p>
               <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
               <button id="home-exp" class="home-btn ghost" type="button">Expedición<i class="new-tag">Beta</i></button>
-              <button id="catalog-open" class="home-btn home-link ghost" type="button">Catálogo y puntuación</button>
+              <button id="catalog-open" class="home-btn home-link ghost" type="button">Catálogo</button>
               <button id="settings-open-home" class="home-btn home-link ghost" type="button">Ajustes</button>
               <button id="install-btn" class="home-btn home-link ghost" type="button" hidden>Instalar en este dispositivo</button>
               <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
@@ -76,7 +76,7 @@
 
             <section id="home-rank" class="home-entry is-locked" aria-labelledby="h-rank">
               <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
-              <p class="home-entry-desc">Las mejores puntuaciones de Arcade.</p>
+              <p class="home-entry-desc">Las mejores puntuaciones de cada modo.</p>
               <p class="home-soon">Próximamente</p>
               <button id="rank-open" class="home-btn small" type="button" hidden>Ver rankings</button>
             </section>
@@ -114,7 +114,7 @@
           <p class="home-note">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
-        <footer class="home-foot">Pilecrawl · versión <span data-version></span> <a class="rank-link" href="/guia.html">Guía</a> · <a class="rank-link" href="/perks.html">Mejoras</a> · <a class="rank-link" href="/privacidad.html">Privacidad</a> · <a class="rank-link" href="/acerca.html">Contacto</a> · <a class="rank-link" href="/novedades.html">Novedades</a> · <a class="rank-link" href="/reportar.html">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
+        <footer class="home-foot">Pilecrawl · versión <span data-version></span> <a class="rank-link" href="/guia.html">Guía</a> · <a class="rank-link" href="/perks.html">Mejoras</a> · <a class="rank-link" href="/privacidad.html">Privacidad</a> · <a class="rank-link" href="/acerca.html">Acerca de</a> · <a class="rank-link" href="/novedades.html">Novedades</a> · <a class="rank-link" href="/reportar.html">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
         </div>
       </div>
     </main>
@@ -138,7 +138,7 @@
         </header>
         <section class="home-card">
           <p class="home-lead">Fragmentos: <b id="exp-shards">0</b> · Expediciones: <b id="exp-runs">0</b></p>
-          <p class="home-note">Está en beta: costes, fragmentos y retos aún sin equilibrar. Una partida normal, pero con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
+          <p class="home-note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
           <button id="exp-play" class="home-btn" type="button">Jugar Expedición <kbd>Enter</kbd></button>
         </section>
         <div id="exp-body"></div>
