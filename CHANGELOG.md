@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
-- (#PR) [interno] Código: `game.ts` deja de declarar tipos y constantes, que pasan a `types.ts` y `constants.ts` (sin cambio de reglas ni de comportamiento).
+- (#85) [interno] Código: `game.ts` deja de declarar tipos y constantes, que pasan a `types.ts` y `constants.ts` (sin cambio de reglas ni de comportamiento).
 
 ## 0.37.2 — 2026-10-26
 - (#84) «Reportar un bug» vuelve a abrir el formulario de GitHub (el repositorio es público otra vez).
