@@ -4,6 +4,14 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.37.2 — 2026-10-26
+- (#84) «Reportar un bug» vuelve a abrir el formulario de GitHub (el repositorio es público otra vez).
+- [interno] (#84) Vuelve el workflow Imagen (publica la imagen a GHCR para el actualizador de la Pi). El CI se lanza una sola vez por cambio, se cancela si llega otro push y no corre con cambios solo de texto.
+
+## 0.37.1 — 2026-10-26
+- (#83) «Reportar un bug» se envía por correo (el repositorio ya es privado).
+- [interno] (#83) Se retira el workflow Imagen (la imagen se construye en la Pi) y el CI se lanza una sola vez por cambio, se cancela si llega otro push y no corre con cambios solo de texto.
+
 ## 0.37.0 — 2026-10-26
 - (#82) **Cambia las reglas (`RULES_VERSION` 16): reinicia los marcadores.** Los jefes (Gota, Gravedad, Imán) salen solo en Expedición. Partida y desafío diario vuelven a no tener jefes.
 
