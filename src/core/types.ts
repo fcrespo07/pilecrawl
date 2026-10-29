@@ -29,7 +29,7 @@ export type SpinKind = 'full' | 'mini' | null;
 export type Cell = [number, number];
 export type GameState = 'ready' | 'playing' | 'choosing' | 'paused' | 'over';
 /** Por qué terminó la partida: tablero lleno o fin del tiempo (contrarreloj). */
-export type EndReason = 'topout' | 'time';
+export type EndReason = 'topout' | 'time' | 'victory';
 
 export interface ClearInfo {
   rows: number[];

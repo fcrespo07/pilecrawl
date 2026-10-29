@@ -6,6 +6,7 @@ import { HYPER_CHANCE_BASE, HYPER_CHANCE_FULL, HYPER_FROM_LEVEL, HYPER_SURE_LEVE
 import { GARBAGE_ID, PIECES, type PieceDef } from './pieces';
 import { CURSES, PERK_BY_ID, PERKS, rollOffer } from './perks';
 import { makeRng } from './rng';
+import { COUNTDOWN_STEPS } from './bosses';
 import type { PieceSpec } from './game';
 
 /** Partida lista para jugar, sin azar en la cola inicial que moleste a los tests. */
@@ -1010,7 +1011,8 @@ describe('jefes', () => {
     expect(atLevel(3).bossNow()?.id).toBe('drip');
     expect(atLevel(6).bossNow()?.id).toBe('gravity');
     expect(atLevel(9).bossNow()?.id).toBe('magnet');
-    expect(atLevel(12).bossNow()?.id).toBe('drip');
+    expect(atLevel(12).bossNow()?.id).toBe('fog');
+    expect(atLevel(24).bossNow()?.id).toBe('monolith');
     expect(atLevel(3, 'timed').bossNow()).toBeNull();
     expect(atLevel(3, 'normal').bossNow()).toBeNull();
   });
@@ -1073,5 +1075,82 @@ describe('jefes: Imán y basura', () => {
     const col = g.magnetCol;
     g.board[ROWS - 1] = Array.from({ length: COLS }, (_, x) => (x === col ? 0 : GARBAGE_ID));
     expect(g['findFullRows']()).not.toContain(ROWS - 1);
+  });
+});
+
+describe('jefes de Expedición: reglas nuevas y victoria', () => {
+  const expo = (level: number) => {
+    const g = new Game();
+    g.start(7, 'expedition');
+    g.level = level;
+    g['syncBoss']();
+    return g;
+  };
+
+  it('el Monolito mezcla dos reglas distintas de las siete primeras, siempre las mismas para una semilla', () => {
+    const a = expo(24).bossNow()!;
+    expect(a.rules).toHaveLength(2);
+    expect(a.rules[0]).not.toBe(a.rules[1]);
+    expect(a.rules.every((r) => r !== ('monolith' as string))).toBe(true);
+    expect(expo(24).bossNow()!.rules).toEqual(a.rules);
+  });
+
+  it('Niebla deja una sola pieza visible', () => {
+    expect(expo(12).previewCount()).toBe(1);
+  });
+
+  it('Espejo invierte el lado en las 5 primeras piezas de cada tanda de 10', () => {
+    const g = expo(15);
+    g.state = 'playing';
+    setActive(g, PIECES.T, 4, 5);
+    g.piecesLocked = 0;
+    g.move(1);
+    expect(g.active!.x).toBe(3);
+    g.piecesLocked = 5;
+    g.move(1);
+    expect(g.active!.x).toBe(4);
+  });
+
+  it('Alud quita la fila más alta cada 4 piezas', () => {
+    const g = expo(18);
+    g.state = 'playing';
+    g.board[ROWS - 6][0] = PIECES.T.id;
+    g.board[ROWS - 1][0] = PIECES.T.id;
+    g.piecesLocked = 3;
+    g.piecesLocked++;
+    g['afterLock']();
+    expect(g.board[ROWS - 6].every((v) => v === 0)).toBe(true);
+    expect(g.board[ROWS - 1][0]).toBe(PIECES.T.id);
+  });
+
+  it('Cuenta atrás sube una fila de basura cada 10 segundos de juego', () => {
+    const g = expo(21);
+    g.state = 'playing';
+    setActive(g, PIECES.O, 4, 0);
+    const garbageRows = () => g.board.filter((r) => r.includes(GARBAGE_ID)).length;
+    const before = garbageRows();
+    for (let i = 0; i < COUNTDOWN_STEPS - 1; i++) g['bossTick']();
+    expect(garbageRows()).toBe(before);
+    g['bossTick']();
+    expect(garbageRows()).toBe(before + 1);
+  });
+
+  it('vencer al Monolito da la victoria al terminar la pieza', () => {
+    const g = expo(24);
+    g.state = 'playing';
+    g.bestLevel = Infinity;
+    g['addLevelProgress'](g.linesNeeded());
+    expect(g.victory).toBe(true);
+    g['afterLock']();
+    expect(g.state).toBe('over');
+    expect(g.endReason).toBe('victory');
+  });
+
+  it('en el arcade no hay reglas de jefe aunque el nivel sea jefe', () => {
+    const g = new Game();
+    g.start(7, 'normal');
+    g.level = 24;
+    expect(g.bossNow()).toBeNull();
+    expect(g.bossHas('fog')).toBe(false);
   });
 });

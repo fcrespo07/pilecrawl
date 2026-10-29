@@ -1181,7 +1181,7 @@ export class Renderer {
     // ghost
     let gy = a.y;
     while (!g.collides(a.def, ax, gy + 1, arot)) gy++;
-    if (!g.mods.noGhost) shape.forEach(([cx, cy], i) => {
+    if (!g.mods.noGhost && !g.bossHas('fog')) shape.forEach(([cx, cy], i) => {
       const y = gy + cy;
       if (y < HIDDEN) return;
       this.placeCell(this.ghosts, this.px(ax + cx), this.py(y), CELL, this.specColor(a, i), 0.7);
