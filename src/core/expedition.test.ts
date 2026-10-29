@@ -76,6 +76,11 @@ describe('expedición', () => {
     for (const id of EXPEDITION_EXCLUDED) expect(open.has(id)).toBe(true);
   });
 
+  it('los perks que antes eran retos siguen fuera desde la primera partida', () => {
+    const locked = lockedPerks([]);
+    for (const id of ['cross', 'allspin', 'interest', 'eternal']) expect(locked.has(id)).toBe(true);
+  });
+
   it('un reto se cumple y no se repite', () => {
     expect(newUnlocks([], stats({ quads: 3 }))).toEqual(['erosion']);
     expect(newUnlocks(['erosion'], stats({ quads: 3 }))).toEqual([]);

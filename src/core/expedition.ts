@@ -119,7 +119,7 @@ export const RENAMED_CHALLENGE_PERKS: Record<string, string> = { cross: 'erosion
  */
 export const EXPEDITION_EXCLUDED: readonly string[] = [
   'greed', 'chain', 'hammer', 'freehold', 'mono', 'hook', 'lifeline', 'life', 'fury', 'pact', 'collector',
-  'anchor', 'gold', 'b2b', 'vertigo', 'reflex',
+  'anchor', 'gold', 'b2b', 'vertigo', 'reflex', 'cross', 'allspin', 'interest', 'eternal',
 ];
 
 export const CHALLENGE_PERKS = CHALLENGES.map((c) => c.perk);
