@@ -439,8 +439,12 @@ export class Game {
   // ─────────────────────────── Bucle ───────────────────────────
 
   gravityMs(): number {
-    const cap = MODES[this.mode].gravityCap ?? GRAVITY_MS.length;
-    let t = GRAVITY_MS[Math.min(this.level, cap, GRAVITY_MS.length) - 1];
+    const m = MODES[this.mode];
+    // curva propia (Expedición): tras el tope, la velocidad sube un paso cada `gravityStep` niveles
+    const idx = m.gravityCap === undefined
+      ? this.level
+      : Math.min(this.level, m.gravityCap) + Math.floor(Math.max(0, this.level - m.gravityCap) / (m.gravityStep ?? 1));
+    let t = GRAVITY_MS[Math.min(idx, GRAVITY_MS.length) - 1];
     let speed = this.mods.gravitySpeed;
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
@@ -984,6 +988,7 @@ export class Game {
       row.forEach((v, x) => { if (v === 0) holes.add(x); });
     }
     const options = MAGNET_COLS.filter((c) => c !== this.magnetCol && !holes.has(c));
+    // si las seis columnas candidatas tienen basura con hueco, no hay columna: el jefe no prohíbe nada ese tramo
     this.magnetCol = options.length > 0 ? options[Math.floor(this.rng() * options.length)] : -1;
     this.events.emit('bossMagnet', { col: this.magnetCol });
   }
