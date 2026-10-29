@@ -7,6 +7,10 @@ export type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 export interface Mods {
   preview: number;
   holdSlots: number;
+  /** Sin reserva (Presión): no se puede guardar ninguna pieza. */
+  noHold: boolean;
+  /** Nivel desde el que llega la basura (4 normal; 2 con Presión «Basura temprana»). */
+  garbageFrom: number;
   infiniteHold: boolean;
   holdCost: number; // puntos × nivel que cuesta cada hold
   gravitySpeed: number; // multiplicador de velocidad de caída (<1 = más lento)
@@ -89,6 +93,8 @@ export function baseMods(): Mods {
   return {
     preview: 3,
     holdSlots: 1,
+    noHold: false,
+    garbageFrom: 4,
     infiniteHold: false,
     holdCost: 0,
     gravitySpeed: 1,

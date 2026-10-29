@@ -5,7 +5,7 @@ import { Game } from './game';
 import { runReplay } from './replay';
 import { isRankedMode } from '../../server/validate';
 
-const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0 });
+const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0, pressure: [], pressureBest: [] });
 const stats = (o: Partial<RunStats> = {}): RunStats => ({ quads: 0, spins: 0, maxCombo: 0, level: 1, lines: 0, timeMs: 0, ...o });
 
 describe('expedición', () => {
