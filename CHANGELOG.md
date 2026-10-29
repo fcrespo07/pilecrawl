@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.40.0 — 2026-10-29
+- (#93) Pilecrawl en **inglés**: la portada, el selector de modos, los paneles y el pie se traducen. Se elige en Ajustes → Idioma (por defecto, el del navegador). El resto del juego sigue en español por ahora. Además, adaptador del SDK de **CrazyGames** que solo se activa en el build de portal (`VITE_PORTAL=crazygames`); en pilecrawl.fun no cambia nada. En Expedición, el aviso «Desbloqueado» ya no anuncia rarezas que esa modalidad no desbloquea.
+
 ## 0.39.0 — 2026-10-29
 - (#87) **Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (los movimientos a izquierda y derecha se invierten en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes y sin cambios de reglas.
 
