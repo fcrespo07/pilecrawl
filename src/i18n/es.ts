@@ -163,6 +163,15 @@ export const es = {
   "over.victory": "Victoria",
   "over.pressure": "Presión",
   "over.perkOpened": "Perk abierto",
+  // catálogo y Expedición (pantalla)
+  "nav.back": "Volver",
+  "catalog.aria": "Catálogo y puntuación",
+  "exp.play": "Jugar Expedición",
+  "exp.shards": "Fragmentos",
+  "exp.runs": "Expediciones",
+  "exp.best": "Mejor nivel",
+  "exp.wins": "Victorias",
+  "exp.note": "Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.",
 } as const;
 
 export type Key = keyof typeof es;
