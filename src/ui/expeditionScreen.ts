@@ -50,6 +50,7 @@ export function renderExpedition(root: HTMLElement) {
   const mult = `×${pressureMult(chosen).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   root.querySelector('#exp-shards')!.textContent = fmt(save.shards);
   root.querySelector('#exp-runs')!.textContent = fmt(save.runs);
+  root.querySelector('#exp-best')!.textContent = String(save.bestLevel);
   root.querySelector('#exp-body')!.innerHTML =
     `<section class="home-card"><h2>Presión <small>${chosen}/${allowed} · fragmentos ${mult}</small></h2><p class="home-note">Antes de jugar puedes endurecer la partida. Cada condición activa vale 1 punto y cada punto suma un 25 % a los fragmentos que das. Solo afecta a la Expedición.</p><div class="cat-grid">${pressure}</div></section>` +
     `<section class="home-card"><h2>Mejoras permanentes</h2><div class="cat-grid">${items}</div></section>` +
