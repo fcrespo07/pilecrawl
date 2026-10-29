@@ -8,6 +8,7 @@ import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
 import { perkName } from '../core/expedition';
+import { pressureMult } from '../core/pressure';
 import { STAGE_LEVELS, stageOf } from '../core/bosses';
 import { loadBest, submitScore } from '../records';
 import { keyName } from '../settings';
@@ -177,7 +178,7 @@ export class UI {
   }
 
   /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
-  showGameOver(prize: { shards: number; unlocked: string[] } | null = null) {
+  showGameOver(prize: { shards: number; unlocked: string[]; points: number } | null = null) {
     const g = this.game;
     // el laboratorio falsea la partida: ni récord ni ranking
     const isBest = !g.sandbox && submitScore(g.mode, this.date, g.score);
@@ -206,6 +207,7 @@ export class UI {
       stat('Mejor nivel', loadMeta().bestLevel) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
       (prize ? stat('Fragmentos', `+${fmt(prize.shards)}`) : '') +
+      (prize?.points ? stat('Presión', `${prize.points} · ×${pressureMult(prize.points).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) : '') +
       (prize?.unlocked.length ? stat('Perk abierto', prize.unlocked.map(perkName).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     const share = $('share-btn');

@@ -1369,6 +1369,11 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
 .exp-item .home-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
 .exp-done .b-name small { color: var(--hi); }
 .exp-max { display: inline-block; margin-top: 10px; font-size: 14px; color: var(--hi); }
+/* Presión: cada condición es un botón que se activa y desactiva; las bloqueadas no responden */
+button.exp-press { display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+button.exp-press:disabled { cursor: default; opacity: 0.45; }
+.exp-press.exp-on { outline: 4px solid var(--hi); outline-offset: -4px; }
+.exp-press.exp-on .b-name small { color: var(--hi); }
 #expedition .home-card { margin: 18px 0; }
 #expedition .home-card .home-btn { margin-top: 16px; }
 #expedition .home-lead { text-align: left; }
