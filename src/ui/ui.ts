@@ -185,7 +185,8 @@ export class UI {
     const timeUp = g.endReason === 'time';
     $('over-mode').textContent = this.modeTitle();
     const title = $('over-title');
-    title.textContent = timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
+    const won = g.endReason === 'victory';
+    title.textContent = won ? 'VICTORIA' : timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
     const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';

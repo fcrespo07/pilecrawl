@@ -7,7 +7,7 @@ import {
 } from './streak';
 import type { SkinId } from '../fx/skins';
 import { MODES, type ModeId } from './modes';
-import { bossForLevel, DRIP_EVERY, isBossLevel, MAGNET_COLS, MAGNET_EVERY, type BossDef } from './bosses';
+import { ALUD_EVERY, bossForLevel, COUNTDOWN_STEPS, DRIP_EVERY, isBossLevel, MAGNET_COLS, MAGNET_EVERY, MIRROR_BURST, MIRROR_FLIPPED, type BossDef, type RuleId } from './bosses';
 import { makeRng, randomSeed, type Rng } from './rng';
 import { applyUpgrades, level as expLevel, lockedPerks, type Owned } from './expedition';
 
@@ -45,7 +45,7 @@ export type SpinKind = 'full' | 'mini' | null;
 export type Cell = [number, number];
 export type GameState = 'ready' | 'playing' | 'choosing' | 'paused' | 'over';
 /** Por qué terminó la partida: tablero lleno o fin del tiempo (contrarreloj). */
-export type EndReason = 'topout' | 'time';
+export type EndReason = 'topout' | 'time' | 'victory';
 
 export interface ClearInfo {
   rows: number[];
@@ -135,7 +135,7 @@ export const REROLL_EVERY_LEVELS = 5;
 export const SOFT_DROP_MS = 40;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 16;
+export const RULES_VERSION = 17;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;
@@ -273,6 +273,10 @@ export class Game {
   blessedOffer = false;
   /** La oferta actual premia haber superado un nivel jefe: épica o mejor, sin maldiciones. */
   bossOffer = false;
+  /** Pasos del nivel jefe (para Cuenta atrás). */
+  bossSteps = 0;
+  /** Se ha vencido al Monolito: la partida acaba en victoria al terminar la pieza. */
+  victory = false;
   /** Columna prohibida de Imán (-1: ninguna). */
   magnetCol = -1;
   pendingLevelUps = 0;
@@ -354,6 +358,8 @@ export class Game {
     this.cursedOffer = false;
     this.blessedOffer = false;
     this.bossOffer = false;
+    this.bossSteps = 0;
+    this.victory = false;
     this.magnetCol = -1;
     this.pendingLevelUps = 0;
     this.bonusOffers = 0;
@@ -516,8 +522,10 @@ export class Game {
     if (this.state !== 'playing' || !this.active) return false;
     this.record([this.steps, 'move', dx]);
     const a = this.active;
-    if (this.collides(a.def, a.x + dx, a.y, a.rot)) return false;
-    a.x += dx;
+    // Espejo: en las primeras piezas de cada tanda, izquierda y derecha se cambian
+    const step = this.bossHas('mirror') && this.piecesLocked % MIRROR_BURST < MIRROR_FLIPPED ? -dx : dx;
+    if (this.collides(a.def, a.x + step, a.y, a.rot)) return false;
+    a.x += step;
     this.lastWasRotate = false;
     this.resetLockOnMove();
     this.events.emit('move', undefined);
@@ -593,7 +601,7 @@ export class Game {
 
   /** Piezas de la cola que se ven (la maldición Cola ciega deja solo la siguiente). */
   previewCount(): number {
-    return this.mods.blindQueue ? 1 : this.mods.preview;
+    return this.mods.blindQueue || this.bossHas('fog') ? 1 : this.mods.preview;
   }
 
   ghostY(): number {
@@ -611,7 +619,7 @@ export class Game {
     if (this.mods.instinct) speed *= this.inDanger() ? 0.3 : 1.1;
     if (this.active?.gold) speed *= 2;
     if (this.active?.heavy) speed *= 2;
-    if (this.bossNow()?.id === 'gravity') speed *= 2;
+    if (this.bossHas('gravity')) speed *= 2;
     if (this.hyperActive('slowmo')) speed *= 0.12;
     if (this.skillLeft > 0) speed *= 0.0001;
     speed *= this.labGravity;
@@ -650,6 +658,7 @@ export class Game {
     if (this.skillLeft > 0) this.skillLeft--;
     if (this.hyperLeft > 0 && --this.hyperLeft === 0) this.events.emit('hyperEnd', { hyper: this.hyper! });
     this.update(STEP_MS);
+    this.bossTick();
     // si la última pieza sube de nivel justo al acabar, no se llega a elegir carta
     if (this.timeLeftMs() <= 0 && (this.state === 'playing' || this.state === 'choosing')) this.endRun('time');
   }
@@ -1056,6 +1065,10 @@ export class Game {
     if (m.driftEvery > 0 && this.piecesLocked % m.driftEvery === 0) this.driftBoard();
     if (m.rouletteEvery > 0 && this.piecesLocked % m.rouletteEvery === 0) this.spinRoulette();
 
+    if (this.victory) {
+      this.endRun('victory');
+      return;
+    }
     if (this.pendingLevelUps > 0) {
       if (m.levelClearRows > 0) this.breathe(m.levelClearRows * this.pendingLevelUps);
       this.beginChoice();
@@ -1120,14 +1133,20 @@ export class Game {
 
   /** Jefe activo en el nivel actual (null si no es nivel jefe o el modo no tiene jefes). */
   bossNow(): BossDef | null {
-    return MODES[this.mode].bosses ? bossForLevel(this.level) : null;
+    return MODES[this.mode].bosses ? bossForLevel(this.level, this.seed) : null;
+  }
+
+  /** Si la regla está activa en el nivel jefe actual (el Monolito lleva dos). */
+  bossHas(rule: RuleId): boolean {
+    return this.bossNow()?.rules.includes(rule) ?? false;
   }
 
   /** Al cambiar de nivel: prepara (o quita) lo que dura el nivel jefe. */
   private syncBoss() {
     const boss = this.bossNow();
     this.magnetCol = -1;
-    if (boss?.id === 'magnet') this.pickMagnetCol();
+    this.bossSteps = 0;
+    if (this.bossHas('magnet')) this.pickMagnetCol();
     this.events.emit('boss', { boss, level: this.level });
   }
 
@@ -1139,9 +1158,7 @@ export class Game {
 
   /** Efectos de jefe tras fijar una pieza. */
   private bossAfterLock() {
-    const boss = this.bossNow();
-    if (!boss) return;
-    if (boss.id === 'drip' && this.piecesLocked % DRIP_EVERY === 0) {
+    if (this.bossHas('drip') && this.piecesLocked % DRIP_EVERY === 0) {
       const x = Math.floor(this.rng() * COLS);
       let top = 0;
       while (top < ROWS && this.board[top][x] === 0) top++;
@@ -1152,7 +1169,29 @@ export class Game {
         this.events.emit('bossDrop', { x, y });
       }
     }
-    if (boss.id === 'magnet' && this.piecesLocked % MAGNET_EVERY === 0) this.pickMagnetCol();
+    if (this.bossHas('magnet') && this.piecesLocked % MAGNET_EVERY === 0) this.pickMagnetCol();
+    if (this.bossHas('alud') && this.piecesLocked % ALUD_EVERY === 0) {
+      // Alud: la fila más alta del montón se desprende y no da puntos
+      const top = this.board.findIndex((r) => r.some((v) => v !== 0));
+      if (top >= 0) {
+        const values = [...this.board[top]];
+        this.removeRows([top]);
+        this.events.emit('breather', { rows: [values] });
+      }
+    }
+  }
+
+  /** Cuenta atrás: una fila de basura cada 10 segundos de juego (los pasos no corren en pausa). */
+  private bossTick() {
+    if (this.state !== 'playing' || !this.bossHas('countdown')) return;
+    if (++this.bossSteps % COUNTDOWN_STEPS !== 0) return;
+    if (!this.addGarbage()) return;
+    // la fila sube bajo la pieza que cae: si la empuja, sube con ella; si no cabe, es tope
+    const a = this.active;
+    if (a && this.collides(a.def, a.x, a.y, a.rot)) {
+      a.y--;
+      if (this.collides(a.def, a.x, a.y, a.rot)) this.topOut();
+    }
   }
 
   garbageInterval(): number {
@@ -1223,7 +1262,7 @@ export class Game {
   private addLevelProgress(n: number) {
     // Atajo: la primera línea de cada nivel vale más
     if (this.mods.shortcut > 0 && this.linesIntoLevel === 0 && n > 0) n += 2 * this.mods.shortcut;
-    if (n >= 2 && this.bossNow()?.id === 'gravity') n *= 2;
+    if (n >= 2 && this.bossHas('gravity')) n *= 2;
     this.linesIntoLevel += n;
     while (this.linesIntoLevel >= this.linesNeeded()) {
       this.linesIntoLevel -= this.linesNeeded();
@@ -1231,6 +1270,7 @@ export class Game {
       this.level++;
       if (beaten) {
         this.rerolls++;
+        if (beaten.id === 'monolith') this.victory = true;
         this.events.emit('bossDown', { boss: beaten, level: this.level - 1 });
       }
       this.pendingLevelUps++;
