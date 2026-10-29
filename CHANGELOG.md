@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
 - (#91) **Expedición: se juega por sus propias reglas.** Los perks de puntos (Codicia, Cadena, Fuego cruzado, Vértigo, Reflejos…) ya no salen en la Expedición: allí los puntos no valen nada. Los retos abren perks que sí salen (Cruz pasa a Erosión, Maestro del giro a Experiencia, Combo eterno a Tahúr, Interés compuesto a Eco). Expedición lleva su propio mejor nivel, que decide las rarezas de sus ofertas, y la pantalla de fin muestra ese récord y no el del arcade.
 
 ## 0.39.0 — 2026-10-29
