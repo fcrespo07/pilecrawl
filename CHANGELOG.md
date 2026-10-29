@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.40.1 — 2026-10-29
+- (#96) Inglés en la pantalla de partida: marcador, mejoras, racha, hiperperk, elección de cartas, pausa y fin de partida se ven en inglés (con el idioma del navegador o el que elijas en Ajustes). Pendiente: nombres y textos de las mejoras, catálogo, Expedición, tutorial y el resto de ajustes.
+
 ## 0.40.0 — 2026-10-29
 - (#95) **Expedición: victorias con premio y pantalla propia.** Vencer al Monolito da 150 fragmentos extra y se cuenta en la pantalla de la Expedición. Ganar abre la Presión siguiente (antes se abría al llegar al nivel 6). La victoria tiene su pantalla dorada, distinta de la derrota. Dos mejoras nuevas: Suerte (más mejoras raras y épicas) y Reserva extra (una pieza más en la reserva). Las Presiones ganadas antes no se conservan: se gana otra vez. Suerte tiene un solo nivel (120 fragmentos) y Bolsillo doble suma a la reserva en vez de fijarla.
 - (#92) En móvil vertical, las mejoras se ven bajo el tablero en una franja (tocarla abre la pausa). Pausa en móvil: los controles son gestos (arrastrar, tocar, tirón, deslizar) en vez de teclas, los botones de la pausa tienen margen en el borde, y en táctil se quitan las pistas de tecla de cartas, fin de partida y portada. Solo presentación.

@@ -1,3 +1,4 @@
+import { locale, t } from '../i18n';
 import { Game, STEP_MS } from '../core/game';
 import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
@@ -19,7 +20,7 @@ const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legen
 /** Las maldiciones llevan su propio color y etiqueta en vez de la rareza. */
 export const rarityKey = (p: PerkDef) => (p.curse ? 'curse' : p.rarity);
 export const rarityLabel = (p: PerkDef) => (p.curse ? 'Maldición' : RARITY_LABEL[p.rarity]);
-const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
+const fmt = (n: number) => Math.round(n).toLocaleString(locale());
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const pctTxt = (x: number) => `${Math.round(x * 100)}%`;
 /** Ms entre carta y carta al destapar una oferta nueva, y tras un reroll. */
@@ -69,6 +70,8 @@ const CARD_MARK = (() => {
 })();
 
 export class UI {
+  /** Cartas de la oferta abierta: la pista «Pulsa 1 2 3 4» muestra el 4 solo si hay cuatro. */
+  private offerCount = 0;
   private shownScore = 0;
   private perksOpen = false;
   private picking = false;
@@ -146,6 +149,11 @@ export class UI {
     $('hud').classList.add('visible');
   }
 
+  /** Tras cambiar de idioma se repinta la pista de la oferta, y con ella el 4 vuelve a esconderse: se recoloca. */
+  refreshOfferHint() {
+    $('key4').hidden = this.offerCount < 4;
+  }
+
   setPaused(p: boolean) {
     if (p) {
       this.renderBuild();
@@ -175,7 +183,7 @@ export class UI {
             </div>`;
           })
           .join('')
-      : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>');
+      : `<div class="empty">${t('build.empty')}</div>`);
   }
 
   /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
@@ -190,17 +198,17 @@ export class UI {
     const won = g.endReason === 'victory';
     // la victoria tiene su propia pantalla (dorada), distinta de la derrota
     $('over').classList.toggle('win', won);
-    title.textContent = won ? 'VICTORIA' : timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
+    title.textContent = won ? t('over.won') : timeUp ? t('over.time') : t('over.title');
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
-    const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';
+    const bestLabel = g.mode === 'daily' ? t('over.bestDaily') : t('over.best');
     const expBest = prize ? loadExpedition().bestLevel : 0;
     const newRecord = isBest || (prize?.newBest ?? false);
     $('over-best').textContent = g.sandbox
-      ? 'Laboratorio: no puntúa'
+      ? t('over.lab')
       : prize
-        ? prize.newBest ? '¡Nuevo mejor nivel!' : `Mejor nivel ${expBest}`
-        : isBest ? `¡Nuevo ${bestLabel.toLowerCase()}!` : `${bestLabel} ${fmt(best)}`;
+        ? prize.newBest ? t('over.newBestLevel') : `${t('over.bestLevel')} ${expBest}`
+        : isBest ? (g.mode === 'daily' ? t('over.newBestDaily') : t('over.newBest')) : `${bestLabel} ${fmt(best)}`;
     $('over-best').classList.toggle('record', newRecord);
     const stat = (label: string, v: string | number) => `<div><span>${label}</span><b>${v}</b></div>`;
     // rarezas que esta partida ha desbloqueado: su nivel está entre el mejor anterior y el actual
@@ -210,17 +218,17 @@ export class UI {
       .filter((r) => UNLOCK_LEVEL[r] > prevBest && UNLOCK_LEVEL[r] <= g.level)
       .map((r) => RARITY_LABEL[r]);
     $('over-stats').innerHTML =
-      stat('Nivel', g.level) +
-      stat('Líneas', g.lines) +
-      stat('Cuádruples', g.quads) +
-      stat('Combo máx.', Math.max(0, g.maxCombo)) +
-      stat('Tiempo', clock(g.time)) +
-      (prize ? '' : stat('Mejor nivel', loadMeta().bestLevel)) +
-      (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
-      (prize ? stat('Fragmentos', `+${fmt(prize.shards - prize.victory)}`) : '') +
-      (prize?.victory ? stat('Victoria', `+${fmt(prize.victory)}`) : '') +
-      (prize?.points ? stat('Presión', `${prize.points} · ×${pressureMult(prize.points).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) : '') +
-      (prize?.unlocked.length ? stat('Perk abierto', prize.unlocked.map(perkName).join(', ')) : '');
+      stat(t('over.level'), g.level) +
+      stat(t('over.lines'), g.lines) +
+      stat(t('over.quads'), g.quads) +
+      stat(t('over.combo'), Math.max(0, g.maxCombo)) +
+      stat(t('over.clock'), clock(g.time)) +
+      (prize ? '' : stat(t('over.bestLevel'), loadMeta().bestLevel)) +
+      (unlocked.length ? stat(t('over.unlocked'), unlocked.join(', ')) : '') +
+      (prize ? stat(t('over.shards'), `+${fmt(prize.shards - prize.victory)}`) : '') +
+      (prize?.victory ? stat(t('over.victory'), `+${fmt(prize.victory)}`) : '') +
+      (prize?.points ? stat(t('over.pressure'), `${prize.points} · ×${pressureMult(prize.points).toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) : '') +
+      (prize?.unlocked.length ? stat(t('over.perkOpened'), prize.unlocked.map(perkName).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     const share = $('share-btn');
     share.hidden = g.sandbox || g.mode === 'tutorial';
@@ -278,13 +286,14 @@ export class UI {
     for (let i = 0; i < n; i++)
       setTimeout(() => { if (gen === this.revealGen && this.perksOpen) audio.reveal(i); }, REVEAL_FLIP_MS + i * this.revealStep);
     box.classList.toggle('four', n > 3);
+    this.offerCount = n;
     $('key4').hidden = n < 4;
     if (hyper) g.hyperChoices.forEach((h, i) => box.appendChild(this.makeCard(h, i, 'r-hyper', 'Hiperperk', 0, '', hyperFoot(h))));
     else g.choices.forEach((p, i) => box.appendChild(this.makeCard(p, i, `r-${rarityKey(p)}`, rarityLabel(p), this.game.perkStacks(p.id), this.stackLabel(this.game.perkStacks(p.id), p.max), '')));
     // oferta maldita: aviso claro en el título y el color de las maldiciones
     const cursed = !hyper && g.cursedOffer;
     $('perks').classList.toggle('cursed', cursed);
-    $('perk-stripe').textContent = hyper ? 'Hiperperk por racha' : cursed ? 'Oferta maldita' : g.bossOffer ? 'Jefe derrotado' : 'Subida de nivel';
+    $('perk-stripe').textContent = hyper ? t('perk.stripeHyper') : cursed ? t('perk.stripeCursed') : g.bossOffer ? t('perk.stripeBoss') : t('perk.stripe');
     $('perk-sub').textContent = hyper
       ? 'Tu racha ha traído una hiperperk: elige una, solo hay una por partida'
       : cursed
@@ -612,7 +621,7 @@ export class UI {
     this.shownScore += diff * (1 - Math.exp(-dt / 90));
     if (Math.abs(diff) < 1) this.shownScore = g.score;
     $('score').textContent = fmt(this.shownScore);
-    $('mult').textContent = `×${g.scoreMultNow().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    $('mult').textContent = `×${g.scoreMultNow().toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     $('level').textContent = pad2(g.level);
     $('combo').textContent = g.combo > 0 ? `×${g.combo}` : '—';
     $('b2b-box').classList.toggle('on', g.b2b);
@@ -622,7 +631,7 @@ export class UI {
     const timedKey = timed ? `${Math.ceil(left / 1000)}` : '';
     if (timedKey !== this.timedKey || !timed) {
       this.timedKey = timedKey;
-      $('time-label').textContent = timed ? 'Queda' : 'Tiempo';
+      $('time-label').textContent = timed ? t('hud.timeLeft') : t('hud.time');
       $('time').textContent = timed ? clock(left, true) : clock(g.time);
       $('time-box').classList.toggle('urgent', timed && left <= 10_000);
     }
