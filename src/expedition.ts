@@ -1,7 +1,7 @@
 // Partida guardada de la Expedición en localStorage: fragmentos, mejoras compradas, retos y Presión.
 // Es del jugador y no cuenta para ningún ranking, así que no hace falta validarla en el servidor.
-import { buy, CHALLENGE_PERKS, newUnlocks, RENAMED_CHALLENGE_PERKS, shardsFor, UPGRADE_BY_ID, UPGRADES, type ExpeditionSave, type Owned, type RunStats, type UpgradeId } from './core/expedition';
-import { allowedPoints, cleanPressure, PRESSURE_BY_ID, pressureMult, type PressureId } from './core/pressure';
+import { buy, CHALLENGE_PERKS, newUnlocks, RENAMED_CHALLENGE_PERKS, shardsFor, UPGRADE_BY_ID, UPGRADES, VICTORY_SHARDS, type ExpeditionSave, type Owned, type RunStats, type UpgradeId } from './core/expedition';
+import { allowedPoints, cleanPressure, PRESSURE, PRESSURE_BY_ID, pressureMult, type PressureId } from './core/pressure';
 
 const KEY = 'blockrogue.exp';
 
@@ -11,7 +11,7 @@ const clean = (v: unknown): number => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-const EMPTY = (): ExpeditionSave => ({ shards: 0, owned: {}, unlocked: [], runs: 0, bestLevel: 0, wins: 0, pressure: [], pressureBest: [] });
+const EMPTY = (): ExpeditionSave => ({ shards: 0, owned: {}, unlocked: [], runs: 0, bestLevel: 0, wins: 0, pressure: [], pressureWins: [] });
 
 export function loadExpedition(): ExpeditionSave {
   try {
@@ -25,9 +25,11 @@ export function loadExpedition(): ExpeditionSave {
     // los retos cambiados conservan su cumplimiento: el perk nuevo queda abierto
     const kept = Array.isArray(p.unlocked) ? (p.unlocked as unknown[]).map((id) => (typeof id === 'string' && RENAMED_CHALLENGE_PERKS[id]) || id) : [];
     const unlocked = CHALLENGE_PERKS.filter((id) => kept.includes(id));
-    const pressure = Array.isArray(p.pressure) ? cleanPressure(p.pressure) : [];
-    const pressureBest = Array.isArray(p.pressureBest) ? p.pressureBest.map(clean) : [];
-    return { shards: clean(p.shards), owned, unlocked, runs: clean(p.runs), bestLevel: clean(p.bestLevel), wins: clean(p.wins), pressure, pressureBest };
+    const pressureWins = Array.isArray(p.pressureWins) ? p.pressureWins.map(clean) : [];
+    // solo las condiciones ya desbloqueadas: si faltan victorias, no quedan activas a escondidas
+    const open = PRESSURE.map((x) => x.id).slice(0, allowedPoints(pressureWins));
+    const pressure = Array.isArray(p.pressure) ? cleanPressure(p.pressure).filter((id) => open.includes(id)) : [];
+    return { shards: clean(p.shards), owned, unlocked, runs: clean(p.runs), bestLevel: clean(p.bestLevel), wins: clean(p.wins), pressure, pressureWins };
   } catch {
     /* sin almacenamiento o JSON roto: se empieza de cero */
     return EMPTY();
@@ -46,24 +48,25 @@ function save(s: ExpeditionSave) {
  * Anota una partida terminada: fragmentos (con su Presión), mejor nivel, victorias, perks de los retos
  * cumplidos y mejor nivel con esa Presión. Devuelve lo necesario para la pantalla de fin.
  */
-export function awardRun(stats: RunStats, pressure: readonly PressureId[], won: boolean): { shards: number; unlocked: string[]; points: number; newBest: boolean } {
+export function awardRun(stats: RunStats, pressure: readonly PressureId[], won: boolean): { shards: number; victory: number; unlocked: string[]; points: number; newBest: boolean } {
   const s = loadExpedition();
   const points = pressure.length;
-  const shards = Math.floor(shardsFor(stats.level, stats.lines) * pressureMult(points));
+  const run = Math.floor(shardsFor(stats.level, stats.lines) * pressureMult(points));
+  const victory = won ? VICTORY_SHARDS : 0;
   const unlocked = newUnlocks(s.unlocked, stats);
-  const pressureBest = [...s.pressureBest];
-  pressureBest[points] = Math.max(pressureBest[points] ?? 0, stats.level);
+  const pressureWins = [...s.pressureWins];
+  if (won) pressureWins[points] = (pressureWins[points] ?? 0) + 1;
   const newBest = stats.level > s.bestLevel;
   save({
     ...s,
-    shards: s.shards + shards,
+    shards: s.shards + run + victory,
     unlocked: [...s.unlocked, ...unlocked],
     runs: s.runs + 1,
     bestLevel: Math.max(s.bestLevel, stats.level),
     wins: s.wins + (won ? 1 : 0),
-    pressureBest,
+    pressureWins,
   });
-  return { shards, unlocked, points, newBest };
+  return { shards: run + victory, victory, unlocked, points, newBest };
 }
 
 /** Compra un nivel de la mejora. Devuelve si se pudo. */
@@ -76,7 +79,7 @@ export function buyUpgrade(id: UpgradeId): boolean {
 }
 
 /** Puntos de Presión que se pueden elegir ahora. */
-export const pressureAllowed = (s: ExpeditionSave): number => allowedPoints(s.pressureBest);
+export const pressureAllowed = (s: ExpeditionSave): number => allowedPoints(s.pressureWins);
 
 /** Activa o desactiva una condición para la próxima partida. Solo si ya está desbloqueada. */
 export function togglePressure(id: PressureId): boolean {

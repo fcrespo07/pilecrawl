@@ -179,7 +179,7 @@ export class UI {
   }
 
   /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
-  showGameOver(prize: { shards: number; unlocked: string[]; points: number; newBest: boolean } | null = null) {
+  showGameOver(prize: { shards: number; victory: number; unlocked: string[]; points: number; newBest: boolean } | null = null) {
     const g = this.game;
     // el laboratorio falsea la partida: ni récord ni ranking. La Expedición no puntúa: su récord es el nivel.
     const isBest = !g.sandbox && !prize && g.mode !== 'expedition' && submitScore(g.mode, this.date, g.score);
@@ -188,6 +188,8 @@ export class UI {
     $('over-mode').textContent = this.modeTitle();
     const title = $('over-title');
     const won = g.endReason === 'victory';
+    // la victoria tiene su propia pantalla (dorada), distinta de la derrota
+    $('over').classList.toggle('win', won);
     title.textContent = won ? 'VICTORIA' : timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
@@ -215,7 +217,8 @@ export class UI {
       stat('Tiempo', clock(g.time)) +
       (prize ? '' : stat('Mejor nivel', loadMeta().bestLevel)) +
       (unlocked.length ? stat('Desbloqueado', unlocked.join(', ')) : '') +
-      (prize ? stat('Fragmentos', `+${fmt(prize.shards)}`) : '') +
+      (prize ? stat('Fragmentos', `+${fmt(prize.shards - prize.victory)}`) : '') +
+      (prize?.victory ? stat('Victoria', `+${fmt(prize.victory)}`) : '') +
       (prize?.points ? stat('Presión', `${prize.points} · ×${pressureMult(prize.points).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`) : '') +
       (prize?.unlocked.length ? stat('Perk abierto', prize.unlocked.map(perkName).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');

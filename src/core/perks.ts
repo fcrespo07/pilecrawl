@@ -269,7 +269,7 @@ export const PERKS: PerkDef[] = [
     id: 'doublehold', name: 'Bolsillo doble', rarity: 'rare', max: 1,
     pros: () => ['Guardas <b>2 piezas</b> en el hold'],
     cons: () => ['Ves <b>1 pieza menos</b> en la cola'],
-    apply: (m) => { m.holdSlots = 2; m.preview = Math.max(1, m.preview - 1); },
+    apply: (m) => { m.holdSlots += 1; m.preview = Math.max(1, m.preview - 1); },
   },
   {
     id: 'freehold', name: 'Hold libre', rarity: 'rare', max: 1,

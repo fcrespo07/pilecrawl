@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { applyUpgrades, VICTORY_SHARDS } from './expedition';
+import { baseMods } from './perks';
 import { CHALLENGE_PERKS, EXPEDITION_EXCLUDED, buy, CHALLENGES, level, lockedPerks, newUnlocks, nextCost, shardsFor, UPGRADES, type ExpeditionSave, type RunStats } from './expedition';
 import { PERK_BY_ID } from './perks';
 import { Game } from './game';
 import { runReplay } from './replay';
 import { isRankedMode } from '../../server/validate';
 
-const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0, bestLevel: 0, wins: 0, pressure: [], pressureBest: [] });
+const save = (shards: number): ExpeditionSave => ({ shards, owned: {}, unlocked: [], runs: 0, bestLevel: 0, wins: 0, pressure: [], pressureWins: [] });
 const stats = (o: Partial<RunStats> = {}): RunStats => ({ quads: 0, spins: 0, maxCombo: 0, level: 1, lines: 0, timeMs: 0, ...o });
 
 describe('expedición', () => {
@@ -123,5 +125,13 @@ describe('expedición', () => {
       return out;
     };
     expect(offers([])).toEqual(offers(['erosion', 'bomb']));
+  });
+
+  it('Suerte y Reserva extra cambian las reglas base', () => {
+    const m = baseMods();
+    applyUpgrades(m, { suerte: 1, reserva: 1 });
+    expect(m.luck).toBe(1);
+    expect(m.holdSlots).toBe(2);
+    expect(VICTORY_SHARDS).toBeGreaterThan(0);
   });
 });

@@ -1,7 +1,7 @@
 // Presión: condiciones opcionales de la Expedición. Cada una endurece una regla de la partida y
 // vale 1 punto. Los puntos multiplican los fragmentos que da la partida.
-// Se desbloquean en cadena: para tener Presión N hace falta haber llegado al nivel
-// `PRESSURE_UNLOCK_LEVEL` con Presión N-1. Solo cambia Expedición: el arcade no la ve.
+// Se desbloquean en cadena: para tener Presión N hace falta haber ganado (vencer al Monolito) con
+// Presión N-1. Solo cambia Expedición: el arcade no la ve.
 import type { Mods } from './perks';
 
 export type PressureId = 'garbage' | 'nohold' | 'twochoices' | 'onepiece';
@@ -25,9 +25,6 @@ export const PRESSURE_BY_ID = Object.fromEntries(PRESSURE.map((p) => [p.id, p]))
 /** Cuánto suma cada punto de Presión al multiplicador de fragmentos. */
 export const PRESSURE_STEP = 0.25;
 
-/** Nivel que hay que alcanzar con Presión N-1 para poder subir a la N. */
-export const PRESSURE_UNLOCK_LEVEL = 6;
-
 /** Ids válidos, sin repetir, en el orden de `PRESSURE`. Lo que no existe se descarta. */
 export function cleanPressure(ids: readonly unknown[]): PressureId[] {
   return PRESSURE.map((p) => p.id).filter((id) => ids.includes(id));
@@ -38,10 +35,10 @@ export function pressureMult(points: number): number {
   return 1 + PRESSURE_STEP * points;
 }
 
-/** Cuántos puntos de Presión se pueden elegir. `bestByPoints[n]` es el mejor nivel con n puntos. */
-export function allowedPoints(bestByPoints: readonly number[]): number {
+/** Cuántos puntos de Presión se pueden elegir. `winsByPoints[n]` son las victorias con n puntos. */
+export function allowedPoints(winsByPoints: readonly number[]): number {
   let n = 0;
-  while (n < PRESSURE.length && (bestByPoints[n] ?? 0) >= PRESSURE_UNLOCK_LEVEL) n++;
+  while (n < PRESSURE.length && (winsByPoints[n] ?? 0) >= 1) n++;
   return n;
 }
 
