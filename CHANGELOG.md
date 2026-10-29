@@ -8,6 +8,7 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 - (#87) **Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (los movimientos a izquierda y derecha se invierten en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes y sin cambios de reglas.
 
 ## 0.38.0 — 2026-10-29
+- (#89) En móvil vertical, el tutorial ya no tapa el marcador, la reserva ni la cola: durante el tutorial se ocultan puntos y nivel y el consejo se ciñe arriba.
 - (#88) **Expedición: Presión.** Antes de jugar puedes activar hasta 4 condiciones que endurecen la partida (basura desde el nivel 2, sin reserva, dos cartas por subida y cola de una pieza). Cada una vale 1 punto y suma un 25 % a los fragmentos. Para tener la Presión N hace falta llegar al nivel 6 con la N-1. Solo Expedición; el resultado sale en la pantalla de fin de partida.
 - (#85) [interno] Código: `game.ts` deja de declarar tipos y constantes, que pasan a `types.ts` y `constants.ts` (sin cambio de reglas ni de comportamiento).
 
