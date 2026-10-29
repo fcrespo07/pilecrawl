@@ -4,6 +4,7 @@ import {
   ACTIONS, ACTION_LABEL, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, mouseOn, resetHandling, resetKeys, setHandling, setMouse,
   type Action,
 } from '../settings';
+import { loadLangSetting, setLangSetting, type LangSetting } from '../i18n';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -24,6 +25,8 @@ export class SettingsUI {
   /** `onKeys`: las teclas han cambiado; hay que repintar las listas y los textos que las nombran. */
   constructor(private onKeys: () => void) {
     $('settings-close').addEventListener('click', () => this.close());
+    const langSel = $('set-lang-select') as HTMLSelectElement;
+    langSel.addEventListener('change', () => setLangSetting(langSel.value as LangSetting));
     // clic fuera del panel
     $('settings').addEventListener('click', (e) => {
       if (e.target === $('settings')) this.close();
@@ -88,6 +91,7 @@ export class SettingsUI {
     this.renderToggles();
     this.renderKeys();
     this.renderHandling();
+    ($('set-lang-select') as HTMLSelectElement).value = loadLangSetting();
     this.say('');
     $('settings').hidden = false;
     ($('settings-close') as HTMLButtonElement).focus();

@@ -1,15 +1,17 @@
 // Selector de modo de la portada: una opción por modo con su récord.
-import { dailyNumber, PLAY_MODE_IDS, MODES, msToNextDaily, type ModeId } from '../core/modes';
+import { dailyNumber, PLAY_MODE_IDS, msToNextDaily, type ModeId } from '../core/modes';
 import * as net from '../net/ranking';
 import { isFirstVisit, loadBest } from '../records';
+import { locale, t } from '../i18n';
 
-const fmt = (n: number) => Math.round(n).toLocaleString('es-ES');
+const fmt = (n: number) => Math.round(n).toLocaleString(locale());
 
 /** «Nuevo en 3 h 12 min»: cuándo empieza el próximo desafío diario. */
 function nextDailyLabel(): string {
   const min = Math.ceil(msToNextDaily(net.now()) / 60_000);
   const h = Math.floor(min / 60);
-  return `Nuevo en ${h ? `${h} h ` : ''}${min % 60} min`;
+  const time = h ? t('time.hm', { h, m: min % 60 }) : t('time.m', { m: min % 60 });
+  return t('mode.newIn', { time });
 }
 
 export class ModeSelect {
@@ -20,7 +22,7 @@ export class ModeSelect {
     // primera visita: el tutorial es lo primero que se ve, marcado. Luego, el último modo elegido
     this._mode = isFirstVisit() ? 'tutorial' : initial;
     root.setAttribute('role', 'radiogroup');
-    root.setAttribute('aria-label', 'Modo de juego');
+    root.setAttribute('aria-label', t('mode.group'));
     root.addEventListener('change', (e) => {
       const input = e.target as HTMLInputElement;
       if (input.name !== 'mode') return;
@@ -29,6 +31,8 @@ export class ModeSelect {
     });
     this.refresh();
     // la cuenta atrás del diario se actualiza sola; al cambiar de día se repinta entero
+    // al cambiar de idioma se repinta con los textos nuevos
+    window.addEventListener('langchange', () => this.refresh());
     window.setInterval(() => {
       if (net.dailyDate() !== this.date) this.refresh();
       else this.root.querySelectorAll('[data-next]').forEach((el) => (el.textContent = nextDailyLabel()));
@@ -47,15 +51,14 @@ export class ModeSelect {
     if (!first && this._mode === 'tutorial') this._mode = 'normal';
     const ids: ModeId[] = first ? ['tutorial', ...PLAY_MODE_IDS] : PLAY_MODE_IDS;
     this.root.innerHTML = ids.map((id) => {
-      const m = MODES[id];
-      const name = id === 'daily' ? `${m.name} <i>#${dailyNumber(date)}</i>` : m.name;
+      const name = id === 'daily' ? `${t(`mode.${id}.name`)} <i>#${dailyNumber(date)}</i>` : t(`mode.${id}.name`);
       const best = loadBest(id, date);
-      const bestLabel = id === 'daily' ? 'Hoy' : 'Récord';
-      const small = id === 'tutorial' ? '<small>Empieza aquí</small>' : `<small>${bestLabel} <em>${best ? fmt(best) : '—'}</em>${id === 'daily' ? ` · <time data-next>${nextDailyLabel()}</time>` : ''}</small>`;
+      const bestLabel = id === 'daily' ? t('mode.today') : t('mode.best');
+      const small = id === 'tutorial' ? `<small>${t('mode.startHere')}</small>` : `<small>${bestLabel} <em>${best ? fmt(best) : '—'}</em>${id === 'daily' ? ` · <time data-next>${nextDailyLabel()}</time>` : ''}</small>`;
       return `<label class="mode-opt">
         <input type="radio" name="mode" value="${id}"${id === this._mode ? ' checked' : ''} />
         <b>${name}</b>
-        <span>${m.desc}</span>
+        <span>${t(`mode.${id}.desc`)}</span>
         ${small}
       </label>`;
     }).join('');
