@@ -195,7 +195,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'vision', name: 'Visión', rarity: 'common', max: 3,
     pros: () => ['Ves <b>+1 pieza</b> en la cola'],
-    apply: (m) => { m.preview += 1; },
+    cons: () => ['Las piezas se fijan <b>60 ms</b> antes'],
+    apply: (m) => { m.preview += 1; m.lockDelay -= 60; },
   },
   {
     id: 'calm', name: 'Pulso tranquilo', rarity: 'common', max: 3,
@@ -206,7 +207,8 @@ export const PERKS: PerkDef[] = [
     // el comodín sin tope: la oferta nunca se queda sin cartas (ver perks.test.ts)
     id: 'dice', name: 'Dados', rarity: 'common', max: 99,
     pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
-    apply: (_m, g) => { g.rerolls += 2; },
+    cons: () => ['Las <b>ofertas malditas</b> salen un 3 % más a menudo'],
+    apply: (m, g) => { g.rerolls += 2; m.curseChance = Math.min(0.3, m.curseChance + 0.03); },
   },
   {
     id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
@@ -223,12 +225,14 @@ export const PERKS: PerkDef[] = [
   {
     id: 'chain', name: 'Cadena', rarity: 'common', max: 5,
     pros: () => ['El bonus de combo sube un <b>60%</b>'],
-    apply: (m) => { m.comboMult += 0.6; },
+    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
+    apply: (m) => { m.comboMult += 0.6; m.gravitySpeed *= 1.04; },
   },
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
     pros: () => ['La basura tarda <b>3 piezas más</b> en subir'],
-    apply: (m) => { m.garbageDelay += 3; },
+    cons: () => ['Pierdes <b>1 cambio de cartas</b>'],
+    apply: (m, g) => { m.garbageDelay += 3; g.rerolls = Math.max(0, g.rerolls - 1); },
   },
   {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
@@ -239,7 +243,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'harvest', name: 'Cosecha', rarity: 'common', max: 2,
     pros: (s) => [`Cada <b>${s > 1 ? 6 : 10} líneas</b> que limpias ganas <b>+1 reroll</b>`],
-    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; },
+    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
+    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; m.gravitySpeed *= 1.04; },
   },
   {
     id: 'reflex', name: 'Reflejos', rarity: 'common', max: 3,
@@ -263,7 +268,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
     pros: () => ['Las ofertas traen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> (si ya están desbloqueadas)'],
-    apply: (m) => { m.luck += 1; },
+    cons: () => ['Cada Trébol quita <b>1 línea</b> de ventaja: subir de nivel pide 1 más'],
+    apply: (m) => { m.luck += 1; m.linesReduction -= 1; },
   },
   {
     id: 'doublehold', name: 'Bolsillo doble', rarity: 'rare', max: 1,
@@ -280,12 +286,14 @@ export const PERKS: PerkDef[] = [
   {
     id: 'bomb', name: 'Bomba', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[12, 9, 6][s - 1]} piezas</b> sale una bomba`, 'Al fijarse revienta un área de <b>5×5</b>'],
-    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; },
+    cons: () => ['Las piezas caen un <b>5 %</b> más rápido'],
+    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; m.gravitySpeed *= 1.05; },
   },
   {
     id: 'drill', name: 'Taladro', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[14, 11, 8][s - 1]} piezas</b> sale un taladro que destruye la fila de abajo`, 'Cuenta como <b>línea</b>'],
-    apply: (m) => { m.drillEvery = m.drillEvery ? m.drillEvery - 3 : 14; },
+    cons: () => ['Eliges entre <b>una carta menos</b> (mínimo 2)'],
+    apply: (m) => { m.drillEvery = m.drillEvery ? m.drillEvery - 3 : 14; m.choices = Math.max(2, m.choices - 1); },
   },
   {
     id: 'gold', name: 'Fiebre del oro', rarity: 'rare', max: 3,
@@ -302,7 +310,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'exp', name: 'Experiencia', rarity: 'rare', max: 3,
     pros: () => ['Los cuádruples y los giros suman <b>2 líneas más</b> de progreso de nivel'],
-    apply: (m) => { m.expBonus += 2; },
+    cons: () => ['La basura sube <b>1 pieza</b> antes'],
+    apply: (m) => { m.expBonus += 2; m.garbageDelay -= 1; },
   },
   {
     id: 'mono', name: 'Monominó', rarity: 'rare', max: 2,
@@ -349,12 +358,14 @@ export const PERKS: PerkDef[] = [
   {
     id: 'domino', name: 'Dominó', rarity: 'rare', max: 2,
     pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
-    apply: (m) => { m.extraPieces.push('D2'); },
+    cons: () => ['Ves <b>1 pieza menos</b> en la cola'],
+    apply: (m) => { m.extraPieces.push('D2'); m.preview = Math.max(1, m.preview - 1); },
   },
   {
     id: 'shortbar', name: 'Barra corta', rarity: 'rare', max: 2,
     pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
-    apply: (m) => { m.extraPieces.push('I3'); },
+    cons: () => ['Las <b>ofertas malditas</b> salen un 2 % más a menudo'],
+    apply: (m) => { m.extraPieces.push('I3'); m.curseChance = Math.min(0.3, m.curseChance + 0.02); },
   },
   // ───────── Épicas ─────────
   {
@@ -378,7 +389,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
     pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
-    apply: (m) => { m.b2bMult += 1; },
+    cons: () => ['Las piezas caen un <b>4 %</b> más rápido'],
+    apply: (m) => { m.b2bMult += 1; m.gravitySpeed *= 1.04; },
   },
   {
     id: 'eternal', name: 'Combo eterno', rarity: 'epic', max: 2,

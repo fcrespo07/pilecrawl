@@ -110,7 +110,7 @@ export const CHALLENGES: Challenge[] = [
   { perk: 'erosion', text: 'Haz 3 cuádruples en una partida', done: (s) => s.quads >= 3 },
   { perk: 'exp', text: 'Haz 5 giros que limpien líneas en una partida', done: (s) => s.spins >= 5 },
   { perk: 'gambler', text: 'Llega a un combo de 6', done: (s) => s.maxCombo >= 6 },
-  { perk: 'echo', text: 'Llega al nivel 6', done: (s) => s.level >= 6 },
+  { perk: 'doublehold', text: 'Llega al nivel 6', done: (s) => s.level >= 6 },
   { perk: 'bomb', text: 'Limpia 30 líneas en una partida', done: (s) => s.lines >= 30 },
   { perk: 'prism', text: 'Limpia 60 líneas en una partida', done: (s) => s.lines >= 60 },
   { perk: 'quake', text: 'Llega al nivel 9', done: (s) => s.level >= 9 },
@@ -118,7 +118,7 @@ export const CHALLENGES: Challenge[] = [
 ];
 
 /** Retos de versiones anteriores: su perk se cambió y el jugador conserva el reto cumplido. */
-export const RENAMED_CHALLENGE_PERKS: Record<string, string> = { cross: 'erosion', allspin: 'exp', eternal: 'gambler', interest: 'echo' };
+export const RENAMED_CHALLENGE_PERKS: Record<string, string> = { cross: 'erosion', allspin: 'exp', eternal: 'gambler', interest: 'doublehold' };
 
 /**
  * Perks que la Expedición no ofrece: su efecto son los puntos, que aquí no valen nada. Sus contrapartidas
