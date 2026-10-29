@@ -295,7 +295,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'irain', name: 'Lluvia de I', rarity: 'rare', max: 2,
-    pros: () => ['Cada bolsa trae <b>una I extra</b>'],
+    pros: () => ['Cada tanda trae <b>una I extra</b>'],
     cons: () => ['…y también <b>una S o Z extra</b>'],
     apply: (m) => { m.extraPieces.push('I', 'SZ'); },
   },
@@ -306,13 +306,13 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'mono', name: 'Monominó', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 monominós</b>' : 'un <b>monominó</b>'} (1 bloque)`],
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 monominós</b>' : 'un <b>monominó</b>'} (1 bloque)`],
     cons: () => ['Las líneas que completa dan <b>la mitad</b> de puntos'],
     apply: (m) => { m.extraPieces.push('M1'); },
   },
   {
     id: 'hook', name: 'Gancho', rarity: 'rare', max: 1,
-    pros: () => ['Cada bolsa trae un <b>gancho</b> de 5 bloques', 'Las líneas que completa valen <b>×2</b>'],
+    pros: () => ['Cada tanda trae un <b>gancho</b> de 5 bloques', 'Las líneas que completa valen <b>×2</b>'],
     cons: () => ['Es una pieza <b>torpe</b> de encajar'],
     apply: (m) => { m.extraPieces.push('P5'); },
   },
@@ -348,12 +348,12 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'domino', name: 'Dominó', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
     apply: (m) => { m.extraPieces.push('D2'); },
   },
   {
     id: 'shortbar', name: 'Barra corta', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
     apply: (m) => { m.extraPieces.push('I3'); },
   },
   // ───────── Épicas ─────────
@@ -418,7 +418,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
-    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×5</b>'],
+    pros: () => ['Cada tanda cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×5</b>'],
     cons: () => ['Como no hay T, tampoco hay <b>giros de T</b>'],
     apply: (m) => { m.crossSwap = true; },
   },
@@ -509,7 +509,7 @@ export const CURSES: PerkDef[] = [
   },
   {
     id: 'c_ballast', name: 'Lastre', rarity: 'common', max: 1, curse: true,
-    pros: () => [], cons: () => ['Cada bolsa trae <b>una S o Z extra</b>'],
+    pros: () => [], cons: () => ['Cada tanda trae <b>una S o Z extra</b>'],
     apply: (m) => { m.extraPieces.push('SZ'); },
   },
   {
