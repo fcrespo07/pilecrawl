@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { Game, STEP_MS } from '../core/game';
 import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
@@ -175,7 +176,7 @@ export class UI {
             </div>`;
           })
           .join('')
-      : '<div class="empty">Todavía no tienes mejoras. Sube de nivel para conseguirlas.</div>');
+      : `<div class="empty">${t('build.empty')}</div>`);
   }
 
   /** `prize`: fragmentos y perks abiertos si fue una Expedición; null en los demás modos. */
@@ -190,7 +191,7 @@ export class UI {
     const won = g.endReason === 'victory';
     // la victoria tiene su propia pantalla (dorada), distinta de la derrota
     $('over').classList.toggle('win', won);
-    title.textContent = won ? 'VICTORIA' : timeUp ? 'TIEMPO' : 'FIN DE PARTIDA';
+    title.textContent = won ? t('over.won') : timeUp ? t('over.time') : t('over.title');
     title.dataset.text = title.textContent;
     $('over-score').textContent = fmt(g.score);
     const bestLabel = g.mode === 'daily' ? 'Récord de hoy' : 'Récord';

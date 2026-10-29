@@ -311,12 +311,12 @@ const fmtNum = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pauseMsg = document.getElementById('pause-msg')!;
 const saveExitBtn = document.getElementById('save-exit')!;
 const quitBtn = document.getElementById('quit-btn')!;
-const QUIT_LABEL = 'Salir sin guardar';
+const quitLabel = () => t('pause.quit');
 let quitTimer = 0;
 
 function disarmQuit() {
   window.clearTimeout(quitTimer);
-  quitBtn.querySelector('span')!.textContent = QUIT_LABEL;
+  quitBtn.querySelector('span')!.textContent = quitLabel();
   delete quitBtn.dataset.armed;
 }
 
@@ -515,9 +515,9 @@ const pauseSound = document.getElementById('pause-sound')!;
 /** Botones de música y sonido del menú de pausa: se redibujan con M, N o desde Ajustes. */
 function syncAudioButtons() {
   pauseMusic.setAttribute('aria-pressed', String(audio.musicOn));
-  pauseMusic.querySelector('span')!.textContent = audio.musicOn ? 'Música: sí' : 'Música: no';
+  pauseMusic.querySelector('span')!.textContent = `${t('audio.music')}: ${audio.musicOn ? t('audio.on') : t('audio.off')}`;
   pauseSound.setAttribute('aria-pressed', String(!audio.muted));
-  pauseSound.querySelector('span')!.textContent = audio.muted ? 'Sonido: no' : 'Sonido: sí';
+  pauseSound.querySelector('span')!.textContent = `${t('audio.sound')}: ${audio.muted ? t('audio.off') : t('audio.on')}`;
 }
 
 /** Efectos de pantalla (shaders): se guardan, y un equipo lento los apaga solo. */
