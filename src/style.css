@@ -1367,6 +1367,8 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   .pause-keys .tc-keys li { font-size: 14px; }
   .pause-keys .tc-keys li span { min-width: 118px; color: var(--hi); }
   .pause-actions kbd { display: none; }
+  /* sin teclado: se quitan las pistas de tecla de cartas, fin de partida y portada */
+  #reroll kbd, #skip kbd, #cards .hint, #retry-btn kbd, #home-play kbd, #exp-play kbd, .home-note kbd { display: none; }
 }
 @media (pointer: coarse) and (orientation: portrait) {
   .pause-actions { padding: 0 16px; box-sizing: border-box; flex-wrap: wrap; }
