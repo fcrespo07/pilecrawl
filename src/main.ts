@@ -615,6 +615,7 @@ async function boot() {
   window.addEventListener('langchange', () => {
     renderResume();
     refreshPanels();
+    ui.refreshOfferHint();
   });
   // el SDK de un portal (si lo hay) arranca en paralelo; sin portal no hace nada
   void initPortal().then(() => portal.loadingStop());

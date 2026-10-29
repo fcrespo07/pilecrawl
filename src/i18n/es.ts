@@ -141,6 +141,28 @@ export const es = {
   "over.won": "VICTORIA",
   "over.time": "TIEMPO",
   "build.empty": "Todavía no tienes mejoras. Sube de nivel para conseguirlas.",
+  // fin de partida y franja de cartas
+  "perk.stripeHyper": "Hiperperk por racha",
+  "perk.stripeCursed": "Oferta maldita",
+  "perk.stripeBoss": "Jefe derrotado",
+  "hud.timeLeft": "Queda",
+  "over.best": "Récord",
+  "over.bestDaily": "Récord de hoy",
+  "over.newBest": "¡Nuevo récord!",
+  "over.newBestDaily": "¡Nuevo récord de hoy!",
+  "over.newBestLevel": "¡Nuevo mejor nivel!",
+  "over.bestLevel": "Mejor nivel",
+  "over.lab": "Laboratorio: no puntúa",
+  "over.level": "Nivel",
+  "over.lines": "Líneas",
+  "over.quads": "Cuádruples",
+  "over.combo": "Combo máx.",
+  "over.clock": "Tiempo",
+  "over.unlocked": "Desbloqueado",
+  "over.shards": "Fragmentos",
+  "over.victory": "Victoria",
+  "over.pressure": "Presión",
+  "over.perkOpened": "Perk abierto",
 } as const;
 
 export type Key = keyof typeof es;
