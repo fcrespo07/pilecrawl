@@ -13,7 +13,7 @@ export function renderExpedition(root: HTMLElement) {
     const action =
       cost === null
         ? '<span class="exp-max">Al máximo</span>'
-        : `<button type="button" class="home-btn small" data-buy="${u.id}"${save.shards < cost ? ' disabled' : ''}>Comprar · ${fmt(cost)}</button>`;
+        : `<button type="button" class="home-btn small" data-buy="${u.id}"${save.shards < cost ? ' disabled' : ''}>Comprar · ${fmt(cost)} fragmentos</button>`;
     return `<article class="cat-item exp-item">
       <div class="cat-body">
         <div class="b-name">${u.name}<small>${pips}</small></div>
