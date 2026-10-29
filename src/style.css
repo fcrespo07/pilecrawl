@@ -1086,10 +1086,11 @@ body.tutorial #perk-list .empty { display: none; }
   .coach-m { top: 8px; left: 8px; right: 8px; }
   /* tutorial en vertical: el consejo ocupa el marcador (que no hace falta) y deja libres reserva y cola */
   body.tutorial .p-score, body.tutorial .p-level { display: none; }
-  body.tutorial .coach-m { top: 6px; left: 6px; right: 62px; padding: 8px 12px 6px; }
-  body.tutorial .coach-m .coach-head { font-size: 8px; }
-  body.tutorial .coach-m .coach-text { font-size: 15px; margin: 2px 0 2px; }
+  body.tutorial .coach-m { top: 6px; left: 6px; right: 62px; padding: 6px 10px 4px; }
+  body.tutorial .coach-m .coach-head { display: none; }
+  body.tutorial .coach-m .coach-text { font-size: 14px; line-height: 1.15; margin: 0 0 2px; }
   body.tutorial .coach-m .coach-actions { margin-top: 0; }
+  body.tutorial .coach-m .coach-skip { padding: 4px 8px 2px; }
 }
 /* en horizontal el escenario ocupa el centro: el cuadro va en el hueco de la izquierda */
 @media (pointer: coarse) and (orientation: landscape) {
