@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
-- (#PR) Versión para itch.io (`npm run build:itch`): rutas relativas, sin enlaces a otras webs y con botón de pantalla completa en la portada. Fuera de ese build no cambia nada.
+- (#99) Versión para itch.io (`npm run build:itch`): rutas relativas, sin enlaces a otras webs y con botón de pantalla completa en la portada. Fuera de ese build no cambia nada.
 
 ## 0.41.0 — 2026-10-30
 - (#97) **Cambia las reglas (`RULES_VERSION` 17): el ranking empieza de cero.** Las doce cartas que no tenían contrapartida ya tienen una, suave: Visión (las piezas se fijan 30 ms antes), Dados (cada cambio de cartas quita 2 de racha), Dique (pierdes un cambio de cartas), Cosecha (cada cambio de cartas acerca la basura), Bomba (cada bomba acerca la basura), Cadena (las piezas se fijan 20 ms antes), Fuego cruzado (guardar una pieza cuesta 10 puntos por nivel), Experiencia (la basura sube antes), Dominó (ves una pieza menos), Barra corta (la basura sube antes), Taladro (una carta menos para elegir) y Trébol (una línea más para subir de nivel por cada copia). En la Expedición, Trébol, Bomba y Dique no tienen contrapartida. El reto de nivel 6 abre Dobles reserva y Eco está abierta desde el principio.
