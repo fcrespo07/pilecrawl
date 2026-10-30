@@ -173,4 +173,5 @@ export const en: Record<Key, string> = {
   "exp.best": "Best level",
   "exp.wins": "Wins",
   "exp.note": "Beta: costs and challenges may change. It is a normal game with the upgrades you buy. When it ends you earn shards based on level and lines. Not in the ranking.",
+  "home.fullscreen": "Full screen",
 };

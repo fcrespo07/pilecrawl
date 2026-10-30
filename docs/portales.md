@@ -25,3 +25,19 @@ Apagados por defecto. `portal.midgameAd(done)` está preparado para anuncios ent
 - Probar en el entorno de pruebas del portal: la versión de la API y las URLs del SDK se han escrito según SDK v3 y hay que comprobarlas con su documentación.
 - Revisar los requisitos del portal (enlaces de salida, pantalla de carga, apodo y guardado local).
 - El idioma inglés cubre la portada y los modos; el resto de la interfaz sigue en español (ver `src/i18n/`).
+
+## itch.io (ZIP estático)
+
+```
+npm run build:itch
+```
+
+Genera `dist-itch/` y `pilecrawl-itch.zip` en la raíz (ambos fuera de git). Con `VITE_PORTAL=itch`:
+
+- rutas relativas (`base: './'`), para que funcione dentro del iframe de itch;
+- sin enlaces a pilecrawl.fun, GitHub ni anuncios (el pie se queda con la versión);
+- botón de pantalla completa en la portada (solo si el navegador la permite).
+
+Sin estadísticas ni ranking: en un build sin `VITE_RANKING=1` no se envía nada fuera.
+
+En Windows, `zip` puede no existir: se puede comprimir `dist-itch/` con «Comprimir» del Explorador o `Compress-Archive` de PowerShell. El ZIP debe tener `index.html` en la raíz, no dentro de una carpeta.

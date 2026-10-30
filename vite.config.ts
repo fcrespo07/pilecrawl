@@ -95,6 +95,8 @@ export default defineConfig(({ mode }) => {
   return {
   define: { __APP_VERSION__: JSON.stringify(pkg.version), __REPO_URL__: JSON.stringify(env.VITE_REPO_URL || REPO_URL_DEFAULT) },
   plugins: [publishing(env)],
+  // itch.io sirve el juego desde una ruta propia dentro de su iframe: rutas relativas solo en el build de itch
+  base: env.VITE_PORTAL === 'itch' ? './' : '/',
   build: {
     rollupOptions: {
       // la web es la portada más dos páginas estáticas (necesarias para anuncios y para cumplir la ley)
