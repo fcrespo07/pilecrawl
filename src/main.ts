@@ -74,7 +74,7 @@ const rankingUI = new RankingUI(
   () => home.focus({ preventScroll: true }),
   () => refreshPanels(true),
 );
-const modeSelect = new ModeSelect(document.getElementById('mode-select')!, loadLastMode(), saveLastMode);
+const modeSelect = new ModeSelect(document.getElementById('mode-select')!, portal.quickStart ? 'normal' : loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
   onPlay: () => void startRun(),
   onRetry: () => { if (!endPressBlocked()) void startRun('tutorial'); },
@@ -651,8 +651,15 @@ async function boot() {
       fsBtn.blur();
     });
   }
-  // en el build de itch el pie y los enlaces salen de pilecrawl.fun: se ocultan (ver style.css)
-  if (import.meta.env.VITE_PORTAL === 'itch') document.body.dataset.portal = 'itch';
+  // en un build de portal el pie y los enlaces salen de pilecrawl.fun: se ocultan (ver style.css)
+  if (portal.isPortalBuild) document.body.dataset.portal = portal.id;
+  if (portal.quickStart) {
+    document.body.dataset.quick = '';
+    // el Tutorial sube a la primera pantalla: la fila de «más» queda plegada
+    const tut = document.getElementById('home-tutorial')!;
+    document.getElementById('home-play')!.after(tut);
+    tut.classList.remove('home-link');
+  }
   pauseMusic.addEventListener('click', () => { audio.toggleMusic(); syncAudioButtons(); pauseMusic.blur(); });
   pauseSound.addEventListener('click', () => { audio.toggleMute(); syncAudioButtons(); pauseSound.blur(); });
   // Ajustes cambia lo mismo: sus botones se escuchan después de que actualicen el audio

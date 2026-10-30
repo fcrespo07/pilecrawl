@@ -18,7 +18,10 @@ interface CrazySdk {
   };
 }
 
-const ACTIVE = import.meta.env.VITE_PORTAL === 'crazygames';
+const PORTAL_ID: string = import.meta.env.VITE_PORTAL ?? '';
+const ACTIVE = PORTAL_ID === 'crazygames';
+/** Portales que piden entrar a jugar a un clic (CrazyGames Full Launch, Poki, YouTube Playables). itch.io conserva la portada completa. */
+const QUICK_PORTALS = ['crazygames', 'poki', 'youtube'];
 const ADS = ACTIVE && import.meta.env.VITE_PORTAL_ADS === '1';
 
 let sdk: CrazySdk | null = null;
@@ -48,6 +51,12 @@ export async function initPortal(): Promise<void> {
 }
 
 export const portal = {
+  /** Id del portal de este build ('' en pilecrawl.fun). */
+  id: PORTAL_ID,
+  /** Cualquier build de portal: sin enlaces a pilecrawl.fun, GitHub ni anuncios. */
+  isPortalBuild: PORTAL_ID !== '',
+  /** Portada de un clic: solo Jugar, Tutorial y Ajustes; sin selector de modos ni paneles. */
+  quickStart: QUICK_PORTALS.includes(PORTAL_ID),
   /** CrazyGames prohíbe botones propios de pantalla completa (el portal ya trae el suyo). */
   allowsOwnFullscreen: !ACTIVE,
   /** Pantalla de carga lista: el portal puede quitar su pantalla. */

@@ -9,3 +9,5 @@ k8s/config.yaml
 # build de itch.io
 dist-itch/
 pilecrawl-itch.zip
+dist-crazygames/
+pilecrawl-crazygames.zip
