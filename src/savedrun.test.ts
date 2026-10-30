@@ -100,7 +100,7 @@ describe('guardado en el navegador', () => {
     s.writeSave({ ...sample(cut), rules: RULES_VERSION - 1 });
     const l = s.loadSave();
     expect(l.run).toBeNull();
-    expect(l.discarded).toMatch(/versión anterior/);
+    expect(l.discarded).toMatch(/versión anterior|older version/);
     expect(s.hasSave()).toBe(false);
   });
 

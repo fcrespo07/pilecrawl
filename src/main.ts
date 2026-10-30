@@ -301,7 +301,7 @@ function offerPublish() {
   if (r.noRank) return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? '') : rankingUI.offerPublish(null);
   if (r.mode !== 'daily' && !r.runId) {
     // sin partida del servidor no hay ranking: avisa solo a quien ya tiene apodo (a los demás les sobra el aviso)
-    return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? 'Sin conexión al empezar: esta partida no cuenta para el ranking.') : rankingUI.offerPublish(null);
+    return net.loadPlayer() ? rankingUI.offerUnavailable(r.unranked ?? L('Sin conexión al empezar: esta partida no cuenta para el ranking.', 'Offline at start: this run will not count for the ranking.')) : rankingUI.offerPublish(null);
   }
   const done: FinishedRun = { replay: game.replay(), score: game.score, mode: r.mode, date: r.date, runId: r.runId };
   rankingUI.offerPublish(done);
@@ -612,6 +612,8 @@ function onKeyDown(e: KeyboardEvent) {
 
 async function boot() {
   applyLang();
+  const overTitle = document.getElementById('over-title')!;
+  overTitle.dataset.text = overTitle.textContent!;
   window.addEventListener('langchange', () => {
     renderResume();
     refreshPanels();

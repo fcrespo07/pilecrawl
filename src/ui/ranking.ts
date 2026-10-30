@@ -1,5 +1,6 @@
 // Interfaz del ranking: la tabla de la portada y el botón de publicar al acabar la partida.
 // No sabe de Pixi ni de las reglas: solo habla con `net/ranking.ts`.
+import { L } from '../i18n';
 import type { Replay } from '../core/game';
 import { MODES, type ModeId } from '../core/modes';
 import * as net from '../net/ranking';
@@ -95,7 +96,7 @@ export class RankingUI {
       if (!box.hidden) t.select();
     });
     $('ranking-rotate').addEventListener('click', () => {
-      if (!window.confirm('El código anterior dejará de valer en todos los navegadores. ¿Generar uno nuevo?')) return;
+      if (!window.confirm(L('El código anterior dejará de valer en todos los navegadores. ¿Generar uno nuevo?', 'The old code will stop working in every browser. Generate a new one?'))) return;
       void this.run(async () => {
         const p = await net.rotateCode();
         ($('ranking-code-text') as HTMLInputElement).value = p.token;
@@ -165,7 +166,7 @@ export class RankingUI {
     try {
       const b = await net.leaderboard(this.mode, this.scope, this.scope === 'daily' ? net.dailyDate() : undefined);
       if (!b.entries.length) {
-        list.innerHTML = '<li class="rank-empty">Todavía no hay puntuaciones. Sé el primero.</li>';
+        list.innerHTML = '<li class="rank-empty">' + L('Todavía no hay puntuaciones. Sé el primero.', 'No scores yet. Be the first.') + '</li>';
         return;
       }
       list.innerHTML = b.entries
@@ -199,7 +200,7 @@ export class RankingUI {
   }
 
   private async deleteMe() {
-    if (!window.confirm('¿Borrar tu apodo y todas tus puntuaciones del ranking? No se puede deshacer.')) return;
+    if (!window.confirm(L('¿Borrar tu apodo y todas tus puntuaciones del ranking? No se puede deshacer.', 'Delete your nickname and all your ranking scores? This cannot be undone.'))) return;
     try {
       await net.deleteMe();
     } catch (e) {
@@ -234,9 +235,9 @@ export class RankingUI {
     if (player) $('publish-link').hidden = true;
     btn.hidden = player === null;
     btn.disabled = false;
-    btn.querySelector('span')!.textContent = 'Publicar puntuación';
+    btn.querySelector('span')!.textContent = L('Publicar puntuación', 'Publish score');
     if (!player && !$('publish-msg').textContent)
-      $('publish-msg').textContent = run.mode === 'daily' ? 'Elige un apodo para publicar tu puntuación.' : '';
+      $('publish-msg').textContent = run.mode === 'daily' ? L('Elige un apodo para publicar tu puntuación.', 'Pick a nickname to publish your score.') : '';
   }
 
   /** Para partidas libres sin servidor: avisa de por qué no hay botón. */
@@ -254,11 +255,11 @@ export class RankingUI {
     this.publishing = true;
     const btn = $('publish-btn') as HTMLButtonElement;
     btn.disabled = true;
-    $('publish-msg').textContent = 'Enviando…';
+    $('publish-msg').textContent = L('Enviando…', 'Sending…');
     try {
       const r = await net.publish(run.replay, run.score, run.mode === 'daily' ? { date: run.date } : { runId: run.runId });
-      const where = r.rank ? `Puesto ${r.rank} en ${MODES[run.mode].name.toLowerCase()}` : 'Publicada';
-      $('publish-msg').textContent = r.improved ? `${where}.` : `${where}. No mejora tu mejor marca.`;
+      const where = r.rank ? L(`Puesto ${r.rank} en ${MODES[run.mode].name.toLowerCase()}`, `Rank ${r.rank} in ${MODES[run.mode].name.toLowerCase()}`) : L('Publicada', 'Published');
+      $('publish-msg').textContent = r.improved ? `${where}.` : `${where}. ${L('No mejora tu mejor marca.', 'It does not beat your best.')}`;
       btn.hidden = true;
       this.finished = null;
       this.onPublished();

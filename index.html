@@ -307,7 +307,7 @@
       <!-- ═════════════ Fin ═════════════ -->
       <div id="over" class="overlay">
         <div class="stripe-title danger"><span id="over-mode" data-i18n="over.mode">Señal perdida</span></div>
-        <h2 id="over-title" class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
+        <h2 id="over-title" class="big-title glitch" data-text="FIN DE PARTIDA" data-i18n="over.title">FIN DE PARTIDA</h2>
         <div class="final">
           <small data-i18n="over.final">Puntuación final</small>
           <div id="over-score" class="final-score">0</div>
@@ -317,11 +317,11 @@
         <div id="over-perks" class="over-perks"></div>
         <div id="publish" class="publish" hidden>
           <form id="publish-nick" class="rank-nick" hidden>
-            <div><input id="publish-nick-input" maxlength="16" minlength="3" autocomplete="off" placeholder="Apodo" aria-label="Apodo para el ranking" required /><button class="btn small" type="submit"><span>Crear apodo</span></button></div>
+            <div><input id="publish-nick-input" maxlength="16" minlength="3" autocomplete="off" placeholder="Apodo" aria-label="Apodo para el ranking" data-i18n-attr="placeholder=pub.nick;aria-label=pub.nickLabel" required /><button class="btn small" type="submit"><span data-i18n="pub.create">Crear apodo</span></button></div>
           </form>
-          <button id="publish-link-open" class="rank-link" type="button" hidden>Ya tengo un apodo en otro dispositivo</button>
+          <button id="publish-link-open" class="rank-link" type="button" hidden data-i18n="pub.link">Ya tengo un apodo en otro dispositivo</button>
           <form id="publish-link" class="rank-nick" hidden>
-            <div><input id="publish-link-input" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Código de vinculación" aria-label="Código de vinculación" required /><button class="btn small" type="submit"><span>Entrar</span></button></div>
+            <div><input id="publish-link-input" maxlength="80" autocomplete="off" spellcheck="false" placeholder="Código de vinculación" aria-label="Código de vinculación" data-i18n-attr="placeholder=pub.code;aria-label=pub.code" required /><button class="btn small" type="submit"><span data-i18n="pub.enter">Entrar</span></button></div>
           </form>
           <button id="publish-btn" class="btn small" type="button" hidden><span>Publicar puntuación</span></button>
           <p id="publish-msg" class="rank-msg" role="status"></p>

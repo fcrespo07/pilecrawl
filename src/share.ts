@@ -1,4 +1,6 @@
 /** Texto corto para compartir una partida. Sin dependencias del juego: se prueba en Node. */
+import { L } from './i18n';
+
 export interface ShareInfo {
   /** Nombre del modo, p. ej. «Diario #12». */
   mode: string;
@@ -11,7 +13,10 @@ export const SHARE_URL = 'https://pilecrawl.fun';
 
 export function shareText(i: ShareInfo): string {
   const pts = i.score.toLocaleString('es-ES');
-  return `Pilecrawl · ${i.mode}\n${pts} puntos · nivel ${i.level} · ${i.lines} líneas\n¿Me superas? ${SHARE_URL}`;
+  return L(
+    `Pilecrawl · ${i.mode}\n${pts} puntos · nivel ${i.level} · ${i.lines} líneas\n¿Me superas? ${SHARE_URL}`,
+    `Pilecrawl · ${i.mode}\n${pts} points · level ${i.level} · ${i.lines} lines\nCan you beat me? ${SHARE_URL}`,
+  );
 }
 
 /** Abre el menú de compartir del sistema si existe; si no, copia el texto. Devuelve lo que hizo. */
