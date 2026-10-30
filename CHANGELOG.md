@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.41.2 — 2026-10-30
+- (#100) El build para CrazyGames no muestra el botón de pantalla completa propio, que el portal prohíbe. Fuera de ese build no cambia nada.
+
 ## 0.41.1 — 2026-10-30
 - (#99) Versión para itch.io (`npm run build:itch`): rutas relativas, sin enlaces a otras webs y con botón de pantalla completa en la portada. Fuera de ese build no cambia nada.
 
