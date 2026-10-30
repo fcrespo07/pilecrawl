@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "build:server": "esbuild server/index.ts --bundle --platform=node --target=node22 --format=esm --external:node:* --outfile=dist-server/server.mjs && esbuild server/updater-cli.ts --bundle --platform=node --target=node22 --format=esm --external:node:* --outfile=dist-server/updater.mjs",
     "server": "npm run build:server && node dist-server/server.mjs",
-    "build:itch": "VITE_PORTAL=itch vite build --outDir dist-itch --emptyOutDir && cd dist-itch && zip -qr ../pilecrawl-itch.zip ."
+    "build:itch": "VITE_PORTAL=itch vite build --outDir dist-itch --emptyOutDir && cd dist-itch && zip -qr ../pilecrawl-itch.zip .",
+    "build:crazygames": "VITE_PORTAL=crazygames vite build --outDir dist-crazygames --emptyOutDir && cd dist-crazygames && zip -qr ../pilecrawl-crazygames.zip ."
   },
   "dependencies": {
     "pixi-filters": "^6.1.5",

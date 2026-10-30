@@ -8,6 +8,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 ## 0.42.0 — 2026-10-30
 - (#94) **Expedición con curva propia.** Hasta el nivel 10 la velocidad es la del arcade; después sube un paso cada 6 niveles, así que el Monolito llega a 69 ms por fila (no a 40), y cada nivel pide como mucho 8 líneas: unas 200 líneas en total, no 300. Imán nunca cae sobre un hueco de basura ni deja huecos en su columna prohibida: antes había filas que no se podían cerrar. Solo cambia la Expedición; el arcade sigue igual.
 
+## 0.41.4 — 2026-10-30
+- (#102) Modo portal: en los builds de portal (`VITE_PORTAL`) la portada es de un clic (Jugar, Expedición, Tutorial, Catálogo y Ajustes, sin selector de modos ni paneles), todos usan rutas relativas y nuevo `npm run build:crazygames`. En pilecrawl.fun no cambia nada.
+
 ## 0.41.3 — 2026-10-30
 - (#101) Inglés casi completo: nombres y textos de mejoras, maldiciones, hiperperks y jefes, catálogo, Expedición, tutorial, ajustes, nombres de teclas y los textos que salen sobre el tablero. Un test comprueba que las cifras del inglés coinciden con las del español. Pendiente: ranking, mensajes de partida guardada y el laboratorio.
 
