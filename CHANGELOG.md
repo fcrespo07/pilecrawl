@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.41.2 — 2026-10-30
 - (#100) El build para CrazyGames no muestra el botón de pantalla completa propio, que el portal prohíbe. Fuera de ese build no cambia nada.
 
 ## 0.41.1 — 2026-10-30
