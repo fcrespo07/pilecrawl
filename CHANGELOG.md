@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.42.2 — 2026-10-30
+- (#106) Guardado de portal: en el build de CrazyGames, ajustes, récords, Expedición y partida guardada pasan por el módulo de datos del SDK (la cuenta del jugador), sin tocar el resto del código. Fuera de un portal no cambia nada.
+
 ## 0.42.1 — 2026-10-30
 - (#104) Inglés: texto de compartir resultado, avisos de partida guardada, publicar puntuación y apodo, y el título de fin de partida (el efecto de brillo seguía en español). La tabla de rankings queda para otro PR.
 - (#103) Tutorial en móvil vertical: el paso de la Racha es más corto, así que el consejo ya no tapa la reserva. Solo texto.
