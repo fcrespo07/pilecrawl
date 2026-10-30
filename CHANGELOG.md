@@ -3,7 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
-- (#105) Guardado de portal: en el build de CrazyGames, ajustes, récords, Expedición y partida guardada pasan por el módulo de datos del SDK (la cuenta del jugador), sin tocar el resto del código. Fuera de un portal no cambia nada.
+- (#106) Guardado de portal: en el build de CrazyGames, ajustes, récords, Expedición y partida guardada pasan por el módulo de datos del SDK (la cuenta del jugador), sin tocar el resto del código. Fuera de un portal no cambia nada.
 
 ## 0.42.1 — 2026-10-30
 - (#104) Inglés: texto de compartir resultado, avisos de partida guardada, publicar puntuación y apodo, y el título de fin de partida (el efecto de brillo seguía en español). La tabla de rankings queda para otro PR.
