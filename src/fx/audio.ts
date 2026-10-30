@@ -136,6 +136,12 @@ export class SoundEngine {
     return delay;
   }
 
+  /** Para y reanuda el sonido sin tocar los ajustes (anuncios de portal). */
+  suspendSound(on: boolean) {
+    if (!this.ctx) return;
+    void (on ? this.ctx.suspend() : this.ctx.resume());
+  }
+
   toggleMute() {
     this.muted = !this.muted;
     this.save();

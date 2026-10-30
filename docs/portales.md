@@ -54,6 +54,6 @@ Genera `dist-crazygames/` y `pilecrawl-crazygames.zip` (fuera de git). Con `VITE
 - **portada de un clic**: Jugar (partida normal), Expedición, Tutorial, Catálogo y Ajustes; sin selector de modos ni paneles de ranking (Full Launch pide entrar a jugar a un clic);
 - sin botón de pantalla completa propio (el portal lo prohíbe);
 - guardado por el módulo de datos del SDK (`portal/bootstrap.ts`, primer import de `main.ts`): al arrancar copia a localStorage lo que tenga el portal y replica cada cambio de las claves del juego (`SAVE_KEYS` en `portal.ts`); una clave nueva que deba guardarse hay que añadirla ahí;
-- adaptador del SDK v3 (carga, inicio y parada de juego, celebración); los anuncios siguen apagados salvo `VITE_PORTAL_ADS=1`.
+- adaptador del SDK v3 (carga, inicio y parada de juego, celebración); los anuncios siguen apagados salvo `VITE_PORTAL_ADS=1` (entonces, un anuncio al empezar una partida nueva tras acabar otra; nunca en el tutorial).
 
-Pendiente antes de enviar: anuncios entre partidas y probar en su herramienta de pruebas. Detalle en `informes/portales-plataformas.md`.
+Pendiente antes de enviar: probar en su herramienta de pruebas. Detalle en `informes/portales-plataformas.md`.

@@ -466,6 +466,8 @@ function resumeRun() {
 async function startRun(forced?: 'tutorial' | 'expedition') {
   if (starting) return;
   starting = true;
+  // entre una partida acabada y la siguiente, el portal puede mostrar un anuncio (el tutorial no)
+  if (game.state === 'over' && game.mode !== 'tutorial') await new Promise<void>((done) => portal.midgameAd(done, (on) => audio.suspendSound(on)));
   const mode = forced ?? modeSelect.mode;
   // empezar cualquier partida (también el tutorial) cierra la primera visita: la portada vuelve a la de siempre
   markPlayed();
