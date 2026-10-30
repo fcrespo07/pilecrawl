@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.41.4 — 2026-10-30
 - (#102) Modo portal: en los builds de portal (`VITE_PORTAL`) la portada es de un clic (Jugar, Expedición, Tutorial, Catálogo y Ajustes, sin selector de modos ni paneles), todos usan rutas relativas y nuevo `npm run build:crazygames`. En pilecrawl.fun no cambia nada.
 
 ## 0.41.3 — 2026-10-30
