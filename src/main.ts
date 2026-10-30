@@ -643,7 +643,7 @@ async function boot() {
   fxToggle.addEventListener('click', () => { setEffects(!renderer.highQuality); fxToggle.blur(); });
   // pantalla completa: solo si el navegador (o el portal que embebe el juego) la permite
   const fsBtn = document.getElementById('fs-toggle')!;
-  if (document.fullscreenEnabled) {
+  if (document.fullscreenEnabled && portal.allowsOwnFullscreen) {
     fsBtn.hidden = false;
     fsBtn.addEventListener('click', () => {
       if (document.fullscreenElement) void document.exitFullscreen();
