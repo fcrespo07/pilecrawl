@@ -4,7 +4,7 @@ import {
   ACTIONS, ACTION_LABEL, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, mouseOn, resetHandling, resetKeys, setHandling, setMouse,
   type Action,
 } from '../settings';
-import { loadLangSetting, setLangSetting, type LangSetting } from '../i18n';
+import { loadLangSetting, setLangSetting, t, type LangSetting } from '../i18n';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -128,11 +128,11 @@ export class SettingsUI {
 
   renderToggles() {
     $('set-music').setAttribute('aria-pressed', String(audio.musicOn));
-    $('set-music').querySelector('span')!.textContent = audio.musicOn ? 'Música: sí' : 'Música: no';
+    $('set-music').querySelector('span')!.textContent = `${t('audio.music')}: ${audio.musicOn ? t('audio.on') : t('audio.off')}`;
     $('set-mouse-toggle').setAttribute('aria-pressed', String(mouseOn.value));
-    $('set-mouse-toggle').querySelector('span')!.textContent = mouseOn.value ? 'Control con ratón: sí' : 'Control con ratón: no';
+    $('set-mouse-toggle').querySelector('span')!.textContent = `${t('audio.mouse')}: ${mouseOn.value ? t('audio.on') : t('audio.off')}`;
     $('set-mute').setAttribute('aria-pressed', String(!audio.muted));
-    $('set-mute').querySelector('span')!.textContent = audio.muted ? 'Sonido: no' : 'Sonido: sí';
+    $('set-mute').querySelector('span')!.textContent = `${t('audio.sound')}: ${audio.muted ? t('audio.off') : t('audio.on')}`;
   }
 
   // ───────────── teclas ─────────────

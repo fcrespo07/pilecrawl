@@ -4,8 +4,16 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.41.0 — 2026-10-30
+- (#97) **Cambia las reglas (`RULES_VERSION` 17): el ranking empieza de cero.** Las doce cartas que no tenían contrapartida ya tienen una, suave: Visión (las piezas se fijan 30 ms antes), Dados (cada cambio de cartas quita 2 de racha), Dique (pierdes un cambio de cartas), Cosecha (cada cambio de cartas acerca la basura), Bomba (cada bomba acerca la basura), Cadena (las piezas se fijan 20 ms antes), Fuego cruzado (guardar una pieza cuesta 10 puntos por nivel), Experiencia (la basura sube antes), Dominó (ves una pieza menos), Barra corta (la basura sube antes), Taladro (una carta menos para elegir) y Trébol (una línea más para subir de nivel por cada copia). En la Expedición, Trébol, Bomba y Dique no tienen contrapartida. El reto de nivel 6 abre Dobles reserva y Eco está abierta desde el principio.
+
+## 0.40.2 — 2026-10-29
+- (#98) Inglés en el catálogo y en la cabecera de Expedición (títulos, cifras y botón). El cuerpo del catálogo, la presión, las mejoras permanentes y los nombres de las mejoras siguen en español por ahora.
+
+## 0.40.1 — 2026-10-29
+- (#96) Inglés en la pantalla de partida: marcador, mejoras, racha, hiperperk, elección de cartas, pausa y fin de partida se ven en inglés (con el idioma del navegador o el que elijas en Ajustes). Pendiente: nombres y textos de las mejoras, catálogo, Expedición, tutorial y el resto de ajustes.
+
 ## 0.40.0 — 2026-10-29
-- (#97) **Cambia las reglas (`RULES_VERSION` 17): el ranking empieza de cero.** Las doce cartas que no tenían contrapartida ya tienen una con carácter: Visión (las piezas se fijan antes), Dados (cada cambio de cartas quita racha), Dique (pierdes un cambio de cartas), Cosecha (cada cambio de cartas acerca la basura), Bomba (cada bomba acerca la basura), Cadena (las piezas se fijan antes), Fuego cruzado (guardar una pieza cuesta puntos), Experiencia (la basura sube antes), Dominó (ves una pieza menos), Barra corta (la basura sube antes), Taladro (una carta menos para elegir) y Trébol (una línea más para subir de nivel por cada copia). En la Expedición, el reto de nivel 6 abre Dobles reserva y Eco está abierta desde el principio.
 - (#95) **Expedición: victorias con premio y pantalla propia.** Vencer al Monolito da 150 fragmentos extra y se cuenta en la pantalla de la Expedición. Ganar abre la Presión siguiente (antes se abría al llegar al nivel 6). La victoria tiene su pantalla dorada, distinta de la derrota. Dos mejoras nuevas: Suerte (más mejoras raras y épicas) y Reserva extra (una pieza más en la reserva). Las Presiones ganadas antes no se conservan: se gana otra vez. Suerte tiene un solo nivel (120 fragmentos) y Bolsillo doble suma a la reserva en vez de fijarla.
 - (#92) En móvil vertical, las mejoras se ven bajo el tablero en una franja (tocarla abre la pausa). Pausa en móvil: los controles son gestos (arrastrar, tocar, tirón, deslizar) en vez de teclas, los botones de la pausa tienen margen en el borde, y en táctil se quitan las pistas de tecla de cartas, fin de partida y portada. Solo presentación.
 - Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
