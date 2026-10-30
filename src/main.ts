@@ -1,4 +1,5 @@
 import './style.css';
+import './portal/bootstrap';
 import './storage';
 import { Game, RULES_VERSION, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
