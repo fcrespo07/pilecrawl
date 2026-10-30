@@ -172,6 +172,7 @@ export const es = {
   "exp.best": "Mejor nivel",
   "exp.wins": "Victorias",
   "exp.note": "Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.",
+  "home.fullscreen": "Pantalla completa",
 } as const;
 
 export type Key = keyof typeof es;

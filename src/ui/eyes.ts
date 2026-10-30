@@ -70,7 +70,7 @@ export function initLogoEyes(canvas: HTMLCanvasElement, isShown: () => boolean):
     ready = true;
     paint();
   };
-  sprite.src = canvas.dataset.src ?? '/logo.png';
+  sprite.src = import.meta.env.BASE_URL + (canvas.dataset.src ?? '/logo.png').replace(/^\//, '');
 
   // Con movimiento reducido el logo se queda quieto en su posición de reposo.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

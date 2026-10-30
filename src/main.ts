@@ -639,6 +639,18 @@ async function boot() {
   setEffects(fxOn, false);
   renderer.onAutoOff = () => setEffects(false, false);
   fxToggle.addEventListener('click', () => { setEffects(!renderer.highQuality); fxToggle.blur(); });
+  // pantalla completa: solo si el navegador (o el portal que embebe el juego) la permite
+  const fsBtn = document.getElementById('fs-toggle')!;
+  if (document.fullscreenEnabled) {
+    fsBtn.hidden = false;
+    fsBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen().catch(() => {});
+      fsBtn.blur();
+    });
+  }
+  // en el build de itch el pie y los enlaces salen de pilecrawl.fun: se ocultan (ver style.css)
+  if (import.meta.env.VITE_PORTAL === 'itch') document.body.dataset.portal = 'itch';
   pauseMusic.addEventListener('click', () => { audio.toggleMusic(); syncAudioButtons(); pauseMusic.blur(); });
   pauseSound.addEventListener('click', () => { audio.toggleMute(); syncAudioButtons(); pauseSound.blur(); });
   // Ajustes cambia lo mismo: sus botones se escuchan después de que actualicen el audio
