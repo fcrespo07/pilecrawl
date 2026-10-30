@@ -1530,8 +1530,17 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 @media (prefers-reduced-motion: reduce) { .boss-intro { animation-name: none; } }
 body.portrait .boss-intro strong { font-size: 20px; }
 
-/* Build de itch.io (VITE_PORTAL=itch): sin enlaces a pilecrawl.fun, GitHub ni anuncios */
-body[data-portal="itch"] .home-foot a,
-body[data-portal="itch"] #ad-prefs,
-body[data-portal="itch"] #privacy-link,
-body[data-portal="itch"] #ad-slot { display: none !important; }
+/* Builds de portal (VITE_PORTAL): sin enlaces a pilecrawl.fun, GitHub ni anuncios */
+body[data-portal] .home-foot a,
+body[data-portal] #ad-prefs,
+body[data-portal] #privacy-link,
+body[data-portal] #ad-slot,
+body[data-portal] #install-btn { display: none !important; }
+/* Portada de un clic (CrazyGames, Poki, YouTube): Jugar, Tutorial y Ajustes; el resto sobra */
+body[data-quick] #h-arcade,
+body[data-quick] #mode-select,
+body[data-quick] #home-exp,
+body[data-quick] #panel-right,
+body[data-quick] #panel-left,
+body[data-quick] #home-more-link,
+body[data-quick] #home-more { display: none !important; }
