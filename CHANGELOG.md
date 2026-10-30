@@ -4,9 +4,12 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
-## 0.41.5 — 2026-10-30
+## 0.42.1 — 2026-10-30
 - (#104) Inglés: texto de compartir resultado, avisos de partida guardada, publicar puntuación y apodo, y el título de fin de partida (el efecto de brillo seguía en español). La tabla de rankings queda para otro PR.
 - (#103) Tutorial en móvil vertical: el paso de la Racha es más corto, así que el consejo ya no tapa la reserva. Solo texto.
+
+## 0.42.0 — 2026-10-30
+- (#94) **Expedición con curva propia.** Hasta el nivel 10 la velocidad es la del arcade; después sube un paso cada 6 niveles, así que el Monolito llega a 69 ms por fila (no a 40), y cada nivel pide como mucho 8 líneas: unas 200 líneas en total, no 300. Imán nunca cae sobre un hueco de basura ni deja huecos en su columna prohibida: antes había filas que no se podían cerrar. Solo cambia la Expedición; el arcade sigue igual.
 
 ## 0.41.4 — 2026-10-30
 - (#102) Modo portal: en los builds de portal (`VITE_PORTAL`) la portada es de un clic (Jugar, Expedición, Tutorial, Catálogo y Ajustes, sin selector de modos ni paneles), todos usan rutas relativas y nuevo `npm run build:crazygames`. En pilecrawl.fun no cambia nada.
