@@ -1067,14 +1067,21 @@ describe('jefes', () => {
 });
 
 describe('jefes: Imán y basura', () => {
-  it('una fila de basura con el hueco en la columna prohibida no se limpia gratis', () => {
+  it('Imán no elige una columna con hueco de basura, y la basura nueva no hace hueco en la prohibida', () => {
     const g = new Game();
     g.start(7, 'expedition');
     g.level = 9;
-    g['syncBoss']();
-    const col = g.magnetCol;
-    g.board[ROWS - 1] = Array.from({ length: COLS }, (_, x) => (x === col ? 0 : GARBAGE_ID));
-    expect(g['findFullRows']()).not.toContain(ROWS - 1);
+    g.board[ROWS - 1] = Array.from({ length: COLS }, (_, x) => (x === 4 ? 0 : GARBAGE_ID));
+    for (let i = 0; i < 20; i++) g['pickMagnetCol']();
+    expect(g.magnetCol).not.toBe(4);
+    g.magnetCol = 2;
+    for (let i = 0; i < 30; i++) {
+      g['lastHole'] = 2;
+      g.board.pop();
+      g.board.unshift(new Array(COLS).fill(0));
+      g['addGarbage']();
+      expect(g.board[ROWS - 1][2]).not.toBe(0);
+    }
   });
 });
 
