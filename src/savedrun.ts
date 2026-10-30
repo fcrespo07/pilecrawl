@@ -1,6 +1,7 @@
 // Partida guardada a medias, en el navegador. Como la partida es determinista, basta con su repetición
 // (semilla + acciones + pasos): al reanudar se vuelve a simular hasta ese punto. Un solo hueco.
 // Al reanudar se borra, para que nadie pueda recargar y repetir una mala decisión.
+import { L } from './i18n';
 import { RULES_VERSION, type Replay } from './core/game';
 import { checkReplay } from './core/replay';
 import { isModeId, MODES, type ModeId } from './core/modes';
@@ -83,18 +84,18 @@ export function loadSave(): Loaded {
   try {
     s = JSON.parse(raw) as SavedRun;
   } catch {
-    return drop('La partida guardada estaba dañada y se ha descartado.');
+    return drop(L('La partida guardada estaba dañada y se ha descartado.', 'The saved game was damaged and has been discarded.'));
   }
-  if (!s || typeof s !== 'object' || s.v !== 1 || !s.replay || typeof s.replay !== 'object') return drop('La partida guardada estaba dañada y se ha descartado.');
+  if (!s || typeof s !== 'object' || s.v !== 1 || !s.replay || typeof s.replay !== 'object') return drop(L('La partida guardada estaba dañada y se ha descartado.', 'The saved game was damaged and has been discarded.'));
   // con otras reglas la simulación daría otra partida: no se puede reanudar
   if (s.rules !== RULES_VERSION || s.replay.version !== RULES_VERSION) {
-    return drop('La partida guardada era de una versión anterior del juego, con otras reglas, y se ha descartado.');
+    return drop(L('La partida guardada era de una versión anterior del juego, con otras reglas, y se ha descartado.', 'The saved game was from an older version of the game, with different rules, and has been discarded.'));
   }
   const mode = s.replay.mode ?? 'normal';
   if (!isModeId(mode) || MODES[mode].tutorial || s.replay.sandbox || checkReplay(s.replay) || s.replay.steps > MAX_STEPS) {
-    return drop('La partida guardada estaba dañada y se ha descartado.');
+    return drop(L('La partida guardada estaba dañada y se ha descartado.', 'The saved game was damaged and has been discarded.'));
   }
-  if (typeof s.date !== 'string' || typeof s.savedAt !== 'number' || typeof s.startedAt !== 'number') return drop('La partida guardada estaba dañada y se ha descartado.');
+  if (typeof s.date !== 'string' || typeof s.savedAt !== 'number' || typeof s.startedAt !== 'number') return drop(L('La partida guardada estaba dañada y se ha descartado.', 'The saved game was damaged and has been discarded.'));
   return { run: s };
 }
 
