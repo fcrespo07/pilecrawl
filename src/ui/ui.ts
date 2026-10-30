@@ -1,5 +1,5 @@
 import { Game, STEP_MS } from '../core/game';
-import { HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
+import { consOf, HEAT_MAX, RARITY_LABEL, type PerkDef, type Rarity } from '../core/perks';
 import type { HyperDef } from '../core/hypers';
 import { STREAK_MAX, STREAK_TIER_NAMES, streakTier } from '../core/streak';
 import { audio } from '../fx/audio';
@@ -38,9 +38,9 @@ function clock(ms: number, up = false) {
 }
 
 /** Lista de ventajas (verde) y desventajas (rojo) de un perk. */
-export function effectsHTML(p: Pick<PerkDef, 'pros' | 'cons'>, stacks: number): string {
+export function effectsHTML(p: Pick<PerkDef, 'pros' | 'cons' | 'expeditionCons'>, stacks: number, expedition = false): string {
   const pros = p.pros(stacks).map((t) => `<li class="pro">${t}</li>`);
-  const cons = (p.cons?.(stacks) ?? []).map((t) => `<li class="con">${t}</li>`);
+  const cons = consOf(p as PerkDef, stacks, expedition).map((t) => `<li class="con">${t}</li>`);
   return `<ul class="fx">${pros.join('')}${cons.join('')}</ul>`;
 }
 
@@ -171,7 +171,7 @@ export class UI {
             const n = g.perkStacks(id);
             return `<div class="build-row r-${rarityKey(p)}">
               <div class="b-ico">${perkIcon(id)}</div>
-              <div><div class="b-name">${p.name}${n > 1 ? `<small>×${n}</small>` : ''}</div>${effectsHTML(p, n)}</div>
+              <div><div class="b-name">${p.name}${n > 1 ? `<small>×${n}</small>` : ''}</div>${effectsHTML(p, n, g.mode === 'expedition')}</div>
             </div>`;
           })
           .join('')
@@ -394,7 +394,7 @@ export class UI {
             <div class="card-icon">${perkIcon(p.id)}</div>
             <div class="card-name">${p.name}</div>
             <div class="card-sep"></div>
-            ${effectsHTML(p, cur + 1)}
+            ${effectsHTML(p, cur + 1, this.game.mode === 'expedition')}
             ${foot ? `<div class="card-foot">${foot}</div>` : ''}
             <div class="card-shine"></div>
           </div>
@@ -497,7 +497,7 @@ export class UI {
       const n = Math.max(1, this.game.perkStacks(id));
       const tip = $('tooltip');
       tip.style.setProperty('--c', `var(--${rarityKey(p)})`);
-      tip.innerHTML = `<div class="tt-head"><span class="tt-name">${p.name}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${rarityLabel(p)}</span></div>${effectsHTML(p, n)}`;
+      tip.innerHTML = `<div class="tt-head"><span class="tt-name">${p.name}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${rarityLabel(p)}</span></div>${effectsHTML(p, n, this.game.mode === 'expedition')}`;
       const r = chip.getBoundingClientRect();
       const stage = $('stage').getBoundingClientRect();
       const scale = stage.width / 960;

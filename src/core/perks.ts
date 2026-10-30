@@ -165,6 +165,8 @@ export interface PerkDef {
   /** stacks = cuántos tendrás después de cogerlo */
   pros: (stacks: number) => string[];
   cons?: (stacks: number) => string[];
+  /** Expedición: contrapartida que sustituye a `cons` en ese modo (`[]` = ninguna). Va con su `apply` (que mira `g.mode`). */
+  expeditionCons?: (stacks: number) => string[];
   apply: (m: Mods, g: Game) => void;
   /** Nivel de mejor marca para que salga; por defecto el de su rareza (`UNLOCK_LEVEL`). */
   unlock?: number;
@@ -204,8 +206,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'vision', name: 'Visión', rarity: 'common', max: 3,
     pros: () => ['Ves <b>+1 pieza</b> en la cola'],
-    cons: () => ['Las piezas se fijan <b>60 ms</b> antes'],
-    apply: (m) => { m.preview += 1; m.lockDelay -= 60; },
+    cons: () => ['Las piezas se fijan <b>30 ms</b> antes'],
+    apply: (m) => { m.preview += 1; m.lockDelay -= 30; },
   },
   {
     id: 'calm', name: 'Pulso tranquilo', rarity: 'common', max: 3,
@@ -216,8 +218,8 @@ export const PERKS: PerkDef[] = [
     // el comodín sin tope: la oferta nunca se queda sin cartas (ver perks.test.ts)
     id: 'dice', name: 'Dados', rarity: 'common', max: 99,
     pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
-    cons: () => ['Cada cambio de cartas te quita <b>3 de racha</b>'],
-    apply: (m, g) => { g.rerolls += 2; m.rerollStreak += 3; },
+    cons: () => ['Cada cambio de cartas te quita <b>2 de racha</b>'],
+    apply: (m, g) => { g.rerolls += 2; m.rerollStreak += 2; },
   },
   {
     id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
@@ -234,14 +236,15 @@ export const PERKS: PerkDef[] = [
   {
     id: 'chain', name: 'Cadena', rarity: 'common', max: 5,
     pros: () => ['El bonus de combo sube un <b>60%</b>'],
-    cons: () => ['Las piezas se fijan <b>40 ms</b> antes'],
-    apply: (m) => { m.comboMult += 0.6; m.lockDelay -= 40; },
+    cons: () => ['Las piezas se fijan <b>20 ms</b> antes'],
+    apply: (m) => { m.comboMult += 0.6; m.lockDelay -= 20; },
   },
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
     pros: () => ['La basura tarda <b>3 piezas más</b> en subir'],
     cons: () => ['Pierdes <b>hasta 1 cambio de cartas</b>'],
-    apply: (m, g) => { m.garbageDelay += 3; g.rerolls = Math.max(0, g.rerolls - 1); },
+    expeditionCons: () => [],
+    apply: (m, g) => { m.garbageDelay += 3; if (g.mode !== 'expedition') g.rerolls = Math.max(0, g.rerolls - 1); },
   },
   {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
@@ -278,7 +281,8 @@ export const PERKS: PerkDef[] = [
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
     pros: () => ['Las ofertas traen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> (si ya están desbloqueadas)'],
     cons: () => ['Cada Trébol quita <b>1 línea</b> de ventaja: subir de nivel pide 1 más'],
-    apply: (m) => { m.luck += 1; m.linesReduction -= 1; },
+    expeditionCons: () => [],
+    apply: (m, g) => { m.luck += 1; if (g.mode !== 'expedition') m.linesReduction -= 1; },
   },
   {
     id: 'doublehold', name: 'Bolsillo doble', rarity: 'rare', max: 1,
@@ -296,7 +300,8 @@ export const PERKS: PerkDef[] = [
     id: 'bomb', name: 'Bomba', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[12, 9, 6][s - 1]} piezas</b> sale una bomba`, 'Al fijarse revienta un área de <b>5×5</b>'],
     cons: () => ['Cada bomba que sale acerca la basura <b>1 pieza</b>'],
-    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; m.bombGarbage += 1; },
+    expeditionCons: () => [],
+    apply: (m, g) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; if (g.mode !== 'expedition') m.bombGarbage += 1; },
   },
   {
     id: 'drill', name: 'Taladro', rarity: 'rare', max: 3,
@@ -398,8 +403,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
     pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
-    cons: () => ['Guardar una pieza cuesta <b>20 puntos</b> por nivel'],
-    apply: (m) => { m.b2bMult += 1; m.holdCost += 20; },
+    cons: () => ['Guardar una pieza cuesta <b>10 puntos</b> por nivel'],
+    apply: (m) => { m.b2bMult += 1; m.holdCost += 10; },
   },
   {
     id: 'eternal', name: 'Combo eterno', rarity: 'epic', max: 2,
@@ -572,6 +577,12 @@ function skillTaken(owned: Map<string, number>, p: PerkDef): boolean {
 }
 
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
+/** Contrapartidas que se muestran: en Expedición, `expeditionCons` si existe. */
+export function consOf(p: PerkDef, stacks: number, expedition: boolean): string[] {
+  if (expedition && p.expeditionCons) return p.expeditionCons(stacks);
+  return p.cons?.(stacks) ?? [];
+}
+
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
   return bestLevel >= (p.unlock ?? UNLOCK_LEVEL[p.rarity]);
 }
