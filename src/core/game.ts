@@ -259,6 +259,7 @@ export class Game {
     this.generated++;
     const m = this.mods;
     const bomb = m.bombEvery > 0 && this.generated % m.bombEvery === 0;
+    if (bomb) this.garbageCounter += m.bombGarbage;
     const prism = !bomb && m.prismEvery > 0 && this.generated % m.prismEvery === 0;
     const gold = !bomb && !prism && this.rng() < m.goldChance;
     const heavy = m.heavyEvery > 0 && this.generated % m.heavyEvery === 0;
@@ -1245,6 +1246,8 @@ export class Game {
     if (this.state !== 'choosing' || this.rerolls <= 0) return false;
     this.rerolls--;
     this.record([this.steps, 'reroll']);
+    if (this.mods.rerollStreak) this.addStreak(-this.mods.rerollStreak);
+    this.garbageCounter += this.mods.rerollGarbage;
     this.rollChoices();
     return true;
   }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { baseMods } from './perks';
 import { heatGain } from './streak';
-import { CURSES, isUnlocked, NO_HEAT, offerOdds, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
+import { CURSES, consOf, isUnlocked, NO_HEAT, offerOdds, PERKS, PERK_BY_ID, rollOffer, rollPerks } from './perks';
 import { makeRng } from './rng';
 import { Game } from './game';
 
@@ -186,5 +186,31 @@ describe('ofertas', () => {
       }
     }
     expect(cursed).toBeGreaterThan(0);
+  });
+});
+
+describe('contrapartidas en Expedición', () => {
+  const find = (id: string) => PERKS.find((p) => p.id === id)!;
+  const fake = (mode: string) => ({ mode, rerolls: 2 }) as unknown as Game;
+
+  it('Trébol, Bomba y Dique no tienen desventaja en Expedición y sí en el arcade', () => {
+    for (const id of ['clover', 'bomb', 'dike']) {
+      const p = find(id);
+      expect(consOf(p, 1, true)).toEqual([]);
+      expect(consOf(p, 1, false).length).toBeGreaterThan(0);
+    }
+    const arcade = baseMods();
+    find('clover').apply(arcade, fake('normal'));
+    expect(arcade.linesReduction).toBe(-1);
+    const exp = baseMods();
+    find('clover').apply(exp, fake('expedition'));
+    expect(exp.linesReduction).toBe(0);
+    expect(exp.luck).toBe(1);
+  });
+
+  it('Dique no te quita cambios de cartas en Expedición', () => {
+    const g = fake('expedition');
+    find('dike').apply(baseMods(), g);
+    expect(g.rerolls).toBe(2);
   });
 });

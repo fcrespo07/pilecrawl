@@ -104,6 +104,9 @@ describe('bot de equilibrio', () => {
   // v13 (rework de perks, fase 1): las maldiciones Deriva y Ruleta mueven bloques que el bot no sabe leer y el bot coge maldiciones al azar:
   // la primera partida pasa de 14 a 21 perdidas de 60 (sin las maldiciones nuevas, 14). Es la subida buscada de las maldiciones: techo 22.
   // v14 (cada carta con su rareza): en la primera partida el bot ve más raras mezcladas con las comunes y pierde menos (8 de 60, antes 21); todo desbloqueado, 26. Suelo de la primera partida: 6.
+  // v17 (las doce cartas sin contrapartida ahora tienen una que no es solo velocidad: basura al cambiar cartas o con bombas,
+  // racha, reserva cara, fijado antes): la primera partida sube de 8 a 24 de 60 con el bot, que coge las cartas al azar y no
+  // esquiva la basura. Es la subida buscada de las contrapartidas, y se nota en la primera partida: techo 26.
   // Las partidas usan semillas fijas: si una regla cambia la dificultad de verdad, este test lo avisa.
   it('la proporción de partidas perdidas sigue en su banda', () => {
     const unlocked = Array.from({ length: GAMES }, (_, i) => playBot(1000 + i));
@@ -112,6 +115,6 @@ describe('bot de equilibrio', () => {
     expect(lost(unlocked)).toBeGreaterThanOrEqual(10);
     expect(lost(unlocked)).toBeLessThanOrEqual(40);
     expect(lost(firstRun)).toBeGreaterThanOrEqual(6);
-    expect(lost(firstRun)).toBeLessThanOrEqual(22);
+    expect(lost(firstRun)).toBeLessThanOrEqual(26);
   }, 120_000);
 });
