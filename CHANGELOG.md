@@ -3,6 +3,8 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+
+## 0.41.3 — 2026-10-30
 - (#101) Inglés casi completo: nombres y textos de mejoras, maldiciones, hiperperks y jefes, catálogo, Expedición, tutorial, ajustes, nombres de teclas y los textos que salen sobre el tablero. Un test comprueba que las cifras del inglés coinciden con las del español. Pendiente: ranking, mensajes de partida guardada y el laboratorio.
 
 ## 0.41.2 — 2026-10-30
