@@ -725,6 +725,10 @@ kbd {
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
+/* Victoria: la pantalla de fin se vuelve dorada en vez del rojo de la derrota */
+#over.win .stripe-title { color: var(--hi2); }
+#over.win .stripe-title::before, #over.win .stripe-title::after { background: repeating-linear-gradient(90deg, var(--hi2) 0 6px, transparent 6px 12px); }
+#over.win .big-title { color: var(--hi2); text-shadow: 4px 4px 0 var(--hot); }
 .over-best { font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
 .over-best.record { font-family: var(--f-display); font-weight: 800; letter-spacing: 0.02em; font-size: 18px; color: var(--accent); animation: pulse 0.7s infinite alternate; }
 @keyframes pulse { to { transform: scale(1.08); } }
@@ -1308,7 +1312,16 @@ body.portrait .p-score .sub { display: none; }
 body.portrait .lvl { font-size: 30px; }
 body.portrait .segs { margin-top: 4px; }
 body.portrait .p-level { left: 216px; top: 6px; width: 200px; }
+/* vertical: franja de mejoras bajo el tablero (en táctil, tocarla abre la pausa; ver main.ts) */
 body.portrait .p-perks { display: none; }
+@media (pointer: coarse) and (orientation: portrait) {
+  body.portrait .p-perks { display: flex; flex-direction: row; align-items: center; gap: 8px; left: 8px; right: 8px; top: auto; bottom: 116px; width: auto; height: 26px; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
+  body.portrait .p-perks > header { flex: none; font-size: 8px; }
+  body.portrait #perk-list { display: flex; flex-direction: row; gap: 6px; overflow-x: auto; overflow-y: hidden; min-width: 0; flex: 1; padding: 0; scrollbar-width: none; }
+  body.portrait #perk-list .prow { flex: none; height: 20px; font-size: 14px; border-left-width: 2px; white-space: nowrap; }
+  body.portrait #perk-list .prow .pn { font-size: 14px; }
+  body.portrait #perk-list .empty { display: none; }
+}
 body.portrait .hud-side { display: contents; }
 body.portrait .hud-side > .panel { position: absolute; }
 body.portrait .mini-grid > #time-box { grid-column: auto; }
@@ -1359,6 +1372,20 @@ body.portrait .card-front .fx { padding-bottom: 14px; }
   .coach-m .coach-text { font-size: 16px; margin: 2px 0 4px; }
 }
 .touch-only { display: none; }
+/* controles de la pausa: en pantalla táctil, los gestos en vez de las teclas */
+.pause-keys .tc-keys { display: none; }
+@media (pointer: coarse) {
+  .pause-keys .kb-keys { display: none; }
+  .pause-keys .tc-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .pause-keys .tc-keys li { font-size: 14px; }
+  .pause-keys .tc-keys li span { min-width: 118px; color: var(--hi); }
+  .pause-actions kbd { display: none; }
+  /* sin teclado: se quitan las pistas de tecla de cartas, fin de partida y portada */
+  #reroll kbd, #skip kbd, #cards .hint, #retry-btn kbd, #home-play kbd, #exp-play kbd, .kb-only { display: none; }
+}
+@media (pointer: coarse) and (orientation: portrait) {
+  .pause-actions { padding: 0 16px; box-sizing: border-box; flex-wrap: wrap; }
+}
 @media (pointer: coarse) { .touch-only { display: inline-flex; } }
 
 /* Expedición: pantalla de mejoras permanentes */
@@ -1396,6 +1423,7 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 .set-sec h3 { margin: 0; font-family: var(--f-display); font-size: 11px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .set-row { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 12px; font-size: 20px; color: var(--ink); }
 .set-row input[type="range"] { width: 100%; min-width: 0; accent-color: var(--hi); cursor: pointer; }
+.set-row select { width: 100%; min-width: 0; font: inherit; font-size: 20px; color: var(--ink); background: var(--panel-hi); border: 2px solid var(--line); padding: 4px 8px; cursor: pointer; }
 .set-row output { font-family: var(--f-display); font-size: 10px; color: var(--hi); text-align: right; }
 .set-toggles { display: flex; flex-wrap: wrap; gap: 10px; }
 .set-hint { margin: 0; font-size: 17px; color: var(--muted); line-height: 1.3; }
@@ -1501,3 +1529,9 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 }
 @media (prefers-reduced-motion: reduce) { .boss-intro { animation-name: none; } }
 body.portrait .boss-intro strong { font-size: 20px; }
+
+/* Build de itch.io (VITE_PORTAL=itch): sin enlaces a pilecrawl.fun, GitHub ni anuncios */
+body[data-portal="itch"] .home-foot a,
+body[data-portal="itch"] #ad-prefs,
+body[data-portal="itch"] #privacy-link,
+body[data-portal="itch"] #ad-slot { display: none !important; }

@@ -30,7 +30,7 @@ export const REROLL_EVERY_LEVELS = 5;
 export const SOFT_DROP_MS = 40;
 
 /** Versión de las reglas. Súbela si un cambio hace que una repetición antigua dé otro resultado. */
-export const RULES_VERSION = 16;
+export const RULES_VERSION = 17;
 
 /** Ofertas malditas: desde qué nivel pueden salir y con qué probabilidad (nunca dos seguidas). */
 export const CURSE_FROM_LEVEL = 5;

@@ -5,6 +5,7 @@ import { CURSES, PERKS, type PerkDef } from '../core/perks';
 import type { Game } from '../core/game';
 import { perkIcon } from './icons';
 import { rarityKey, rarityLabel } from './ui';
+import { perkName } from '../i18n/content';
 
 export const LAB_ENABLED = import.meta.env.DEV || new URLSearchParams(location.search).has('lab');
 
@@ -27,7 +28,7 @@ export class Lab {
       this.renderControls();
     });
     $('lab-hyper').innerHTML =
-      '<option value="">Sin hiperperk</option>' + HYPERS.map((h) => `<option value="${h.id}">${h.name}</option>`).join('');
+      '<option value="">Sin hiperperk</option>' + HYPERS.map((h) => `<option value="${h.id}">${perkName(h)}</option>`).join('');
     $('lab-hyper').addEventListener('change', (e) => {
       this.game.labSetHyper(((e.target as HTMLSelectElement).value || null) as HyperId | null);
       this.renderControls();
@@ -69,16 +70,16 @@ export class Lab {
     const n = this.game.perkStacks(p.id);
     return `<div class="lab-row r-${rarityKey(p)}${n ? ' on' : ''}">
       <div class="b-ico">${perkIcon(p.id)}</div>
-      <div class="lab-name">${p.name}<small>${rarityLabel(p)}</small></div>
-      <button type="button" data-act="del" data-id="${p.id}" aria-label="Quitar ${p.name}"${n ? '' : ' disabled'}>−</button>
+      <div class="lab-name">${perkName(p)}<small>${rarityLabel(p)}</small></div>
+      <button type="button" data-act="del" data-id="${p.id}" aria-label="Quitar ${perkName(p)}"${n ? '' : ' disabled'}>−</button>
       <b>${n}/${p.max >= 99 ? '∞' : p.max}</b>
-      <button type="button" data-act="add" data-id="${p.id}" aria-label="Añadir ${p.name}"${n >= p.max ? ' disabled' : ''}>+</button>
+      <button type="button" data-act="add" data-id="${p.id}" aria-label="Añadir ${perkName(p)}"${n >= p.max ? ' disabled' : ''}>+</button>
     </div>`;
   }
 
   private renderList() {
     const g = this.game;
-    const match = (p: PerkDef) => !this.filter || norm(p.name).includes(this.filter);
+    const match = (p: PerkDef) => !this.filter || (norm(p.name).includes(this.filter) || norm(perkName(p)).includes(this.filter));
     const key = `${this.filter}|${g.perkOrder.map((id) => `${id}${g.perkStacks(id)}`).join(',')}`;
     if (key === this.listKey) return;
     this.listKey = key;

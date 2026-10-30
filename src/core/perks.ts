@@ -21,6 +21,12 @@ export interface Mods {
   quadMult: number;
   linesReduction: number; // puede ser negativo (= más líneas por nivel)
   garbageDelay: number; // piezas extra entre filas de basura (negativo = antes)
+  /** piezas de basura que acerca cada cambio de cartas (Cosecha) */
+  rerollGarbage: number;
+  /** piezas de basura que acerca cada bomba que sale (Bomba) */
+  bombGarbage: number;
+  /** racha que quita cada cambio de cartas (Dados) */
+  rerollStreak: number;
   hardDropMult: number;
   softDropPoints: boolean;
   bombEvery: number; // 0 = desactivado
@@ -105,6 +111,9 @@ export function baseMods(): Mods {
     quadMult: 1,
     linesReduction: 0,
     garbageDelay: 0,
+    rerollGarbage: 0,
+    bombGarbage: 0,
+    rerollStreak: 0,
     hardDropMult: 1,
     softDropPoints: true,
     bombEvery: 0,
@@ -156,6 +165,8 @@ export interface PerkDef {
   /** stacks = cuántos tendrás después de cogerlo */
   pros: (stacks: number) => string[];
   cons?: (stacks: number) => string[];
+  /** Expedición: contrapartida que sustituye a `cons` en ese modo (`[]` = ninguna). Va con su `apply` (que mira `g.mode`). */
+  expeditionCons?: (stacks: number) => string[];
   apply: (m: Mods, g: Game) => void;
   /** Nivel de mejor marca para que salga; por defecto el de su rareza (`UNLOCK_LEVEL`). */
   unlock?: number;
@@ -195,7 +206,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'vision', name: 'Visión', rarity: 'common', max: 3,
     pros: () => ['Ves <b>+1 pieza</b> en la cola'],
-    apply: (m) => { m.preview += 1; },
+    cons: () => ['Las piezas se fijan <b>30 ms</b> antes'],
+    apply: (m) => { m.preview += 1; m.lockDelay -= 30; },
   },
   {
     id: 'calm', name: 'Pulso tranquilo', rarity: 'common', max: 3,
@@ -206,7 +218,8 @@ export const PERKS: PerkDef[] = [
     // el comodín sin tope: la oferta nunca se queda sin cartas (ver perks.test.ts)
     id: 'dice', name: 'Dados', rarity: 'common', max: 99,
     pros: () => ['<b>+2 rerolls</b> al elegir mejoras'],
-    apply: (_m, g) => { g.rerolls += 2; },
+    cons: () => ['Cada cambio de cartas te quita <b>2 de racha</b>'],
+    apply: (m, g) => { g.rerolls += 2; m.rerollStreak += 2; },
   },
   {
     id: 'greed', name: 'Codicia', rarity: 'common', max: 3,
@@ -223,12 +236,15 @@ export const PERKS: PerkDef[] = [
   {
     id: 'chain', name: 'Cadena', rarity: 'common', max: 5,
     pros: () => ['El bonus de combo sube un <b>60%</b>'],
-    apply: (m) => { m.comboMult += 0.6; },
+    cons: () => ['Las piezas se fijan <b>20 ms</b> antes'],
+    apply: (m) => { m.comboMult += 0.6; m.lockDelay -= 20; },
   },
   {
     id: 'dike', name: 'Dique', rarity: 'common', max: 3,
     pros: () => ['La basura tarda <b>3 piezas más</b> en subir'],
-    apply: (m) => { m.garbageDelay += 3; },
+    cons: () => ['Pierdes <b>hasta 1 cambio de cartas</b>'],
+    expeditionCons: () => [],
+    apply: (m, g) => { m.garbageDelay += 3; if (g.mode !== 'expedition') g.rerolls = Math.max(0, g.rerolls - 1); },
   },
   {
     id: 'hammer', name: 'Martillo', rarity: 'common', max: 3,
@@ -239,7 +255,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'harvest', name: 'Cosecha', rarity: 'common', max: 2,
     pros: (s) => [`Cada <b>${s > 1 ? 6 : 10} líneas</b> que limpias ganas <b>+1 reroll</b>`],
-    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; },
+    cons: () => ['Cada cambio de cartas acerca la basura <b>1 pieza</b>'],
+    apply: (m) => { m.harvestEvery = m.harvestEvery ? 6 : 10; m.rerollGarbage += 1; },
   },
   {
     id: 'reflex', name: 'Reflejos', rarity: 'common', max: 3,
@@ -263,13 +280,15 @@ export const PERKS: PerkDef[] = [
   {
     id: 'clover', name: 'Trébol', rarity: 'rare', max: 3,
     pros: () => ['Las ofertas traen más mejoras <b>raras</b>, y más <b>épicas y legendarias</b> (si ya están desbloqueadas)'],
-    apply: (m) => { m.luck += 1; },
+    cons: () => ['Cada Trébol quita <b>1 línea</b> de ventaja: subir de nivel pide 1 más'],
+    expeditionCons: () => [],
+    apply: (m, g) => { m.luck += 1; if (g.mode !== 'expedition') m.linesReduction -= 1; },
   },
   {
     id: 'doublehold', name: 'Bolsillo doble', rarity: 'rare', max: 1,
     pros: () => ['Guardas <b>2 piezas</b> en el hold'],
     cons: () => ['Ves <b>1 pieza menos</b> en la cola'],
-    apply: (m) => { m.holdSlots = 2; m.preview = Math.max(1, m.preview - 1); },
+    apply: (m) => { m.holdSlots += 1; m.preview = Math.max(1, m.preview - 1); },
   },
   {
     id: 'freehold', name: 'Hold libre', rarity: 'rare', max: 1,
@@ -280,12 +299,15 @@ export const PERKS: PerkDef[] = [
   {
     id: 'bomb', name: 'Bomba', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[12, 9, 6][s - 1]} piezas</b> sale una bomba`, 'Al fijarse revienta un área de <b>5×5</b>'],
-    apply: (m) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; },
+    cons: () => ['Cada bomba que sale acerca la basura <b>1 pieza</b>'],
+    expeditionCons: () => [],
+    apply: (m, g) => { m.bombEvery = m.bombEvery ? m.bombEvery - 3 : 12; if (g.mode !== 'expedition') m.bombGarbage += 1; },
   },
   {
     id: 'drill', name: 'Taladro', rarity: 'rare', max: 3,
     pros: (s) => [`Cada <b>${[14, 11, 8][s - 1]} piezas</b> sale un taladro que destruye la fila de abajo`, 'Cuenta como <b>línea</b>'],
-    apply: (m) => { m.drillEvery = m.drillEvery ? m.drillEvery - 3 : 14; },
+    cons: () => ['Eliges entre <b>una carta menos</b> (mínimo 2)'],
+    apply: (m) => { m.drillEvery = m.drillEvery ? m.drillEvery - 3 : 14; m.choices = Math.max(2, m.choices - 1); },
   },
   {
     id: 'gold', name: 'Fiebre del oro', rarity: 'rare', max: 3,
@@ -295,24 +317,25 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'irain', name: 'Lluvia de I', rarity: 'rare', max: 2,
-    pros: () => ['Cada bolsa trae <b>una I extra</b>'],
+    pros: () => ['Cada tanda trae <b>una I extra</b>'],
     cons: () => ['…y también <b>una S o Z extra</b>'],
     apply: (m) => { m.extraPieces.push('I', 'SZ'); },
   },
   {
     id: 'exp', name: 'Experiencia', rarity: 'rare', max: 3,
     pros: () => ['Los cuádruples y los giros suman <b>2 líneas más</b> de progreso de nivel'],
-    apply: (m) => { m.expBonus += 2; },
+    cons: () => ['La basura sube <b>1 pieza</b> antes'],
+    apply: (m) => { m.expBonus += 2; m.garbageDelay -= 1; },
   },
   {
     id: 'mono', name: 'Monominó', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 monominós</b>' : 'un <b>monominó</b>'} (1 bloque)`],
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 monominós</b>' : 'un <b>monominó</b>'} (1 bloque)`],
     cons: () => ['Las líneas que completa dan <b>la mitad</b> de puntos'],
     apply: (m) => { m.extraPieces.push('M1'); },
   },
   {
     id: 'hook', name: 'Gancho', rarity: 'rare', max: 1,
-    pros: () => ['Cada bolsa trae un <b>gancho</b> de 5 bloques', 'Las líneas que completa valen <b>×2</b>'],
+    pros: () => ['Cada tanda trae un <b>gancho</b> de 5 bloques', 'Las líneas que completa valen <b>×2</b>'],
     cons: () => ['Es una pieza <b>torpe</b> de encajar'],
     apply: (m) => { m.extraPieces.push('P5'); },
   },
@@ -348,13 +371,15 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'domino', name: 'Dominó', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
-    apply: (m) => { m.extraPieces.push('D2'); },
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 dominós</b>' : 'un <b>dominó</b>'} (2 bloques)`],
+    cons: () => ['Ves <b>1 pieza menos</b> en la cola'],
+    apply: (m) => { m.extraPieces.push('D2'); m.preview = Math.max(1, m.preview - 1); },
   },
   {
     id: 'shortbar', name: 'Barra corta', rarity: 'rare', max: 2,
-    pros: (s) => [`Cada bolsa trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
-    apply: (m) => { m.extraPieces.push('I3'); },
+    pros: (s) => [`Cada tanda trae ${s > 1 ? '<b>2 barras cortas</b>' : 'una <b>barra corta</b>'} (3 bloques)`],
+    cons: () => ['La basura sube <b>1 pieza</b> antes'],
+    apply: (m) => { m.extraPieces.push('I3'); m.garbageDelay -= 1; },
   },
   // ───────── Épicas ─────────
   {
@@ -378,7 +403,8 @@ export const PERKS: PerkDef[] = [
   {
     id: 'b2b', name: 'Fuego cruzado', rarity: 'epic', max: 2,
     pros: () => ['Encadenar cuádruples o giros (back-to-back) suma <b>+1</b> a su bonus por cada copia: de ×1,5 a ×2,5'],
-    apply: (m) => { m.b2bMult += 1; },
+    cons: () => ['Guardar una pieza cuesta <b>10 puntos</b> por nivel'],
+    apply: (m) => { m.b2bMult += 1; m.holdCost += 10; },
   },
   {
     id: 'eternal', name: 'Combo eterno', rarity: 'epic', max: 2,
@@ -418,7 +444,7 @@ export const PERKS: PerkDef[] = [
   },
   {
     id: 'cross', name: 'Cruz', rarity: 'epic', max: 1,
-    pros: () => ['Cada bolsa cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×5</b>'],
+    pros: () => ['Cada tanda cambia la <b>T</b> por una <b>cruz</b> de 5 bloques', 'Las líneas que completa valen <b>×5</b>'],
     cons: () => ['Como no hay T, tampoco hay <b>giros de T</b>'],
     apply: (m) => { m.crossSwap = true; },
   },
@@ -509,7 +535,7 @@ export const CURSES: PerkDef[] = [
   },
   {
     id: 'c_ballast', name: 'Lastre', rarity: 'common', max: 1, curse: true,
-    pros: () => [], cons: () => ['Cada bolsa trae <b>una S o Z extra</b>'],
+    pros: () => [], cons: () => ['Cada tanda trae <b>una S o Z extra</b>'],
     apply: (m) => { m.extraPieces.push('SZ'); },
   },
   {
@@ -551,6 +577,12 @@ function skillTaken(owned: Map<string, number>, p: PerkDef): boolean {
 }
 
 /** Un perk está disponible si su rareza ya se desbloqueó con el mejor nivel alcanzado. */
+/** Contrapartidas que se muestran: en Expedición, `expeditionCons` si existe. */
+export function consOf(p: PerkDef, stacks: number, expedition: boolean): string[] {
+  if (expedition && p.expeditionCons) return p.expeditionCons(stacks);
+  return p.cons?.(stacks) ?? [];
+}
+
 export function isUnlocked(p: PerkDef, bestLevel: number): boolean {
   return bestLevel >= (p.unlock ?? UNLOCK_LEVEL[p.rarity]);
 }

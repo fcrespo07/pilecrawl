@@ -23,6 +23,8 @@ import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } fro
 import type { Owned } from './core/expedition';
 import type { PressureId } from './core/pressure';
 import { UI } from './ui/ui';
+import { applyLang, L, t, type Key } from './i18n';
+import { initPortal, portal } from './portal/portal';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
 import { postStats, StatsCollector } from './net/stats';
@@ -168,6 +170,7 @@ function wireAudioAndFeel() {
   ev.on('bossDown', () => audio.levelUp());
   ev.on('garbage', () => audio.garbage());
   ev.on('levelup', ({ level }) => {
+    portal.happytime();
     setTimeout(() => audio.levelUp(), 120);
     audio.setIntensity(level);
     // el tutorial y el laboratorio no cuentan para desbloquear rarezas
@@ -179,12 +182,13 @@ function wireAudioAndFeel() {
   ev.on('hyper', () => audio.hyperOn());
   ev.on('gameover', () => {
     endLock.arm();
+    portal.gameplayStop();
     audio.stopMusic();
     audio.gameOver();
     // Expedición: los fragmentos se dan una sola vez, al acabar (el laboratorio no puntúa)
     const prize =
       game.mode === 'expedition' && !game.sandbox
-        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time }, game.pressure)
+        ? awardRun({ quads: game.quads, spins: game.spins, maxCombo: Math.max(0, game.maxCombo), level: game.level, lines: game.lines, timeMs: game.time }, game.pressure, game.endReason === 'victory')
         : null;
     if (game.mode !== 'tutorial') ui.showGameOver(prize);
     modeSelect.refresh();
@@ -211,6 +215,10 @@ function wireTouch() {
   document.querySelector<HTMLButtonElement>('[data-touch="pause"]')!.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     togglePause();
+  });
+  // en vertical táctil, la franja de mejoras bajo el tablero también abre la pausa
+  document.querySelector<HTMLElement>('.p-perks')!.addEventListener('pointerdown', () => {
+    if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) togglePause();
   });
   // la tarjeta de la hiperperk es también su botón táctil
   const hyper = document.getElementById('hyper-box')!;
@@ -263,6 +271,7 @@ function showHome(show: boolean) {
   expScreen.classList.add('hidden');
   home.classList.toggle('hidden', !show);
   if (show) {
+    portal.gameplayStop();
     tutorial.stop();
     audio.stopMusic();
     document.querySelector<HTMLElement>('#home-tutorial .new-tag')!.hidden = loadTutorialDone();
@@ -302,12 +311,12 @@ const fmtNum = (n: number) => Math.round(n).toLocaleString('es-ES');
 const pauseMsg = document.getElementById('pause-msg')!;
 const saveExitBtn = document.getElementById('save-exit')!;
 const quitBtn = document.getElementById('quit-btn')!;
-const QUIT_LABEL = 'Salir sin guardar';
+const quitLabel = () => t('pause.quit');
 let quitTimer = 0;
 
 function disarmQuit() {
   window.clearTimeout(quitTimer);
-  quitBtn.querySelector('span')!.textContent = QUIT_LABEL;
+  quitBtn.querySelector('span')!.textContent = quitLabel();
   delete quitBtn.dataset.armed;
 }
 
@@ -316,6 +325,8 @@ const canSave = () => currentRun !== null && !game.sandbox && game.mode !== 'tut
 
 function setPaused(p: boolean) {
   ui.setPaused(p);
+  if (p) portal.gameplayStop();
+  else portal.gameplayStart();
   if (p) syncAudioButtons();
   disarmQuit();
   pauseMsg.hidden = true;
@@ -331,7 +342,7 @@ function renderResume(note?: string) {
   resumeBox.hidden = !saved;
   if (saved) {
     document.getElementById('home-resume-text')!.innerHTML =
-      `Continuar partida<small>${MODES[modeOf(saved)].name} · nivel ${saved.level} · ${fmtNum(saved.score)} puntos</small>`;
+      `${t('home.resume')}<small>${t(`mode.${modeOf(saved)}.name` as Key)} · ${L('nivel', 'level')} ${saved.level} · ${fmtNum(saved.score)} ${L('puntos', 'points')}</small>`;
   }
   if (note !== undefined) {
     saveNote.textContent = note;
@@ -484,11 +495,14 @@ async function startRun(forced?: 'tutorial' | 'expedition') {
   stepAcc = 0;
   renderer.reset();
   game.bestLevel = ranked ? ranked.bestLevel : loadMeta().bestLevel;
+  // la Expedición tiene su propio mejor nivel: decide qué rarezas salen en sus ofertas
+  if (mode === 'expedition') game.bestLevel = loadExpedition().bestLevel;
   // el tutorial siempre reparte igual: mismas piezas y mismas cartas
   const seed = mode === 'daily' ? dailySeed(date) : mode === 'tutorial' ? TUTORIAL_SEED : ranked ? ranked.seed : randomSeed();
   const exp = mode === 'expedition' ? loadExpedition() : null;
   stats.begin();
   game.start(seed, mode, exp?.owned ?? {}, exp?.unlocked ?? [], exp?.pressure ?? []);
+  portal.gameplayStart();
   currentRun = { mode, date, runId: ranked?.runId, startedAt: Date.now(), exp: exp ? { owned: exp.owned, unlocked: [...exp.unlocked], pressure: exp.pressure } : undefined };
   ui.startGame(date);
   if (mode === 'tutorial') tutorial.start();
@@ -501,9 +515,9 @@ const pauseSound = document.getElementById('pause-sound')!;
 /** Botones de música y sonido del menú de pausa: se redibujan con M, N o desde Ajustes. */
 function syncAudioButtons() {
   pauseMusic.setAttribute('aria-pressed', String(audio.musicOn));
-  pauseMusic.querySelector('span')!.textContent = audio.musicOn ? 'Música: sí' : 'Música: no';
+  pauseMusic.querySelector('span')!.textContent = `${t('audio.music')}: ${audio.musicOn ? t('audio.on') : t('audio.off')}`;
   pauseSound.setAttribute('aria-pressed', String(!audio.muted));
-  pauseSound.querySelector('span')!.textContent = audio.muted ? 'Sonido: no' : 'Sonido: sí';
+  pauseSound.querySelector('span')!.textContent = `${t('audio.sound')}: ${audio.muted ? t('audio.off') : t('audio.on')}`;
 }
 
 /** Efectos de pantalla (shaders): se guardan, y un equipo lento los apaga solo. */
@@ -511,7 +525,7 @@ function setEffects(on: boolean, save = true) {
   renderer.highQuality = on;
   renderer.applyQuality();
   fxToggle.setAttribute('aria-pressed', String(on));
-  fxToggle.querySelector('span')!.textContent = on ? 'Efectos: sí' : 'Efectos: no';
+  fxToggle.querySelector('span')!.textContent = on ? t('set.fxOn') : t('set.fxOff');
   if (!save) return;
   try { localStorage.setItem('blockrogue.fx', on ? '1' : '0'); } catch { /* sin almacenamiento */ }
 }
@@ -597,6 +611,16 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 async function boot() {
+  applyLang();
+  window.addEventListener('langchange', () => {
+    renderResume();
+    refreshPanels();
+    ui.refreshOfferHint();
+    renderCatalog(catalog);
+    if (!expScreen.classList.contains('hidden')) renderExpedition(expScreen);
+  });
+  // el SDK de un portal (si lo hay) arranca en paralelo; sin portal no hace nada
+  void initPortal().then(() => portal.loadingStop());
   await Promise.allSettled([
     document.fonts.load('16px "Press Start 2P"'),
     document.fonts.load('16px VT323'),
@@ -617,6 +641,18 @@ async function boot() {
   setEffects(fxOn, false);
   renderer.onAutoOff = () => setEffects(false, false);
   fxToggle.addEventListener('click', () => { setEffects(!renderer.highQuality); fxToggle.blur(); });
+  // pantalla completa: solo si el navegador (o el portal que embebe el juego) la permite
+  const fsBtn = document.getElementById('fs-toggle')!;
+  if (document.fullscreenEnabled && portal.allowsOwnFullscreen) {
+    fsBtn.hidden = false;
+    fsBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen().catch(() => {});
+      fsBtn.blur();
+    });
+  }
+  // en el build de itch el pie y los enlaces salen de pilecrawl.fun: se ocultan (ver style.css)
+  if (import.meta.env.VITE_PORTAL === 'itch') document.body.dataset.portal = 'itch';
   pauseMusic.addEventListener('click', () => { audio.toggleMusic(); syncAudioButtons(); pauseMusic.blur(); });
   pauseSound.addEventListener('click', () => { audio.toggleMute(); syncAudioButtons(); pauseSound.blur(); });
   // Ajustes cambia lo mismo: sus botones se escuchan después de que actualicen el audio

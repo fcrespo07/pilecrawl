@@ -38,21 +38,21 @@
             <div class="home-center">
               <header class="home-hero">
                 <canvas class="home-logo" data-src="/logo.png" aria-hidden="true"></canvas>
-                <p class="home-kicker">Roguelite de bloques</p>
+                <p class="home-kicker" data-i18n="home.kicker">Roguelite de bloques</p>
                 <h1 class="home-title">Pilecrawl</h1>
               </header>
-              <h2 id="h-arcade" class="home-mode-label">Modos</h2>
+              <h2 id="h-arcade" class="home-mode-label" data-i18n="home.modes">Modos</h2>
               <div id="mode-select" class="mode-select"></div>
               <div id="home-resume-box" class="resume-box" hidden>
-                <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text">Continuar partida</span></button>
-                <button id="home-resume-drop" class="rank-link" type="button">Descartar partida guardada</button>
+                <button id="home-resume" class="home-btn" type="button"><span id="home-resume-text"><span data-i18n="home.resume">Continuar partida</span></span></button>
+                <button id="home-resume-drop" class="rank-link" type="button" data-i18n="home.resumeDrop">Descartar partida guardada</button>
               </div>
               <p id="home-save-note" class="home-note save-note" role="status" hidden></p>
-              <button id="home-play" class="home-btn" type="button">Jugar <kbd>Enter</kbd></button>
-              <button id="home-exp" class="home-btn ghost" type="button">Expedición<i class="new-tag">Beta</i></button>
-              <button id="catalog-open" class="home-btn home-link ghost" type="button">Catálogo</button>
-              <button id="settings-open-home" class="home-btn home-link ghost" type="button">Ajustes</button>
-              <button id="install-btn" class="home-btn home-link ghost" type="button" hidden>Instalar en este dispositivo</button>
+              <button id="home-play" class="home-btn" type="button"><span data-i18n="home.play">Jugar</span> <kbd>Enter</kbd></button>
+              <button id="home-exp" class="home-btn ghost" type="button"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></button>
+              <button id="catalog-open" class="home-btn home-link ghost" type="button" data-i18n="home.catalog">Catálogo</button>
+              <button id="settings-open-home" class="home-btn home-link ghost" type="button" data-i18n="home.settings">Ajustes</button>
+              <button id="install-btn" class="home-btn home-link ghost" type="button" hidden data-i18n="home.install">Instalar en este dispositivo</button>
               <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
                    Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
               <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
@@ -60,86 +60,87 @@
 
             <aside id="panel-right" class="home-panel panel-right" aria-label="Desafío diario"></aside>
           </div>
-          <button class="home-more-hint" id="home-more-link" type="button">Cómo se juega y más<span aria-hidden="true">&#9660;</span></button>
+          <button class="home-more-hint" id="home-more-link" type="button"><span data-i18n="home.moreHint">Cómo se juega y más</span><span aria-hidden="true">&#9660;</span></button>
         </section>
 
         <div id="home-more" class="home-more">
-          <p class="home-lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
+          <p class="home-lead" data-i18n="home.lead">Limpia líneas, sube de nivel y elige 1 de 3 mejoras que rompen las reglas. Cada mejora tiene su precio, y se acumulan.</p>
 
           <!-- Expedición y Rankings -->
           <div class="home-menu">
             <section class="home-entry" aria-labelledby="h-story">
-              <h2 id="h-story">Expedición<i class="new-tag">Beta</i></h2>
-              <p class="home-entry-desc">Cada partida da fragmentos para comprar mejoras permanentes. Sin ranking.</p>
-              <button id="exp-open" class="home-btn small" type="button">Abrir</button>
+              <h2 id="h-story"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></h2>
+              <p class="home-entry-desc" data-i18n="home.expDesc">Cada partida da fragmentos para comprar mejoras permanentes. Sin ranking.</p>
+              <button id="exp-open" class="home-btn small" type="button" data-i18n="home.open">Abrir</button>
             </section>
 
             <section id="home-rank" class="home-entry is-locked" aria-labelledby="h-rank">
               <h2 id="h-rank"><svg class="lock-ico" viewBox="0 0 8 8" aria-hidden="true"><path d="M2 3V2h1V1h2v1h1v1h1v4H1V3zm1 0h2V2H3z" fill="currentColor" fill-rule="evenodd"/></svg>Rankings</h2>
-              <p class="home-entry-desc">Las mejores puntuaciones de cada modo.</p>
-              <p class="home-soon">Próximamente</p>
+              <p class="home-entry-desc" data-i18n="home.rankDesc">Las mejores puntuaciones de cada modo.</p>
+              <p class="home-soon" data-i18n="home.soon">Próximamente</p>
               <button id="rank-open" class="home-btn small" type="button" hidden>Ver rankings</button>
             </section>
           </div>
 
           <!-- Accesos secundarios (tutorial): van en esta fila, no en la primera pantalla -->
           <div class="home-links" id="home-links">
-            <button id="home-tutorial" class="home-btn home-link ghost" type="button">Tutorial<i class="new-tag" hidden>Nuevo</i></button>
+            <button id="fs-toggle" class="home-btn home-link ghost" type="button" hidden data-i18n="home.fullscreen">Pantalla completa</button>
+            <button id="home-tutorial" class="home-btn home-link ghost" type="button"><span data-i18n="home.tutorial">Tutorial</span><i class="new-tag" data-i18n="tag.new" hidden>Nuevo</i></button>
           </div>
 
         <section class="home-card" aria-labelledby="h-how">
-          <h2 id="h-how">Cómo se juega</h2>
+          <h2 id="h-how" data-i18n="home.howTitle">Cómo se juega</h2>
           <ol class="home-steps">
-            <li><b>Limpia líneas.</b> Tablero de 11×18, rotación con rebotes, reserva y giros.</li>
-            <li><b>Sube de nivel.</b> Cada pocas líneas. La basura sube desde el nivel 4.</li>
-            <li><b>Elige una mejora.</b> Ventajas con desventajas que cambian las reglas y se combinan.</li>
-            <li><b>Mantén la racha.</b> Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.</li>
+            <li><b data-i18n="home.step1b">Limpia líneas.</b> <span data-i18n="home.step1">Tablero de 11×18, rotación con rebotes, reserva y giros.</span></li>
+            <li><b data-i18n="home.step2b">Sube de nivel.</b> <span data-i18n="home.step2">Cada pocas líneas. La basura sube desde el nivel 4.</span></li>
+            <li><b data-i18n="home.step3b">Elige una mejora.</b> <span data-i18n="home.step3">Ventajas con desventajas que cambian las reglas y se combinan.</span></li>
+            <li><b data-i18n="home.step4b">Mantén la racha.</b> <span data-i18n="home.step4">Varias líneas a la vez, combos y jugar rápido llenan la racha: salen mejores cartas y, con suerte, una hiperperk que cambia la pantalla mientras dura.</span></li>
           </ol>
         </section>
 
         <section class="home-card" aria-labelledby="h-keys">
-          <h2 id="h-keys">Controles</h2>
+          <h2 id="h-keys" data-i18n="home.keysTitle">Controles</h2>
           <ul class="home-keys">
-            <li><span data-keys="left right"></span>mover</li>
-            <li><span data-keys="down"></span>bajar</li>
-            <li><span data-keys="hard"></span>soltar</li>
-            <li><span data-keys="cw" data-max="2"></span>girar</li>
-            <li><span data-keys="ccw"></span>girar al revés</li>
-            <li><span data-keys="r180"></span>180°</li>
-            <li><span data-keys="hold"></span>reserva</li>
-            <li><span data-keys="hyper"></span>hiperperk</li>
-            <li><span data-keys="skill"></span>habilidad</li>
-            <li><span><kbd>Esc</kbd></span>pausa</li>
+            <li><span data-keys="left right"></span><span data-i18n="keys.move">mover</span></li>
+            <li><span data-keys="down"></span><span data-i18n="keys.down">bajar</span></li>
+            <li><span data-keys="hard"></span><span data-i18n="keys.hard">soltar</span></li>
+            <li><span data-keys="cw" data-max="2"></span><span data-i18n="keys.cw">girar</span></li>
+            <li><span data-keys="ccw"></span><span data-i18n="keys.ccw">girar al revés</span></li>
+            <li><span data-keys="r180"></span><span data-i18n="keys.r180">180°</span></li>
+            <li><span data-keys="hold"></span><span data-i18n="keys.hold">reserva</span></li>
+            <li><span data-keys="hyper"></span><span data-i18n="keys.hyper">hiperperk</span></li>
+            <li><span data-keys="skill"></span><span data-i18n="keys.skill">habilidad</span></li>
+            <li><span><kbd>Esc</kbd></span><span data-i18n="keys.pause">pausa</span></li>
           </ul>
-          <p class="home-note">Las teclas se cambian en Ajustes. Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos. En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
+          <p class="home-note" data-i18n-html="home.keysNoteHtml">Las teclas se cambian en Ajustes. <span class="kb-only">Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos.</span> En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
-        <footer class="home-foot">Pilecrawl · versión <span data-version></span> <a class="rank-link" href="/guia.html">Guía</a> · <a class="rank-link" href="/perks.html">Mejoras</a> · <a class="rank-link" href="/privacidad.html">Privacidad</a> · <a class="rank-link" href="/acerca.html">Acerca de</a> · <a class="rank-link" href="/novedades.html">Novedades</a> · <a class="rank-link" href="/reportar.html">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
+        <footer class="home-foot">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span><a class="rank-link" href="/guia.html" data-i18n="foot.guide">Guía</a> · <a class="rank-link" href="/perks.html" data-i18n="foot.perks">Mejoras</a> · <a class="rank-link" href="/privacidad.html" data-i18n="foot.privacy">Privacidad</a> · <a class="rank-link" href="/acerca.html" data-i18n="foot.about">Acerca de</a> · <a class="rank-link" href="/novedades.html" data-i18n="foot.news">Novedades</a> · <a class="rank-link" href="/reportar.html" data-i18n="foot.bug">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden data-i18n="foot.adPrefs">Preferencias de anuncios</button></footer>
         </div>
       </div>
     </main>
 
     <!-- ═════════════ Catálogo: página aparte, se abre desde la portada ═════════════ -->
-    <main id="catalog" class="home hidden" tabindex="-1" aria-label="Catálogo y puntuación">
+    <main id="catalog" class="home hidden" tabindex="-1" data-i18n-attr="aria-label=catalog.aria">
       <div class="home-inner">
         <header class="cat-head">
-          <button id="catalog-back" class="home-btn" type="button">Volver</button>
-          <h1 class="home-title cat-title">Catálogo</h1>
+          <button id="catalog-back" class="home-btn" type="button" data-i18n="nav.back">Volver</button>
+          <h1 class="home-title cat-title" data-i18n="home.catalog">Catálogo</h1>
         </header>
         <div id="catalog-body" class="cat-body-all"></div>
       </div>
     </main>
 
-    <main id="expedition" class="home hidden" tabindex="-1" aria-label="Expedición">
+    <main id="expedition" class="home hidden" tabindex="-1" data-i18n-attr="aria-label=mode.expedition.name">
       <div class="home-inner">
         <header class="cat-head">
-          <button id="exp-back" class="home-btn" type="button">Volver</button>
-          <h1 class="home-title cat-title">Expedición<i class="new-tag">Beta</i></h1>
+          <button id="exp-back" class="home-btn" type="button" data-i18n="nav.back">Volver</button>
+          <h1 class="home-title cat-title"><span data-i18n="home.exp">Expedición</span><i class="new-tag" data-i18n="tag.beta">Beta</i></h1>
         </header>
         <section class="home-card">
-          <p class="home-lead">Fragmentos: <b id="exp-shards">0</b> · Expediciones: <b id="exp-runs">0</b></p>
-          <p class="home-note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
-          <button id="exp-play" class="home-btn" type="button">Jugar Expedición <kbd>Enter</kbd></button>
+          <p class="home-lead"><span data-i18n="exp.shards">Fragmentos</span>: <b id="exp-shards">0</b> · <span data-i18n="exp.runs">Expediciones</span>: <b id="exp-runs">0</b> · <span data-i18n="exp.best">Mejor nivel</span>: <b id="exp-best">0</b> · <span data-i18n="exp.wins">Victorias</span>: <b id="exp-wins">0</b></p>
+          <p class="home-note" data-i18n="exp.note">Beta: los costes y los retos pueden cambiar. Es una partida normal con las mejoras que compres. Al acabar ganas fragmentos según el nivel y las líneas. No entra en el ranking.</p>
+          <button id="exp-play" class="home-btn" type="button"><span data-i18n="exp.play">Jugar Expedición</span> <kbd>Enter</kbd></button>
         </section>
         <div id="exp-body"></div>
       </div>
@@ -156,22 +157,22 @@
           <div id="bb-rule" class="bb-rule"></div>
         </div>
         <div id="boss-intro" class="boss-intro" hidden>
-          <small id="bi-tag">Nivel jefe</small>
+          <small id="bi-tag" data-i18n="hud.boss">Nivel jefe</small>
           <strong id="bi-name"></strong>
           <span id="bi-rule"></span>
           <em id="bi-goal"></em>
         </div>
         <section class="panel p-score">
-          <header>Puntos</header>
+          <header data-i18n="hud.points">Puntos</header>
           <div id="score" class="num-big">0</div>
-          <div class="sub">MULT <b id="mult">×1,00</b></div>
+          <div class="sub"><span data-i18n="hud.mult">MULT</span> <b id="mult">×1,00</b></div>
         </section>
 
         <section class="panel p-level">
-          <header>Nivel<span id="lvl-stage" class="lvl-stage" hidden><em id="lvl-stage-name"></em><b id="lvl-stage-pips" class="pips"></b></span></header>
+          <header><span data-i18n="hud.level">Nivel</span><span id="lvl-stage" class="lvl-stage" hidden><em id="lvl-stage-name"></em><b id="lvl-stage-pips" class="pips"></b></span></header>
           <div class="lvl-row">
             <div id="level" class="lvl">01</div>
-            <div class="lvl-meta"><b id="lvl-progress">0/8</b><small>líneas</small></div>
+            <div class="lvl-meta"><b id="lvl-progress">0/8</b><small data-i18n="hud.lines">líneas</small></div>
           </div>
           <div id="lvl-segs" class="segs"></div>
         </section>
@@ -179,34 +180,34 @@
         <div class="mini-grid">
           <section class="panel mini"><header>Combo</header><div id="combo" class="num">—</div></section>
           <section class="panel mini" id="b2b-box"><header>B2B</header><div class="ico" id="b2b-ico"></div></section>
-          <section class="panel mini"><header>Vidas</header><div id="lives" class="ico-row"></div></section>
-          <section class="panel mini"><header>Rerolls</header><div id="rerolls" class="num">1</div></section>
-          <section class="panel mini" id="time-box"><header id="time-label">Tiempo</header><div id="time" class="num">0:00</div></section>
+          <section class="panel mini"><header data-i18n="hud.lives">Vidas</header><div id="lives" class="ico-row"></div></section>
+          <section class="panel mini"><header data-i18n="hud.rerolls">Rerolls</header><div id="rerolls" class="num">1</div></section>
+          <section class="panel mini" id="time-box"><header id="time-label" data-i18n="hud.time">Tiempo</header><div id="time" class="num">0:00</div></section>
         </div>
 
         <section class="panel p-perks">
-          <header>Mejoras <span id="perk-count">0</span></header>
+          <header><span data-i18n="hud.perks">Mejoras</span> <span id="perk-count">0</span></header>
           <div id="perk-list"></div>
         </section>
 
         <div class="hud-side">
           <section class="panel p-streak" id="streak-box" data-tier="0">
-            <header>Racha <span id="streak-num">0</span></header>
-            <div id="streak-tier" class="st-tier">Sin racha</div>
+            <header><span data-i18n="hud.streak">Racha</span> <span id="streak-num">0</span></header>
+            <div id="streak-tier" class="st-tier" data-i18n="hud.noStreak">Sin racha</div>
             <div class="hy-bar st-meter"><i id="streak-fill"></i><s style="left:20%"></s><s style="left:40%"></s><s style="left:60%"></s><s style="left:80%"></s></div>
             <div id="streak-chain" class="st-chain"></div>
             <div id="streak-odds" class="st-odds"></div>
           </section>
 
           <section class="panel p-hyper" id="hyper-box" data-state="none">
-            <header>Hiper <kbd data-keys="hyper"></kbd></header>
-            <div class="hy-row"><div id="hyper-ico" class="hy-ico"></div><div id="hyper-name" class="hy-name">Hiperperk</div></div>
+            <header><span data-i18n="hud.hyper">Hiper</span> <kbd data-keys="hyper"></kbd></header>
+            <div class="hy-row"><div id="hyper-ico" class="hy-ico"></div><div id="hyper-name" class="hy-name" data-i18n="hud.hyperperk">Hiperperk</div></div>
             <div class="hy-bar"><i id="hyper-fill"></i></div>
             <div id="hyper-state" class="hy-state"></div>
           </section>
 
           <section class="panel p-skill" id="skill-box" data-state="none" hidden>
-            <header>Habilidad <kbd data-keys="skill"></kbd></header>
+            <header><span data-i18n="hud.skill">Habilidad</span> <kbd data-keys="skill"></kbd></header>
             <div class="hy-row"><div id="skill-ico" class="hy-ico"></div><div id="skill-name" class="hy-name"></div></div>
             <div id="skill-state" class="hy-state"></div>
           </section>
@@ -214,64 +215,73 @@
 
       </div>
       <div id="tooltip"></div>
-      <div id="lab-badge" class="lab-badge" hidden>Laboratorio · no puntúa</div>
+      <div id="lab-badge" class="lab-badge" hidden data-i18n="lab.badge">Laboratorio · no puntúa</div>
 
       <!-- Entrenador del tutorial (src/ui/tutorial.ts): aquí en pantallas con ratón -->
       <aside class="coach coach-d" aria-live="polite" hidden></aside>
 
       <!-- ═════════════ Elección de mejoras ═════════════ -->
       <div id="perks" class="overlay">
-        <div class="stripe-title"><span id="perk-stripe">Subida de nivel</span></div>
-        <div class="perk-title">NIVEL <span id="perk-level">02</span></div>
-        <div class="perk-sub" id="perk-sub">Elige una mejora</div>
+        <div class="stripe-title"><span id="perk-stripe" data-i18n="perk.stripe">Subida de nivel</span></div>
+        <div class="perk-title"><span data-i18n="perk.level">NIVEL</span> <span id="perk-level">02</span></div>
+        <div class="perk-sub" id="perk-sub" data-i18n="perk.choose">Elige una mejora</div>
         <div class="perk-odds" id="perk-odds"></div>
         <div id="cards"></div>
         <div class="perk-actions">
-          <button id="reroll" class="btn ghost small"><span>Reroll</span><kbd>R</kbd><b id="reroll-count">1</b></button>
-          <button id="skip" class="btn ghost small" title="No coges carta y ganas un reroll"><span>Saltar</span><kbd>K</kbd><b>+1</b></button>
-          <span class="hint">Pulsa <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd id="key4" hidden>4</kbd> o haz clic</span>
+          <button id="reroll" class="btn ghost small"><span data-i18n="perk.reroll">Reroll</span><kbd>R</kbd><b id="reroll-count">1</b></button>
+          <button id="skip" class="btn ghost small" data-i18n-attr="title=perk.skipTitle"><span data-i18n="perk.skip">Saltar</span><kbd>K</kbd><b>+1</b></button>
+          <span class="hint" data-i18n-html="perk.hintHtml">Pulsa <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd id="key4" hidden>4</kbd> o haz clic</span>
         </div>
         <div id="shed" class="perk-shed"></div>
       </div>
 
       <!-- ═════════════ Pausa ═════════════ -->
       <div id="pause" class="overlay">
-        <div class="stripe-title"><span>Sistema en espera</span></div>
-        <h2 class="big-title">PAUSA</h2>
+        <div class="stripe-title"><span data-i18n="pause.stripe">Sistema en espera</span></div>
+        <h2 class="big-title" data-i18n="pause.title">PAUSA</h2>
         <div class="build">
-          <header>Tu build</header>
+          <header data-i18n="pause.build">Tu build</header>
           <div id="build-list"></div>
         </div>
         <div class="build pause-keys">
-          <header>Controles</header>
-          <ul class="keys">
-            <li><span data-keys="left right"></span>mover</li>
-            <li><span data-keys="down"></span>bajar</li>
-            <li><span data-keys="hard"></span>soltar</li>
-            <li><span data-keys="cw" data-max="2"></span>girar</li>
-            <li><span data-keys="ccw"></span>girar al revés</li>
+          <header data-i18n="home.keysTitle">Controles</header>
+          <ul class="keys tc-keys" aria-label="Gestos en pantalla táctil">
+            <li><span data-i18n="tc.drag">arrastrar</span><span data-i18n="keys.move">mover</span></li>
+            <li><span data-i18n="tc.dragSlow">arrastrar lento</span><span data-i18n="keys.down">bajar</span></li>
+            <li><span data-i18n="tc.flick">tirón abajo</span><span data-i18n="keys.hard">soltar</span></li>
+            <li><span data-i18n="tc.tap">tocar</span><span data-i18n="keys.cw">girar</span></li>
+            <li><span data-i18n="tc.swipe">deslizar arriba</span><span data-i18n="keys.hold">reserva</span></li>
+            <li><span data-i18n="tc.tapHyper">tocar Hiper</span><span data-i18n="keys.hyper">hiperperk</span></li>
+            <li><span data-i18n="tc.tapPanel">tocar panel</span><span data-i18n="keys.skill">habilidad</span></li>
+          </ul>
+          <ul class="keys kb-keys">
+            <li><span data-keys="left right"></span><span data-i18n="keys.move">mover</span></li>
+            <li><span data-keys="down"></span><span data-i18n="keys.down">bajar</span></li>
+            <li><span data-keys="hard"></span><span data-i18n="keys.hard">soltar</span></li>
+            <li><span data-keys="cw" data-max="2"></span><span data-i18n="keys.cw">girar</span></li>
+            <li><span data-keys="ccw"></span><span data-i18n="keys.ccw">girar al revés</span></li>
             <li><span data-keys="r180"></span>180°</li>
-            <li><span data-keys="hold"></span>reserva</li>
-            <li><span data-keys="hyper"></span>hiperperk</li>
-            <li><span data-keys="skill"></span>habilidad</li>
-            <li><span><kbd>Esc</kbd></span>pausa</li>
-            <li><span><kbd>M</kbd></span>música</li>
-            <li><span><kbd>N</kbd></span>sonido</li>
-            <li><span><kbd>F</kbd></span>efectos</li>
+            <li><span data-keys="hold"></span><span data-i18n="keys.hold">reserva</span></li>
+            <li><span data-keys="hyper"></span><span data-i18n="keys.hyper">hiperperk</span></li>
+            <li><span data-keys="skill"></span><span data-i18n="keys.skill">habilidad</span></li>
+            <li><span><kbd>Esc</kbd></span><span data-i18n="keys.pause">pausa</span></li>
+            <li><span><kbd>M</kbd></span><span data-i18n="pause.music">música</span></li>
+            <li><span><kbd>N</kbd></span><span data-i18n="pause.sound">sonido</span></li>
+            <li><span><kbd>F</kbd></span><span data-i18n="pause.fx">efectos</span></li>
           </ul>
         </div>
         <div class="pause-actions">
           <button id="pause-music" class="btn ghost small" type="button" aria-pressed="true"><span>Música: sí</span><kbd>M</kbd></button>
           <button id="pause-sound" class="btn ghost small" type="button" aria-pressed="false"><span>Sonido: sí</span><kbd>N</kbd></button>
-          <button id="settings-open" class="btn ghost small" type="button"><span>Ajustes</span></button>
-          <button id="save-exit" class="btn ghost small" type="button"><span>Guardar y salir</span></button>
-          <button id="quit-btn" class="btn ghost small" type="button"><span>Salir sin guardar</span></button>
-          <button id="lab-open" class="btn ghost small" type="button" hidden><span>Laboratorio</span></button>
-          <button id="resume-btn" class="btn ghost small touch-only" type="button"><span>Continuar</span></button>
+          <button id="settings-open" class="btn ghost small" type="button"><span data-i18n="home.settings">Ajustes</span></button>
+          <button id="save-exit" class="btn ghost small" type="button"><span data-i18n="pause.saveExit">Guardar y salir</span></button>
+          <button id="quit-btn" class="btn ghost small" type="button"><span data-i18n="pause.quit">Salir sin guardar</span></button>
+          <button id="lab-open" class="btn ghost small" type="button" hidden><span data-i18n="pause.lab">Laboratorio</span></button>
+          <button id="resume-btn" class="btn ghost small touch-only" type="button"><span data-i18n="pause.continue">Continuar</span></button>
         </div>
         <p id="pause-msg" class="hint pause-msg" role="status" hidden></p>
-        <p class="hint">Pulsa <kbd>Esc</kbd> para continuar</p>
-        <p class="hint">Pilecrawl · versión <span data-version></span></p>
+        <p class="hint" data-i18n-html="pause.escHtml">Pulsa <kbd>Esc</kbd> para continuar</p>
+        <p class="hint">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span></p>
       </div>
 
       <!-- ═════════════ Laboratorio (solo desarrollo o ?lab) ═════════════ -->
@@ -296,10 +306,10 @@
 
       <!-- ═════════════ Fin ═════════════ -->
       <div id="over" class="overlay">
-        <div class="stripe-title danger"><span id="over-mode">Señal perdida</span></div>
+        <div class="stripe-title danger"><span id="over-mode" data-i18n="over.mode">Señal perdida</span></div>
         <h2 id="over-title" class="big-title glitch" data-text="FIN DE PARTIDA">FIN DE PARTIDA</h2>
         <div class="final">
-          <small>Puntuación final</small>
+          <small data-i18n="over.final">Puntuación final</small>
           <div id="over-score" class="final-score">0</div>
           <div id="over-best" class="over-best"></div>
         </div>
@@ -316,9 +326,9 @@
           <button id="publish-btn" class="btn small" type="button" hidden><span>Publicar puntuación</span></button>
           <p id="publish-msg" class="rank-msg" role="status"></p>
         </div>
-        <button id="share-btn" class="btn small" type="button"><span>Compartir resultado</span></button>
-        <button id="retry-btn" class="btn"><span>Otra partida</span><kbd>Enter</kbd></button>
-        <button id="home-btn" class="btn ghost small" type="button"><span>Inicio</span></button>
+        <button id="share-btn" class="btn small" type="button"><span data-i18n="over.share">Compartir resultado</span></button>
+        <button id="retry-btn" class="btn"><span data-i18n="over.again">Otra partida</span><kbd>Enter</kbd></button>
+        <button id="home-btn" class="btn ghost small" type="button"><span data-i18n="over.home">Inicio</span></button>
       </div>
     </div>
     <!-- Igual, fuera del escenario, para pantallas táctiles: allí el escenario se encoge y no cabría -->
@@ -368,15 +378,25 @@
     <div id="settings" class="rank-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
       <div class="rank-panel settings-panel">
         <header>
-          <h2 id="settings-title">Ajustes</h2>
-          <button id="settings-close" class="rank-x" type="button" aria-label="Cerrar">X</button>
+          <h2 id="settings-title" data-i18n="settings.title">Ajustes</h2>
+          <button id="settings-close" class="rank-x" type="button" data-i18n-attr="aria-label=settings.close">X</button>
         </header>
 
+        <section class="set-sec" aria-label="Idioma" data-i18n-attr="aria-label=settings.language">
+          <label class="set-row"><span data-i18n="settings.language">Idioma</span>
+            <select id="set-lang-select">
+              <option value="auto" data-i18n="lang.auto">Automático (del navegador)</option>
+              <option value="es" data-i18n="lang.es">Español</option>
+              <option value="en" data-i18n="lang.en">English</option>
+            </select>
+          </label>
+        </section>
+
         <section class="set-sec" aria-labelledby="set-sound">
-          <h3 id="set-sound">Sonido</h3>
-          <label class="set-row"><span>General</span><input id="vol-master" type="range" min="0" max="100" step="5" /><output id="vol-master-n"></output></label>
-          <label class="set-row"><span>Música</span><input id="vol-music" type="range" min="0" max="100" step="5" /><output id="vol-music-n"></output></label>
-          <label class="set-row"><span>Efectos</span><input id="vol-sfx" type="range" min="0" max="100" step="5" /><output id="vol-sfx-n"></output></label>
+          <h3 id="set-sound" data-i18n="audio.sound">Sonido</h3>
+          <label class="set-row"><span data-i18n="set.general">General</span><input id="vol-master" type="range" min="0" max="100" step="5" /><output id="vol-master-n"></output></label>
+          <label class="set-row"><span data-i18n="audio.music">Música</span><input id="vol-music" type="range" min="0" max="100" step="5" /><output id="vol-music-n"></output></label>
+          <label class="set-row"><span data-i18n="set.fx">Efectos</span><input id="vol-sfx" type="range" min="0" max="100" step="5" /><output id="vol-sfx-n"></output></label>
           <div class="set-toggles">
             <button id="set-music" class="btn ghost small" type="button" aria-pressed="true"><span>Música: sí</span><kbd>M</kbd></button>
             <button id="set-mute" class="btn ghost small" type="button" aria-pressed="false"><span>Sonido: sí</span><kbd>N</kbd></button>
@@ -384,29 +404,29 @@
         </section>
 
         <section class="set-sec" aria-labelledby="set-screen">
-          <h3 id="set-screen">Pantalla</h3>
+          <h3 id="set-screen" data-i18n="set.screen">Pantalla</h3>
           <div class="set-toggles">
             <button id="fx-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Efectos: sí</span><kbd>F</kbd></button>
           </div>
         </section>
 
         <section class="set-sec set-keys-sec" aria-labelledby="set-mouse">
-          <h3 id="set-mouse">Ratón</h3>
+          <h3 id="set-mouse" data-i18n="set.mouse">Ratón</h3>
           <div class="set-toggles">
             <button id="set-mouse-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Control con ratón: sí</span></button>
           </div>
-          <p class="set-hint">La pieza cae en la columna del cursor y el juego te sugiere el mejor giro. Clic: soltar. Rueda o clic derecho: cambiar el giro. Clic en la reserva: guardar. El teclado sigue funcionando.</p>
+          <p class="set-hint" data-i18n="set.mouseHint">La pieza cae en la columna del cursor y el juego te sugiere el mejor giro. Clic: soltar. Rueda o clic derecho: cambiar el giro. Clic en la reserva: guardar. El teclado sigue funcionando.</p>
         </section>
 
         <section class="set-sec set-keys-sec" aria-labelledby="set-keys">
-          <h3 id="set-keys">Controles</h3>
-          <p class="set-hint">Elige un hueco y pulsa la tecla nueva. <kbd>Esc</kbd> cancela y <kbd>Supr</kbd> vacía el hueco. Si la tecla ya hacía otra cosa, se la quita.</p>
+          <h3 id="set-keys" data-i18n="home.keysTitle">Controles</h3>
+          <p class="set-hint" data-i18n-html="set.keysHintHtml">Elige un hueco y pulsa la tecla nueva. <kbd>Esc</kbd> cancela y <kbd>Supr</kbd> vacía el hueco. Si la tecla ya hacía otra cosa, se la quita.</p>
           <div id="set-keylist" class="set-keylist"></div>
           <p id="set-keymsg" class="set-hint set-keymsg" role="status"></p>
-          <label class="set-row"><span>Espera (DAS)</span><input id="set-das" type="range" /><output id="set-das-n"></output></label>
-          <label class="set-row"><span>Repetición (ARR)</span><input id="set-arr" type="range" /><output id="set-arr-n"></output></label>
-          <p class="set-hint">Espera: lo que tarda en repetirse el movimiento al mantener la tecla. Repetición: el tiempo entre pasos (0 es instantáneo).</p>
-          <button id="set-keys-reset" class="btn ghost small" type="button"><span>Restablecer controles</span></button>
+          <label class="set-row"><span data-i18n="set.das">Espera (DAS)</span><input id="set-das" type="range" /><output id="set-das-n"></output></label>
+          <label class="set-row"><span data-i18n="set.arr">Repetición (ARR)</span><input id="set-arr" type="range" /><output id="set-arr-n"></output></label>
+          <p class="set-hint" data-i18n="set.handHint">Espera: lo que tarda en repetirse el movimiento al mantener la tecla. Repetición: el tiempo entre pasos (0 es instantáneo).</p>
+          <button id="set-keys-reset" class="btn ghost small" type="button"><span data-i18n="set.reset">Restablecer controles</span></button>
         </section>
       </div>
     </div>

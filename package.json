@@ -1,6 +1,6 @@
 {
   "name": "pilecrawl",
-  "version": "0.39.0",
+  "version": "0.42.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:server": "esbuild server/index.ts --bundle --platform=node --target=node22 --format=esm --external:node:* --outfile=dist-server/server.mjs && esbuild server/updater-cli.ts --bundle --platform=node --target=node22 --format=esm --external:node:* --outfile=dist-server/updater.mjs",
-    "server": "npm run build:server && node dist-server/server.mjs"
+    "server": "npm run build:server && node dist-server/server.mjs",
+    "build:itch": "VITE_PORTAL=itch vite build --outDir dist-itch --emptyOutDir && cd dist-itch && zip -qr ../pilecrawl-itch.zip ."
   },
   "dependencies": {
     "pixi-filters": "^6.1.5",

@@ -3,7 +3,35 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#103) Tutorial en móvil vertical: el paso de la Racha es más corto, así que el consejo ya no tapa la reserva. Solo texto.
+
+## 0.42.0 — 2026-10-30
 - (#94) **Expedición con curva propia.** Hasta el nivel 10 la velocidad es la del arcade; después sube un paso cada 6 niveles, así que el Monolito llega a 69 ms por fila (no a 40), y cada nivel pide como mucho 8 líneas: unas 200 líneas en total, no 300. Imán nunca cae sobre un hueco de basura ni deja huecos en su columna prohibida: antes había filas que no se podían cerrar. Solo cambia la Expedición; el arcade sigue igual.
+
+## 0.41.3 — 2026-10-30
+- (#101) Inglés casi completo: nombres y textos de mejoras, maldiciones, hiperperks y jefes, catálogo, Expedición, tutorial, ajustes, nombres de teclas y los textos que salen sobre el tablero. Un test comprueba que las cifras del inglés coinciden con las del español. Pendiente: ranking, mensajes de partida guardada y el laboratorio.
+
+## 0.41.2 — 2026-10-30
+- (#100) El build para CrazyGames no muestra el botón de pantalla completa propio, que el portal prohíbe. Fuera de ese build no cambia nada.
+
+## 0.41.1 — 2026-10-30
+- (#99) Versión para itch.io (`npm run build:itch`): rutas relativas, sin enlaces a otras webs y con botón de pantalla completa en la portada. Fuera de ese build no cambia nada.
+
+## 0.41.0 — 2026-10-30
+- (#97) **Cambia las reglas (`RULES_VERSION` 17): el ranking empieza de cero.** Las doce cartas que no tenían contrapartida ya tienen una, suave: Visión (las piezas se fijan 30 ms antes), Dados (cada cambio de cartas quita 2 de racha), Dique (pierdes un cambio de cartas), Cosecha (cada cambio de cartas acerca la basura), Bomba (cada bomba acerca la basura), Cadena (las piezas se fijan 20 ms antes), Fuego cruzado (guardar una pieza cuesta 10 puntos por nivel), Experiencia (la basura sube antes), Dominó (ves una pieza menos), Barra corta (la basura sube antes), Taladro (una carta menos para elegir) y Trébol (una línea más para subir de nivel por cada copia). En la Expedición, Trébol, Bomba y Dique no tienen contrapartida. El reto de nivel 6 abre Dobles reserva y Eco está abierta desde el principio.
+
+## 0.40.2 — 2026-10-29
+- (#98) Inglés en el catálogo y en la cabecera de Expedición (títulos, cifras y botón). El cuerpo del catálogo, la presión, las mejoras permanentes y los nombres de las mejoras siguen en español por ahora.
+
+## 0.40.1 — 2026-10-29
+- (#96) Inglés en la pantalla de partida: marcador, mejoras, racha, hiperperk, elección de cartas, pausa y fin de partida se ven en inglés (con el idioma del navegador o el que elijas en Ajustes). Pendiente: nombres y textos de las mejoras, catálogo, Expedición, tutorial y el resto de ajustes.
+
+## 0.40.0 — 2026-10-29
+- (#95) **Expedición: victorias con premio y pantalla propia.** Vencer al Monolito da 150 fragmentos extra y se cuenta en la pantalla de la Expedición. Ganar abre la Presión siguiente (antes se abría al llegar al nivel 6). La victoria tiene su pantalla dorada, distinta de la derrota. Dos mejoras nuevas: Suerte (más mejoras raras y épicas) y Reserva extra (una pieza más en la reserva). Las Presiones ganadas antes no se conservan: se gana otra vez. Suerte tiene un solo nivel (120 fragmentos) y Bolsillo doble suma a la reserva en vez de fijarla.
+- (#92) En móvil vertical, las mejoras se ven bajo el tablero en una franja (tocarla abre la pausa). Pausa en móvil: los controles son gestos (arrastrar, tocar, tirón, deslizar) en vez de teclas, los botones de la pausa tienen margen en el borde, y en táctil se quitan las pistas de tecla de cartas, fin de partida y portada. Solo presentación.
+- Copy de las mejoras: «Cada bolsa» pasa a «Cada tanda» (las piezas de cada tanda se siguen sacando igual). Solo texto.
+- (#91) **Expedición: se juega por sus propias reglas.** Los perks de puntos (Codicia, Cadena, Fuego cruzado, Vértigo, Reflejos…) ya no salen en la Expedición: allí los puntos no valen nada. Los retos abren perks que sí salen (Cruz pasa a Erosión, Maestro del giro a Experiencia, Combo eterno a Tahúr, Interés compuesto a Eco). Expedición lleva su propio mejor nivel, que decide las rarezas de sus ofertas, y la pantalla de fin muestra ese récord y no el del arcade.
+- (#93) Pilecrawl en **inglés**: la portada, el selector de modos, los paneles y el pie se traducen. Se elige en Ajustes → Idioma (por defecto, el del navegador). El resto del juego sigue en español por ahora. Además, adaptador del SDK de **CrazyGames** que solo se activa en el build de portal (`VITE_PORTAL=crazygames`); en pilecrawl.fun no cambia nada. En Expedición, el aviso «Desbloqueado» ya no anuncia rarezas que esa modalidad no desbloquea.
 
 ## 0.39.0 — 2026-10-29
 - (#87) **Expedición tiene ya los ocho jefes: Niebla (una sola pieza visible y sin fantasma), Espejo (los movimientos a izquierda y derecha se invierten en las 5 primeras piezas de cada 10), Alud (cada 4 piezas se desprende la fila más alta, sin puntos), Cuenta atrás (una fila de basura cada 10 segundos de juego) y el Monolito en el nivel 24, que mezcla dos reglas de las anteriores según la semilla. Vencer al Monolito da la **victoria** (pantalla «VICTORIA»). Partida y el diario siguen sin jefes y sin cambios de reglas.
