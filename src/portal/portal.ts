@@ -48,6 +48,8 @@ export async function initPortal(): Promise<void> {
 }
 
 export const portal = {
+  /** CrazyGames prohíbe botones propios de pantalla completa (el portal ya trae el suyo). */
+  allowsOwnFullscreen: !ACTIVE,
   /** Pantalla de carga lista: el portal puede quitar su pantalla. */
   loadingStop() {
     sdk?.game.loadingStop();
