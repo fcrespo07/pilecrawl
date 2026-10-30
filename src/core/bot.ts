@@ -43,21 +43,31 @@ function evaluate(board: number[][], cells: [number, number][]): Eval {
   return { lines, score: -0.51 * aggregate + 0.76 * lines - 0.36 * holes - 0.18 * bump };
 }
 
-/** Mejor colocación (rotación y columna) para la pieza activa. */
-export function bestPlacement(g: Game): { rot: number; x: number; score: number } | null {
+export interface Placement {
+  rot: number;
+  x: number;
+  score: number;
+}
+
+/** Todas las colocaciones posibles de la pieza activa, de mejor a peor. */
+export function rankPlacements(g: Game): Placement[] {
   const a = g.active!;
   const def: PieceDef = a.def;
   const rots = def.kicks === 'O' ? [0] : [0, 1, 2, 3];
-  let best: { rot: number; x: number; score: number } | null = null;
+  const out: Placement[] = [];
   for (const rot of rots) {
     for (let x = -2; x < COLS + 2; x++) {
       if (g.collides(def, x, a.y, rot)) continue;
       let y = a.y;
       while (!g.collides(def, x, y + 1, rot)) y++;
       const cells = def.shapes[rot].map(([cx, cy]) => [x + cx, y + cy] as [number, number]);
-      const e = evaluate(g.board, cells);
-      if (!best || e.score > best.score) best = { rot, x, score: e.score };
+      out.push({ rot, x, score: evaluate(g.board, cells).score });
     }
   }
-  return best;
+  return out.sort((p, q) => q.score - p.score);
+}
+
+/** Mejor colocación (rotación y columna) para la pieza activa. */
+export function bestPlacement(g: Game): Placement | null {
+  return rankPlacements(g)[0] ?? null;
 }
