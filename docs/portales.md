@@ -57,3 +57,13 @@ Genera `dist-crazygames/` y `pilecrawl-crazygames.zip` (fuera de git). Con `VITE
 - adaptador del SDK v3 (carga, inicio y parada de juego, celebración); los anuncios siguen apagados salvo `VITE_PORTAL_ADS=1` (entonces, un anuncio al empezar una partida nueva tras acabar otra; nunca en el tutorial).
 
 Pendiente antes de enviar: probar en su herramienta de pruebas. Detalle en `informes/portales-plataformas.md`.
+
+## Poki (ZIP)
+
+```
+npm run build:poki
+```
+
+Genera `dist-poki/` y `pilecrawl-poki.zip` (fuera de git) con `VITE_PORTAL=poki`: rutas relativas, portada de un clic, sin enlaces ni anuncios propios y la única petición externa es el SDK de Poki. El adaptador (`portal/portal.ts`) llama a `gameLoadingFinished`, `gameplayStart`/`gameplayStop` (nunca dos iguales seguidos) y `commercialBreak` al empezar una partida tras acabar otra, con el sonido parado mientras dura. Poki decide si hay anuncio; si `init` falla (bloqueador) el juego sigue.
+
+Pendiente antes de enviar: confirmar con Poki la proporción 16:9 frente a nuestro diseño vertical en móvil, política de privacidad dentro del juego si queda algún enlace externo y miniaturas. Detalle en `informes/portales-plataformas.md`.
