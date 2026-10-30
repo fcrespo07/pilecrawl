@@ -92,6 +92,11 @@ describe('ajustes de teclas', () => {
     const s = await fresh();
     expect(s.keyLabel('KeyZ')).toBe('Z');
     expect(s.keyLabel('ArrowLeft')).toBe('←');
+    expect(s.keyLabels('hold', 2)).toEqual(['C', 'Shift']);
+    // el idioma cambia el nombre de las teclas especiales, no el de las letras
+    const { current } = await import('./i18n');
+    current.lang = 'es';
     expect(s.keyLabels('hold', 2)).toEqual(['C', 'Mayús']);
+    current.lang = 'en';
   });
 });

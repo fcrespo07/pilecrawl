@@ -1,7 +1,7 @@
 // Pantalla de Ajustes: volúmenes, efectos, teclas y manejo. Se abre desde la portada y desde la pausa.
 import { audio } from '../fx/audio';
 import {
-  ACTIONS, ACTION_LABEL, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, mouseOn, resetHandling, resetKeys, setHandling, setMouse,
+  ACTIONS, actionLabel, ARR_RANGE, DAS_RANGE, RESERVED, SLOTS, bindKey, handling, keyLabel, keyLabels, keymap, mouseOn, resetHandling, resetKeys, setHandling, setMouse,
   type Action,
 } from '../settings';
 import { loadLangSetting, setLangSetting, t, type LangSetting } from '../i18n';
@@ -68,7 +68,7 @@ export class SettingsUI {
       this.cancelCapture();
       resetKeys();
       resetHandling();
-      this.say('Controles restablecidos.');
+      this.say(t('set.resetDone'));
       this.renderKeys();
       this.renderHandling();
       this.onKeys();
@@ -141,7 +141,7 @@ export class SettingsUI {
     ($('set-das') as HTMLInputElement).value = String(handling.das);
     ($('set-arr') as HTMLInputElement).value = String(handling.arr);
     $('set-das-n').textContent = `${handling.das} ms`;
-    $('set-arr-n').textContent = handling.arr === 0 ? 'instantánea' : `${handling.arr} ms`;
+    $('set-arr-n').textContent = handling.arr === 0 ? t('set.instant') : `${handling.arr} ms`;
   }
 
   private renderKeys() {
@@ -149,11 +149,11 @@ export class SettingsUI {
       const slots = Array.from({ length: SLOTS }, (_, i) => {
         const code = keymap[a][i];
         const on = this.capture?.action === a && this.capture.slot === i;
-        const text = on ? 'Pulsa una tecla' : code ? keyLabel(code) : '–';
-        const label = `${ACTION_LABEL[a]}, hueco ${i + 1}: ${code ? keyLabel(code) : 'vacío'}`;
+        const text = on ? t('set.press') : code ? keyLabel(code) : '–';
+        const label = `${actionLabel(a)}, ${t('set.slot')} ${i + 1}: ${code ? keyLabel(code) : t('set.empty')}`;
         return `<button type="button" class="set-key${on ? ' on' : ''}${code ? '' : ' empty'}" data-action="${a}" data-slot="${i}" aria-label="${label}">${text}</button>`;
       }).join('');
-      return `<div class="set-keyrow"><span>${ACTION_LABEL[a]}</span><div>${slots}</div></div>`;
+      return `<div class="set-keyrow"><span>${actionLabel(a)}</span><div>${slots}</div></div>`;
     });
     $('set-keylist').innerHTML = rows.join('');
   }
@@ -164,7 +164,7 @@ export class SettingsUI {
 
   private startCapture(action: Action, slot: number) {
     this.capture = { action, slot };
-    this.say('Pulsa la tecla nueva. Esc cancela, Supr vacía el hueco.');
+    this.say(t('set.capture'));
     this.renderKeys();
     ($('set-keylist').querySelector('.set-key.on') as HTMLElement | null)?.focus();
   }
@@ -186,12 +186,12 @@ export class SettingsUI {
     this.capture = null;
     if (e.code === 'Delete' || e.code === 'Backspace') {
       bindKey(cap.action, cap.slot, null);
-      this.say('Hueco vacío.');
+      this.say(t('set.slotEmpty'));
     } else if (RESERVED.has(e.code)) {
-      this.say(`${keyLabel(e.code)} está reservada para el juego: elige otra.`);
+      this.say(t('set.reserved', { key: keyLabel(e.code) }));
     } else {
       const stolen = bindKey(cap.action, cap.slot, e.code);
-      this.say(stolen ? `${keyLabel(e.code)} ya era de «${ACTION_LABEL[stolen]}»: ahora es de «${ACTION_LABEL[cap.action]}».` : '');
+      this.say(stolen ? t('set.stolen', { key: keyLabel(e.code), from: actionLabel(stolen), to: actionLabel(cap.action) }) : '');
     }
     this.renderKeys();
     this.onKeys();

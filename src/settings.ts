@@ -1,11 +1,13 @@
 // Ajustes del jugador guardados en el navegador: teclas y manejo (DAS/ARR). El volumen vive en fx/audio.ts.
 // Las teclas solo cambian qué tecla dispara cada acción: las acciones y las repeticiones son las de siempre.
 
+import { current, t, type Key } from './i18n';
+
 /** Acciones de juego que se pueden asignar a teclas (y que también disparan los gestos táctiles). */
 export const ACTIONS = ['left', 'right', 'down', 'hard', 'cw', 'ccw', 'r180', 'hold', 'hyper', 'skill'] as const;
 export type Action = (typeof ACTIONS)[number];
 
-export const ACTION_LABEL: Record<Action, string> = {
+const ACTION_ES: Record<Action, string> = {
   left: 'Mover a la izquierda',
   right: 'Mover a la derecha',
   down: 'Bajar',
@@ -17,6 +19,10 @@ export const ACTION_LABEL: Record<Action, string> = {
   hyper: 'Hiperperk',
   skill: 'Habilidad',
 };
+
+/** Nombre de una acción en el idioma en uso. */
+export const actionLabel = (a: Action): string => t(`act.${a}` as Key);
+export const ACTION_LABEL = ACTION_ES;
 
 /** Teclas por acción (códigos físicos de `KeyboardEvent.code`). */
 export type Keymap = Record<Action, string[]>;
@@ -198,12 +204,36 @@ const NAMES: Record<string, string> = {
   NumpadDecimal: 'Núm .',
 };
 
+const NAMES_EN: Record<string, string> = {
+  Space: 'Space',
+  ControlLeft: 'Left Ctrl',
+  ControlRight: 'Right Ctrl',
+  ShiftLeft: 'Left Shift',
+  ShiftRight: 'Right Shift',
+  AltLeft: 'Left Alt',
+  AltRight: 'Right Alt',
+  Backspace: 'Backspace',
+  Delete: 'Del',
+  Insert: 'Ins',
+  Home: 'Home',
+  End: 'End',
+  PageUp: 'Page Up',
+  PageDown: 'Page Down',
+  CapsLock: 'Caps Lock',
+  NumpadAdd: 'Num +',
+  NumpadSubtract: 'Num -',
+  NumpadMultiply: 'Num *',
+  NumpadDivide: 'Num /',
+  NumpadDecimal: 'Num .',
+};
+
 /** Nombre corto de una tecla para enseñarlo en pantalla («KeyX» → «X», «ShiftLeft» → «Mayús»). */
 export function keyLabel(code: string): string {
+  if (current.lang === 'en' && NAMES_EN[code]) return NAMES_EN[code];
   if (NAMES[code]) return NAMES[code];
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
   if (/^Digit\d$/.test(code)) return code.slice(5);
-  if (/^Numpad\d$/.test(code)) return `Núm ${code.slice(6)}`;
+  if (/^Numpad\d$/.test(code)) return `${current.lang === 'en' ? 'Num' : 'Núm'} ${code.slice(6)}`;
   return code;
 }
 
@@ -212,7 +242,7 @@ export function keyLabels(action: Action, max = 1): string[] {
   const out: string[] = [];
   for (const c of keymap[action]) {
     // en los textos cortos, izquierda y derecha son la misma tecla
-    const l = keyLabel(c).replace(/ (izq|der)$/, '');
+    const l = keyLabel(c).replace(/ (izq|der)$/, '').replace(/^(Left|Right) /, '');
     if (!out.includes(l)) out.push(l);
     if (out.length >= max) break;
   }

@@ -9,9 +9,14 @@ import {
 import { Particles } from './particles';
 import { PostFx } from './postfx';
 import { skinOf, SKINS, type Skin, type SkinId } from './skins';
-import { STREAK_MAX, STREAK_TIER_NAMES, STREAK_TIERS, streakTier } from '../core/streak';
+import { STREAK_MAX, STREAK_TIERS, streakTier } from '../core/streak';
+import { locale, t, type Key } from '../i18n';
+import { perkName } from '../i18n/content';
 
 // estilo píxel: fuente de recreativa y oro claro para los textos flotantes sobre fondo oscuro
+/** El juego da el nombre del giro en español («GIRO T MINI»); en inglés se cambia la palabra. */
+const spinLabel = (name: string) => (name.startsWith('GIRO') ? t('fx.spin') + name.slice(4) : name);
+
 const PIXEL_FONT = '"Press Start 2P", monospace';
 const GOLD_TEXT = 0xffc83d;
 /** Color de cada tramo de racha (0 = sin racha): amarillo, naranja, rojo, rosa. Igual que `.p-streak[data-tier]` en style.css. */
@@ -682,10 +687,10 @@ export class Renderer {
       });
 
       // texto
-      const lineNames = ['', 'SIMPLE', 'DOBLE', 'TRIPLE', 'CUÁDRUPLE'];
-      let label = c.lines >= 4 ? 'CUÁDRUPLE' : lineNames[c.lines];
-      if (c.spin) label = `${c.spinName}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
-      if (c.cascade > 0) label = `CADENA ×${c.cascade + 1}`;
+      const lineNames = ['', t('fx.single'), t('fx.double'), t('fx.triple'), t('fx.quad')];
+      let label = c.lines >= 4 ? t('fx.quad') : lineNames[c.lines];
+      if (c.spin) label = `${spinLabel(c.spinName)}${c.lines ? ' ' + lineNames[Math.min(c.lines, 3)] : ''}`;
+      if (c.cascade > 0) label = t('fx.cascade', { n: c.cascade + 1 });
       const color = c.lines >= 4 ? 0x1f5fa8 : c.spin ? 0x7a3fa0 : c.cascade ? 0xb4541a : this.skin.ink;
       if (c.lines >= 2 || c.spin || c.cascade) this.floatText(label, cxMid, cyMid - 10, { color, size: big ? 40 : 28, life: 1.4 });
       if (c.b2b) this.floatText('BACK-TO-BACK', cxMid, cyMid - 52, { color: 0xb06a14, size: 18, life: 1.4 });
@@ -694,12 +699,12 @@ export class Renderer {
         this.floatText(`COMBO ×${c.combo}`, cxMid, below, { color: 0x4c7d1c, size: 20 + Math.min(c.combo, 10) * 1.5, life: 1.2 });
         below += 32;
       }
-      this.floatText(`+${c.points.toLocaleString('es-ES')}`, cxMid, below, { color: this.skin.ink, size: 16, life: 1.1, vy: -30 });
+      this.floatText(`+${c.points.toLocaleString(locale())}`, cxMid, below, { color: this.skin.ink, size: 16, life: 1.1, vy: -30 });
       below += 28;
-      if (c.gold > 0) this.floatText(`+${c.gold} ORO`, cxMid, below, { color: GOLD_TEXT, size: 18, life: 1.3, vy: -30 });
+      if (c.gold > 0) this.floatText(t('fx.gold', { n: c.gold }), cxMid, below, { color: GOLD_TEXT, size: 18, life: 1.3, vy: -30 });
 
       if (c.perfect) {
-        this.floatText('TABLERO LIMPIO', cxMid, BOARD_Y + BOARD_H / 2, { color: this.skin.ink, size: 46, life: 2.2, vy: -10 });
+        this.floatText(t('fx.perfect'), cxMid, BOARD_Y + BOARD_H / 2, { color: this.skin.ink, size: 46, life: 2.2, vy: -10 });
         this.flash(this.skin.ink, 0.3);
         if (!REDUCED_MOTION) this.post.pixelate(10, 0.4);
         this.shockwave(cxMid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 160, speed: 800 });
@@ -716,7 +721,7 @@ export class Renderer {
 
     ev.on('spinNoLines', ({ spinName, cells }) => {
       const [x, y] = cells[0];
-      this.floatText(spinName, this.cx(x), this.cy(y) - 20, { color: 0x7a3fa0, size: 22 });
+      this.floatText(spinLabel(spinName), this.cx(x), this.cy(y) - 20, { color: 0x7a3fa0, size: 22 });
       this.shake(0.12);
     });
 
@@ -733,8 +738,8 @@ export class Renderer {
       this.shake(0.7);
       this.post.aberrate(0.6);
       this.flash(0xff6a2a, 0.2);
-      this.floatText('¡BOOM!', x, y - 20, { color: 0xb4541a, size: 40 });
-      this.floatText(`+${points.toLocaleString('es-ES')}`, x, y + 22, { size: 16, vy: -70 });
+      this.floatText(t('fx.boom'), x, y - 20, { color: 0xb4541a, size: 40 });
+      this.floatText(`+${points.toLocaleString(locale())}`, x, y + 22, { size: 16, vy: -70 });
     });
 
     ev.on('prism', ({ removed, points, cells }) => {
@@ -748,8 +753,8 @@ export class Renderer {
       this.shockwave(this.cx(x), this.cy(y), { amplitude: 14, wavelength: 150, speed: 500 });
       this.flash(this.skin.ink, 0.3);
       this.shake(0.4);
-      this.floatText(`PRISMA ×${removed.length}`, this.cx(x), this.cy(y) - 30, { color: 0xb8336a, size: 30 });
-      this.floatText(`+${points.toLocaleString('es-ES')}`, this.cx(x), this.cy(y) + 10, { size: 16, vy: -70 });
+      this.floatText(t('fx.prism', { n: removed.length }), this.cx(x), this.cy(y) - 30, { color: 0xb8336a, size: 30 });
+      this.floatText(`+${points.toLocaleString(locale())}`, this.cx(x), this.cy(y) + 10, { size: 16, vy: -70 });
     });
 
     ev.on('drill', ({ values }) => {
@@ -762,7 +767,7 @@ export class Renderer {
       });
       this.particles.emit({ x: BOARD_X, y: this.cy(row), color: 0xffa13d, count: 40, speed: 900, angle: 0, spread: 0.3, life: 0.4, size: 6, gravity: 0, shape: 'spark' });
       this.shake(0.2);
-      this.floatText('TALADRO', BOARD_X + BOARD_W / 2, this.cy(row) - 30, { color: 0xb06a14, size: 20 });
+      this.floatText(t('fx.drill'), BOARD_X + BOARD_W / 2, this.cy(row) - 30, { color: 0xb06a14, size: 20 });
     });
 
     ev.on('quake', ({ chain }) => {
@@ -770,7 +775,7 @@ export class Renderer {
       this.post.wobble(2.2 + Math.min(chain, 4) * 0.5);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H, { amplitude: 20, wavelength: 160, speed: 500 });
       for (let x = 0; x < COLS; x++) this.particles.emit({ x: this.cx(x), y: BOARD_Y + BOARD_H, color: 0xff8a3d, count: 6, speed: 300, angle: -Math.PI / 2, spread: 1, life: 0.8, size: 8, gravity: 600 });
-      this.floatText(chain > 1 ? `TERREMOTO ×${chain}` : 'TERREMOTO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xb4541a, size: 30 });
+      this.floatText(chain > 1 ? `${t('fx.quake')} ×${chain}` : t('fx.quake'), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { color: 0xb4541a, size: 30 });
     });
 
     // la caída tras una bomba o un prisma: un temblor corto para que el salto de bloques se note
@@ -784,7 +789,7 @@ export class Renderer {
 
     ev.on('drift', () => {
       this.shake(0.2);
-      this.floatText('DERIVA', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x9a7bff, size: 28 });
+      this.floatText(t('fx.drift'), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x9a7bff, size: 28 });
     });
     ev.on('roulette', ({ to }) => {
       this.shake(0.1);
@@ -795,7 +800,7 @@ export class Renderer {
       this.flashList.push({ x: BOARD_X + x * CELL, y: BOARD_Y + (y - HIDDEN) * CELL, w: CELL, h: CELL, color: 0xffffff, life: 0.35, max: 0.35 });
     });
     ev.on('skill', ({ skill }) => {
-      this.floatText(skill === 'tactic' ? 'PAUSA' : 'COMODÍN', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x6ad1ff, size: 30 });
+      this.floatText(skill === 'tactic' ? t('fx.pause') : t('fx.wild'), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: 0x6ad1ff, size: 30 });
       if (skill === 'tactic') this.flash(0x6ad1ff, 0.12);
     });
 
@@ -804,7 +809,7 @@ export class Renderer {
       const col = STREAK_COLORS[tier];
       const mid = BOARD_X + BOARD_W / 2;
       if (chain >= 2 || tierUp) {
-        this.floatText(`${STREAK_TIER_NAMES[tier].toUpperCase()} ×${chain}`, mid, BOARD_Y + 76, { color: col, size: tierUp ? 22 : 16, life: tierUp ? 1.6 : 1.1, vy: -14, delay: 0.15 });
+        this.floatText(`${t(`streak.t${tier}` as Key).toUpperCase()} ×${chain}`, mid, BOARD_Y + 76, { color: col, size: tierUp ? 22 : 16, life: tierUp ? 1.6 : 1.1, vy: -14, delay: 0.15 });
       }
       if (tierUp) {
         this.flash(col, 0.18);
@@ -814,12 +819,12 @@ export class Renderer {
       }
     });
     ev.on('streakEnd', ({ chain }) => {
-      if (chain >= 3) this.floatText(`RACHA PERDIDA ×${chain}`, BOARD_X + BOARD_W / 2, BOARD_Y + 76, { color: 0x9aa0b8, size: 14, life: 1.2, vy: 10 });
+      if (chain >= 3) this.floatText(t('fx.streakLost', { n: chain }), BOARD_X + BOARD_W / 2, BOARD_Y + 76, { color: 0x9aa0b8, size: 14, life: 1.2, vy: 10 });
     });
 
     ev.on('levelup', ({ level }) => {
       this.accentTarget = accentFor(level);
-      this.floatText(`NIVEL ${level}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
+      this.floatText(t('fx.level', { n: level }), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { color: accentFor(level), size: 52, life: 1.6, vy: -15, delay: 0.35 });
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2, { amplitude: 12, wavelength: 140, speed: 700 });
       this.flash(accentFor(level), 0.15);
       if (!REDUCED_MOTION) this.post.pixelate(14, 0.45);
@@ -844,11 +849,11 @@ export class Renderer {
     });
 
     ev.on('interest', ({ amount }) => {
-      this.floatText(`INTERÉS +${amount.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
+      this.floatText(t('fx.interest', { n: amount.toLocaleString(locale()) }), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 18, delay: 0.3 });
     });
 
     ev.on('emptyOffer', ({ points }) => {
-      this.floatText(`SIN CARTAS +${points.toLocaleString('es-ES')}`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 16, delay: 0.3 });
+      this.floatText(t('fx.noCards', { n: points.toLocaleString(locale()) }), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 50, { color: GOLD_TEXT, size: 16, delay: 0.3 });
     });
 
     ev.on('breather', ({ rows }) => {
@@ -861,15 +866,15 @@ export class Renderer {
           this.particles.emit({ x: this.cx(x), y: this.cy(row), color, count: 4, speed: 260, angle: -Math.PI / 2, spread: 1.2, life: 0.7, size: 6, gravity: 600, shape: 'square' });
         });
       });
-      this.floatText('RESPIRO', BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 60, { color: 0x2a6f8a, size: 22, delay: 0.2 });
+      this.floatText(t('fx.breather'), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 60, { color: 0x2a6f8a, size: 22, delay: 0.2 });
     });
 
     ev.on('lifeline', () => {
-      this.floatText('SALVAVIDAS', BOARD_X + BOARD_W / 2, BOARD_Y + 120, { color: 0x2a6f8a, size: 24 });
+      this.floatText(t('fx.lifeline'), BOARD_X + BOARD_W / 2, BOARD_Y + 120, { color: 0x2a6f8a, size: 24 });
     });
 
     ev.on('harvest', ({ rerolls }) => {
-      this.floatText(`+${rerolls} REROLL`, BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 80, { color: 0x4c7d1c, size: 18, delay: 0.2 });
+      this.floatText(t('fx.reroll', { n: rerolls }), BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H / 2 + 80, { color: 0x4c7d1c, size: 18, delay: 0.2 });
     });
 
     ev.on('revive', () => {
@@ -879,17 +884,17 @@ export class Renderer {
       this.flash(this.skin.ink, 0.5);
       this.shake(0.6);
       this.shockwave(BOARD_X + BOARD_W / 2, BOARD_Y + BOARD_H - 80, { amplitude: 20, wavelength: 160 });
-      this.floatText(this.game.mods.phoenix ? '¡FÉNIX!' : '¡SEGUNDA VIDA!', BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
+      this.floatText(this.game.mods.phoenix ? t('fx.phoenix') : t('fx.secondLife'), BOARD_X + BOARD_W / 2, BOARD_Y + 200, { color: 0xb83a2e, size: 34, life: 2 });
     });
 
     const mid = BOARD_X + BOARD_W / 2;
     ev.on('hyperPick', ({ hyper }) => {
       this.flash(HYPER_COLOR, 0.3);
-      this.floatText(hyper.name.toUpperCase(), mid, BOARD_Y + 100, { color: HYPER_COLOR, size: 28, life: 1.6 });
+      this.floatText(perkName(hyper).toUpperCase(), mid, BOARD_Y + 100, { color: HYPER_COLOR, size: 28, life: 1.6 });
     });
 
     ev.on('hyperReady', ({ hyper }) => {
-      this.floatText(`${hyper.name.toUpperCase()} LISTA`, mid, BOARD_Y + BOARD_H / 2 + 110, { color: HYPER_COLOR, size: 18, delay: 0.25 });
+      this.floatText(t('fx.hyperReady', { name: perkName(hyper).toUpperCase() }), mid, BOARD_Y + BOARD_H / 2 + 110, { color: HYPER_COLOR, size: 18, delay: 0.25 });
     });
 
     ev.on('hyper', ({ hyper }) => {
@@ -898,11 +903,11 @@ export class Renderer {
       this.ultiBurst((hyper.skin && SKINS[hyper.skin].burst) || HYPER_COLOR);
       this.shake(0.5);
       this.shockwave(mid, BOARD_Y + BOARD_H / 2, { amplitude: 24, wavelength: 170, speed: 650 });
-      this.floatText(`¡${hyper.name.toUpperCase()}!`, mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });
+      this.floatText(t('fx.hyperGo', { name: perkName(hyper).toUpperCase() }), mid, BOARD_Y + BOARD_H / 2 - 40, { color: HYPER_COLOR, size: 44, life: 1.6, vy: -20 });
     });
 
     ev.on('hyperEnd', ({ hyper }) => {
-      this.floatText(`FIN DE ${hyper.name.toUpperCase()}`, mid, BOARD_Y + 120, { color: this.skin.ink, size: 16 });
+      this.floatText(t('fx.hyperEnd', { name: perkName(hyper).toUpperCase() }), mid, BOARD_Y + 120, { color: this.skin.ink, size: 16 });
     });
 
     ev.on('wipe', ({ removed, points }) => {
@@ -912,7 +917,7 @@ export class Renderer {
       }
       this.flashList.push({ x: BOARD_X, y: BOARD_Y, w: BOARD_W, h: BOARD_H, color: HYPER_COLOR, life: 0.5, max: 0.5 });
       this.shake(0.8);
-      this.floatText(`+${points.toLocaleString('es-ES')}`, mid, BOARD_Y + BOARD_H / 2 + 10, { size: 20, vy: -60 });
+      this.floatText(`+${points.toLocaleString(locale())}`, mid, BOARD_Y + BOARD_H / 2 + 10, { size: 20, vy: -60 });
     });
 
     ev.on('gameover', () => {
@@ -927,7 +932,7 @@ export class Renderer {
 
     ev.on('perk', ({ perk }) => {
       this.flash(this.skin.ink, 0.25);
-      this.floatText(perk.name.toUpperCase(), BOARD_X + BOARD_W / 2, BOARD_Y + 160, { color: this.accent, size: 26, life: 1.4 });
+      this.floatText(perkName(perk).toUpperCase(), BOARD_X + BOARD_W / 2, BOARD_Y + 160, { color: this.accent, size: 26, life: 1.4 });
     });
   }
 
@@ -1057,17 +1062,19 @@ export class Renderer {
     }
 
     if (!this.labels.length) {
-      for (const txt of ['RESERVA', 'SIGUIENTES']) {
-        const t = new Text({
-          text: txt,
+      for (const key of ['fx.hold', 'fx.next'] as Key[]) {
+        const label = new Text({
+          text: t(key),
           style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 9, fill: 0xffffff, letterSpacing: 0 },
           resolution: this.app.renderer.resolution,
         });
-        t.anchor.set(0.5, 0.5);
-        this.world.addChild(t);
-        this.labels.push(t);
+        label.anchor.set(0.5, 0.5);
+        this.world.addChild(label);
+        this.labels.push(label);
       }
     }
+    this.labels[0].text = t('fx.hold');
+    this.labels[1].text = t('fx.next');
     this.labels[0].position.set(HOLD_X + HOLD_W / 2, HOLD_Y + 16);
     this.labels[1].position.set(NEXT_X + NEXT_W / 2, NEXT_Y + 16);
     for (const t of this.labels) t.tint = this.accent;
@@ -1334,7 +1341,7 @@ export class Renderer {
       this.slowT = 0;
       this.highQuality = false;
       this.applyQuality();
-      this.floatText('EFECTOS APAGADOS: EL EQUIPO VA LENTO', BOARD_X + BOARD_W / 2, BOARD_Y + 60, { size: 16, life: 3 });
+      this.floatText(t('fx.slow'), BOARD_X + BOARD_W / 2, BOARD_Y + 60, { size: 16, life: 3 });
       this.onAutoOff?.();
     }
   }

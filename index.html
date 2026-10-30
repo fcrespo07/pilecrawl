@@ -115,7 +115,7 @@
           <p class="home-note" data-i18n-html="home.keysNoteHtml">Las teclas se cambian en Ajustes. <span class="kb-only">Atajos: <kbd>M</kbd> música, <kbd>N</kbd> sonido, <kbd>F</kbd> efectos.</span> En móvil se juega con gestos: arrastra para mover, toca para girar, tirón hacia abajo para soltar y desliza hacia arriba para guardar.</p>
         </section>
 
-        <footer class="home-foot">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span><a class="rank-link" href="/guia.html" data-i18n="foot.guide">Guía</a> · <a class="rank-link" href="/perks.html" data-i18n="foot.perks">Mejoras</a> · <a class="rank-link" href="/privacidad.html" data-i18n="foot.privacy">Privacidad</a> · <a class="rank-link" href="/acerca.html" data-i18n="foot.about">Acerca de</a> · <a class="rank-link" href="/novedades.html" data-i18n="foot.news">Novedades</a> · <a class="rank-link" href="/reportar.html" data-i18n="foot.bug">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden>Preferencias de anuncios</button></footer>
+        <footer class="home-foot">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span><a class="rank-link" href="/guia.html" data-i18n="foot.guide">Guía</a> · <a class="rank-link" href="/perks.html" data-i18n="foot.perks">Mejoras</a> · <a class="rank-link" href="/privacidad.html" data-i18n="foot.privacy">Privacidad</a> · <a class="rank-link" href="/acerca.html" data-i18n="foot.about">Acerca de</a> · <a class="rank-link" href="/novedades.html" data-i18n="foot.news">Novedades</a> · <a class="rank-link" href="/reportar.html" data-i18n="foot.bug">Reportar un bug</a> <button id="ad-prefs" class="rank-link" type="button" hidden data-i18n="foot.adPrefs">Preferencias de anuncios</button></footer>
         </div>
       </div>
     </main>
@@ -281,7 +281,7 @@
         </div>
         <p id="pause-msg" class="hint pause-msg" role="status" hidden></p>
         <p class="hint" data-i18n-html="pause.escHtml">Pulsa <kbd>Esc</kbd> para continuar</p>
-        <p class="hint">Pilecrawl · versión <span data-version></span></p>
+        <p class="hint">Pilecrawl · <span data-i18n="foot.version">versión</span> <span data-version></span></p>
       </div>
 
       <!-- ═════════════ Laboratorio (solo desarrollo o ?lab) ═════════════ -->
@@ -393,10 +393,10 @@
         </section>
 
         <section class="set-sec" aria-labelledby="set-sound">
-          <h3 id="set-sound">Sonido</h3>
-          <label class="set-row"><span>General</span><input id="vol-master" type="range" min="0" max="100" step="5" /><output id="vol-master-n"></output></label>
-          <label class="set-row"><span>Música</span><input id="vol-music" type="range" min="0" max="100" step="5" /><output id="vol-music-n"></output></label>
-          <label class="set-row"><span>Efectos</span><input id="vol-sfx" type="range" min="0" max="100" step="5" /><output id="vol-sfx-n"></output></label>
+          <h3 id="set-sound" data-i18n="audio.sound">Sonido</h3>
+          <label class="set-row"><span data-i18n="set.general">General</span><input id="vol-master" type="range" min="0" max="100" step="5" /><output id="vol-master-n"></output></label>
+          <label class="set-row"><span data-i18n="audio.music">Música</span><input id="vol-music" type="range" min="0" max="100" step="5" /><output id="vol-music-n"></output></label>
+          <label class="set-row"><span data-i18n="set.fx">Efectos</span><input id="vol-sfx" type="range" min="0" max="100" step="5" /><output id="vol-sfx-n"></output></label>
           <div class="set-toggles">
             <button id="set-music" class="btn ghost small" type="button" aria-pressed="true"><span>Música: sí</span><kbd>M</kbd></button>
             <button id="set-mute" class="btn ghost small" type="button" aria-pressed="false"><span>Sonido: sí</span><kbd>N</kbd></button>
@@ -404,29 +404,29 @@
         </section>
 
         <section class="set-sec" aria-labelledby="set-screen">
-          <h3 id="set-screen">Pantalla</h3>
+          <h3 id="set-screen" data-i18n="set.screen">Pantalla</h3>
           <div class="set-toggles">
             <button id="fx-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Efectos: sí</span><kbd>F</kbd></button>
           </div>
         </section>
 
         <section class="set-sec set-keys-sec" aria-labelledby="set-mouse">
-          <h3 id="set-mouse">Ratón</h3>
+          <h3 id="set-mouse" data-i18n="set.mouse">Ratón</h3>
           <div class="set-toggles">
             <button id="set-mouse-toggle" class="btn ghost small" type="button" aria-pressed="true"><span>Control con ratón: sí</span></button>
           </div>
-          <p class="set-hint">La pieza cae en la columna del cursor y el juego te sugiere el mejor giro. Clic: soltar. Rueda o clic derecho: cambiar el giro. Clic en la reserva: guardar. El teclado sigue funcionando.</p>
+          <p class="set-hint" data-i18n="set.mouseHint">La pieza cae en la columna del cursor y el juego te sugiere el mejor giro. Clic: soltar. Rueda o clic derecho: cambiar el giro. Clic en la reserva: guardar. El teclado sigue funcionando.</p>
         </section>
 
         <section class="set-sec set-keys-sec" aria-labelledby="set-keys">
-          <h3 id="set-keys">Controles</h3>
-          <p class="set-hint">Elige un hueco y pulsa la tecla nueva. <kbd>Esc</kbd> cancela y <kbd>Supr</kbd> vacía el hueco. Si la tecla ya hacía otra cosa, se la quita.</p>
+          <h3 id="set-keys" data-i18n="home.keysTitle">Controles</h3>
+          <p class="set-hint" data-i18n-html="set.keysHintHtml">Elige un hueco y pulsa la tecla nueva. <kbd>Esc</kbd> cancela y <kbd>Supr</kbd> vacía el hueco. Si la tecla ya hacía otra cosa, se la quita.</p>
           <div id="set-keylist" class="set-keylist"></div>
           <p id="set-keymsg" class="set-hint set-keymsg" role="status"></p>
-          <label class="set-row"><span>Espera (DAS)</span><input id="set-das" type="range" /><output id="set-das-n"></output></label>
-          <label class="set-row"><span>Repetición (ARR)</span><input id="set-arr" type="range" /><output id="set-arr-n"></output></label>
-          <p class="set-hint">Espera: lo que tarda en repetirse el movimiento al mantener la tecla. Repetición: el tiempo entre pasos (0 es instantáneo).</p>
-          <button id="set-keys-reset" class="btn ghost small" type="button"><span>Restablecer controles</span></button>
+          <label class="set-row"><span data-i18n="set.das">Espera (DAS)</span><input id="set-das" type="range" /><output id="set-das-n"></output></label>
+          <label class="set-row"><span data-i18n="set.arr">Repetición (ARR)</span><input id="set-arr" type="range" /><output id="set-arr-n"></output></label>
+          <p class="set-hint" data-i18n="set.handHint">Espera: lo que tarda en repetirse el movimiento al mantener la tecla. Repetición: el tiempo entre pasos (0 es instantáneo).</p>
+          <button id="set-keys-reset" class="btn ghost small" type="button"><span data-i18n="set.reset">Restablecer controles</span></button>
         </section>
       </div>
     </div>

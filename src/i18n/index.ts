@@ -1,5 +1,5 @@
 // Idioma de la interfaz: español e inglés. Por defecto sigue el idioma del navegador; se cambia en Ajustes.
-// Solo cubre lo que pasa por `t()` o lleva `data-i18n*` en index.html. El resto (catálogo, expedición, partida) sigue en español.
+// Cubre lo que pasa por `t()`, `L()` o lleva `data-i18n*` en index.html. El contenido de mejoras y jefes está en `content.ts`.
 import { en } from './en';
 import { es, type Key } from './es';
 
@@ -52,6 +52,11 @@ export function t(key: Key, vars?: Record<string, string | number>): string {
   let s = DICT[current.lang][key] ?? es[key];
   if (vars) for (const [name, value] of Object.entries(vars)) s = s.replaceAll(`{${name}}`, String(value));
   return s;
+}
+
+/** Texto escrito a mano en los dos idiomas, para pantallas largas (catálogo, tutorial) donde una clave por frase sobra. */
+export function L(es: string, en: string): string {
+  return current.lang === 'en' ? en : es;
 }
 
 /** Locale para números y fechas. */
