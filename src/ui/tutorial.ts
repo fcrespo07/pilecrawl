@@ -96,8 +96,8 @@ const STEPS: Step[] = [
     title: () => L('Racha', 'Streak'),
     text: (_t, g) =>
       L(
-        `Mira la <b>Racha</b> (a la derecha): sube con varias líneas a la vez, combos y jugando rápido, y baja con cada pieza. Más racha, cartas más raras. Siguiente nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>.`,
-        `Look at the <b>Streak</b> (on the right): it rises with several lines at once, combos and fast play, and drops with each piece. More streak, rarer cards. Next level: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>.`,
+        `Mira la <b>Racha</b> (a la derecha): sube con líneas seguidas y baja con cada pieza. Más racha, cartas más raras. Siguiente nivel: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>.`,
+        `Look at the <b>Streak</b> (on the right): it rises with clears in a row and drops with each piece. More streak, rarer cards. Next level: <b>${g.linesIntoLevel}/${TUTORIAL_LINES}</b>.`,
       ),
     done: (p) => p.levelups >= 2,
   },
