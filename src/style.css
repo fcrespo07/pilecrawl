@@ -1536,10 +1536,9 @@ body[data-portal] #ad-prefs,
 body[data-portal] #privacy-link,
 body[data-portal] #ad-slot,
 body[data-portal] #install-btn { display: none !important; }
-/* Portada de un clic (CrazyGames, Poki, YouTube): Jugar, Tutorial y Ajustes; el resto sobra */
+/* Portada de un clic (CrazyGames, Poki, YouTube): Jugar, Expedición, Tutorial, Catálogo y Ajustes; el resto sobra */
 body[data-quick] #h-arcade,
 body[data-quick] #mode-select,
-body[data-quick] #home-exp,
 body[data-quick] #panel-right,
 body[data-quick] #panel-left,
 body[data-quick] #home-more-link,
