@@ -23,7 +23,7 @@ import { clearSave, loadSave, modeOf, RUN_TTL_MS, writeSave, type SavedRun } fro
 import type { Owned } from './core/expedition';
 import type { PressureId } from './core/pressure';
 import { UI } from './ui/ui';
-import { applyLang, t } from './i18n';
+import { applyLang, L, t, type Key } from './i18n';
 import { initPortal, portal } from './portal/portal';
 import { RankingUI, type FinishedRun } from './ui/ranking';
 import * as net from './net/ranking';
@@ -342,7 +342,7 @@ function renderResume(note?: string) {
   resumeBox.hidden = !saved;
   if (saved) {
     document.getElementById('home-resume-text')!.innerHTML =
-      `${t('home.resume')}<small>${MODES[modeOf(saved)].name} · nivel ${saved.level} · ${fmtNum(saved.score)} puntos</small>`;
+      `${t('home.resume')}<small>${t(`mode.${modeOf(saved)}.name` as Key)} · ${L('nivel', 'level')} ${saved.level} · ${fmtNum(saved.score)} ${L('puntos', 'points')}</small>`;
   }
   if (note !== undefined) {
     saveNote.textContent = note;
@@ -525,7 +525,7 @@ function setEffects(on: boolean, save = true) {
   renderer.highQuality = on;
   renderer.applyQuality();
   fxToggle.setAttribute('aria-pressed', String(on));
-  fxToggle.querySelector('span')!.textContent = on ? 'Efectos: sí' : 'Efectos: no';
+  fxToggle.querySelector('span')!.textContent = on ? t('set.fxOn') : t('set.fxOff');
   if (!save) return;
   try { localStorage.setItem('blockrogue.fx', on ? '1' : '0'); } catch { /* sin almacenamiento */ }
 }
@@ -616,6 +616,8 @@ async function boot() {
     renderResume();
     refreshPanels();
     ui.refreshOfferHint();
+    renderCatalog(catalog);
+    if (!expScreen.classList.contains('hidden')) renderExpedition(expScreen);
   });
   // el SDK de un portal (si lo hay) arranca en paralelo; sin portal no hace nada
   void initPortal().then(() => portal.loadingStop());

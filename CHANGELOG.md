@@ -4,6 +4,9 @@ Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su l
 
 ## Sin publicar
 
+## 0.41.3 — 2026-10-30
+- (#101) Inglés casi completo: nombres y textos de mejoras, maldiciones, hiperperks y jefes, catálogo, Expedición, tutorial, ajustes, nombres de teclas y los textos que salen sobre el tablero. Un test comprueba que las cifras del inglés coinciden con las del español. Pendiente: ranking, mensajes de partida guardada y el laboratorio.
+
 ## 0.41.2 — 2026-10-30
 - (#100) El build para CrazyGames no muestra el botón de pantalla completa propio, que el portal prohíbe. Fuera de ese build no cambia nada.
 
