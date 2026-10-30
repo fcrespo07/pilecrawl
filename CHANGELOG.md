@@ -3,6 +3,7 @@
 Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
 
 ## Sin publicar
+- (#107) Anuncios de portal entre partidas: con `VITE_PORTAL_ADS=1` el build de CrazyGames pide un anuncio al pasar de una partida acabada a la siguiente (nunca en el tutorial), calla el sonido mientras dura y no deja esperando si falla o no responde en 90 s. Sin esa variable no cambia nada.
 
 ## 0.42.2 — 2026-10-30
 - (#106) Guardado de portal: en el build de CrazyGames, ajustes, récords, Expedición y partida guardada pasan por el módulo de datos del SDK (la cuenta del jugador), sin tocar el resto del código. Fuera de un portal no cambia nada.

@@ -147,10 +147,26 @@ export const portal = {
   /**
    * Anuncio entre partidas. Apagado por defecto: sin VITE_PORTAL_ADS=1 llama a `done` enseguida.
    * `done` se llama al terminar el anuncio o si falla, para que el juego nunca se quede esperando.
+   * `hold` avisa de que el anuncio empieza (true) y acaba (false): el juego calla el sonido mientras tanto.
    */
-  midgameAd(done: () => void) {
-    if (!ADS || !sdk?.ad) return done();
+  midgameAd(done: () => void, hold?: (on: boolean) => void) {
+    const ad = sdk?.ad;
+    if (!ADS || !ad) return done();
     this.gameplayStop();
-    sdk.ad.requestAd('midgame', { adFinished: done, adError: done });
+    let over = false;
+    const finish = () => {
+      if (over) return;
+      over = true;
+      hold?.(false);
+      done();
+    };
+    hold?.(true);
+    try {
+      ad.requestAd('midgame', { adFinished: finish, adError: finish });
+    } catch {
+      finish();
+    }
+    // un anuncio que no responde no puede dejar la partida sin empezar
+    setTimeout(finish, 90_000);
   },
 };
