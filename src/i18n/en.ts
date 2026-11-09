@@ -130,6 +130,8 @@ export const en: Record<Key, string> = {
   "over.mode": "Signal lost",
   "over.final": "Final score",
   "over.share": "Share result",
+  "over.shared": "Copied",
+  "over.shareFail": "Could not share",
   "over.again": "Play again",
   "over.home": "Home",
   // audio y estados

@@ -129,6 +129,8 @@ export const es = {
   "over.mode": "Señal perdida",
   "over.final": "Puntuación final",
   "over.share": "Compartir resultado",
+  "over.shared": "Copiado",
+  "over.shareFail": "No se pudo compartir",
   "over.again": "Otra partida",
   "over.home": "Inicio",
   // audio y estados
