@@ -1,5 +1,8 @@
 ## Sin publicar
 
+## 0.42.6 — 2026-11-09
+- (#110) Builds de CrazyGames y Poki: el idioma por defecto es el inglés aunque el navegador esté en español (los portales lo piden). Se cambia en Ajustes. En pilecrawl.fun no cambia nada.
+
 ## 0.42.5 — 2026-11-09
 - (#109) Builds de portal (CrazyGames y Poki): el juego siempre usa el escenario horizontal y se encaja con franjas en el iframe, en vez de pasar a vertical en móvil. Sin portal no cambia nada.
 
