@@ -12,6 +12,9 @@ const DICT: Record<Lang, Record<Key, string>> = { es, en };
 
 /** Idioma del navegador: español si empieza por «es», inglés en el resto de casos. */
 export function detectLang(): Lang {
+  // los builds de CrazyGames y Poki arrancan en inglés (los portales lo piden); se cambia en Ajustes
+  const portal = import.meta.env.VITE_PORTAL ?? '';
+  if (portal === 'crazygames' || portal === 'poki') return 'en';
   let tag = '';
   try {
     tag = navigator.languages?.[0] ?? navigator.language ?? '';
