@@ -1,5 +1,8 @@
 ## Sin publicar
 
+## 0.42.7 — 2026-11-09
+- (#111) Portal: en CrazyGames un móvil con la pantalla de pie vuelve a usar la vista vertical (#109 la había desactivado en todos los builds de portal). La horizontal forzada se queda solo en Poki. Sin portal no cambia nada.
+
 ## 0.42.6 — 2026-11-09
 - (#110) Builds de CrazyGames y Poki: el idioma por defecto es el inglés aunque el navegador esté en español (los portales lo piden). Se cambia en Ajustes. En pilecrawl.fun no cambia nada.
 
