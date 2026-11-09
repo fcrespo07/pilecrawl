@@ -121,7 +121,7 @@ export class UI {
       if (!this.shareInfo) return;
       const r = await shareRun(this.shareInfo);
       $('share-btn').querySelector('span')!.textContent =
-        r === 'copied' ? 'Copiado' : r === 'failed' ? 'No se pudo compartir' : 'Compartir resultado';
+        r === 'copied' ? t('over.shared') : r === 'failed' ? t('over.shareFail') : t('over.share');
     });
   }
 
@@ -235,8 +235,9 @@ export class UI {
       (prize?.unlocked.length ? stat(t('over.perkOpened'), prize.unlocked.map(perkNameById).join(', ')) : '');
     $('over-perks').innerHTML = g.perkOrder.map((id) => chipHTML(id, g.perkStacks(id))).join('');
     const share = $('share-btn');
-    share.hidden = g.sandbox || g.mode === 'tutorial';
-    share.querySelector('span')!.textContent = 'Compartir resultado';
+    // en los builds de portal no hay compartir: el texto lleva un enlace a pilecrawl.fun y los portales no admiten promoción cruzada
+    share.hidden = g.sandbox || g.mode === 'tutorial' || !!import.meta.env.VITE_PORTAL;
+    share.querySelector('span')!.textContent = t('over.share');
     this.shareInfo = { mode: this.modeTitle(), score: g.score, level: g.level, lines: g.lines };
     // si el jugador reinicia antes de que aparezca, no debe reaparecer sobre la nueva partida
     this.overTimer = window.setTimeout(() => this.show('over'), 900);

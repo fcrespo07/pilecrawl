@@ -1,5 +1,8 @@
 ## Sin publicar
 
+## 0.42.8 — 2026-11-09
+- (#112) Portal: los builds de portal ya no tienen botón de compartir (el texto llevaba un enlace a pilecrawl.fun). «Compartir resultado», «Copiado» y «No se pudo compartir» pasan por el sistema de idiomas y se ven en inglés. Los ZIP de itch, Poki y CrazyGames se crean desde cero, sin restos de builds anteriores.
+
 ## 0.42.7 — 2026-11-09
 - (#111) Portal: en CrazyGames un móvil con la pantalla de pie vuelve a usar la vista vertical (#109 la había desactivado en todos los builds de portal). La horizontal forzada se queda solo en Poki. Sin portal no cambia nada.
 
