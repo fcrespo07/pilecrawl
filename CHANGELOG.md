@@ -1,8 +1,7 @@
-# Registro de cambios
-
-Formato: [versión semántica](https://semver.org/lang/es/). Cada PR añade su línea en «Sin publicar»; la versión se fija al fusionar (ver CLAUDE.md). Las líneas que empiezan por `[interno]` (admin, despliegue, servidor) no salen en la página de novedades.
-
 ## Sin publicar
+
+## 0.42.5 — 2026-11-09
+- (#109) Builds de portal (CrazyGames y Poki): el juego siempre usa el escenario horizontal y se encaja con franjas en el iframe, en vez de pasar a vertical en móvil. Sin portal no cambia nada.
 
 ## 0.42.4 — 2026-10-30
 - (#108) Adaptador de Poki: `npm run build:poki` genera el ZIP con el SDK de Poki (carga, inicio y parada de juego, `commercialBreak` entre partidas con el sonido callado). Portada de un clic como en CrazyGames. Sin portal no cambia nada.

@@ -120,7 +120,9 @@ const coarse = window.matchMedia('(pointer: coarse)');
  * la disposición, para que el renderer rehaga lo que depende del tamaño.
  */
 function layout() {
-  const portrait = coarse.matches && window.innerHeight > window.innerWidth;
+  // en los builds de portal el escenario siempre es el horizontal de 960×720 y se encaja con franjas: los portales
+  // piden una proporción fija (16:9) y no quieren la disposición vertical de móvil
+  const portrait = !portal.isPortalBuild && coarse.matches && window.innerHeight > window.innerWidth;
   let wantH = portrait ? portraitHeight(window.innerHeight / window.innerWidth) : 720;
   // la barra de direcciones del móvil sube y baja: pequeñas variaciones de alto no recomponen el escenario
   if (portrait && PORTRAIT && Math.abs(wantH - H) < 120) wantH = H;
@@ -219,7 +221,7 @@ function wireTouch() {
   });
   // en vertical táctil, la franja de mejoras bajo el tablero también abre la pausa
   document.querySelector<HTMLElement>('.p-perks')!.addEventListener('pointerdown', () => {
-    if (matchMedia('(pointer: coarse) and (orientation: portrait)').matches) togglePause();
+    if (!portal.isPortalBuild && matchMedia('(pointer: coarse) and (orientation: portrait)').matches) togglePause();
   });
   // la tarjeta de la hiperperk es también su botón táctil
   const hyper = document.getElementById('hyper-box')!;
