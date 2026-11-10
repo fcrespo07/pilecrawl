@@ -1548,7 +1548,11 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 /* Jefe: barra de vida y cartel de entrada */
 .boss-bar { position: absolute; z-index: 4; box-sizing: border-box; padding: 4px 8px 5px; background: var(--panel, #1b1d3a); border: 3px solid #ff6b6b; color: var(--text); font-family: var(--f-display); }
 .boss-bar[hidden], .boss-intro[hidden] { display: none; }
-.boss-bar.inside { opacity: 0.85; }
+/* dentro del tablero (16:9, vertical): una sola línea fina y translúcida para no tapar donde aparecen las piezas;
+   la regla ya sale en el cartel de entrada y el nombre del jefe en el panel de nivel */
+.boss-bar.inside { opacity: 0.75; padding: 2px 6px 3px; border-width: 2px; }
+.boss-bar.inside .bb-rule { display: none; }
+.boss-bar.inside .bb-track { height: 6px; margin-top: 2px; }
 .bb-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; letter-spacing: 0.04em; }
 .bb-top b { color: #ff6b6b; font-weight: normal; }
 .bb-top span { font-size: 9px; }

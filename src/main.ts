@@ -152,6 +152,8 @@ function layout() {
   return { s, changed };
 }
 let laidOut = false;
+let relayoutTimer = 0;
+let relayoutPending = false;
 
 let hitstop = 0;
 let stepAcc = 0;
@@ -651,9 +653,17 @@ async function boot() {
   window.addEventListener('resize', () => {
     // con el teclado del apodo abierto el alto se encoge: no se recompone hasta que se cierre
     if (document.activeElement?.matches('input, textarea')) return;
-    const { s, changed } = layout();
-    if (changed) renderer.relayout(renderResolution(s));
-    else renderer.setResolution(renderResolution(s));
+    const { changed } = layout();
+    // en horizontal el ancho sigue la proporción de la ventana: al arrastrar el borde cambia en cada evento.
+    // Rehacer fondo, colinas y texturas es caro, así que se espera a que el tamaño se quede quieto
+    clearTimeout(relayoutTimer);
+    if (changed) relayoutPending = true;
+    relayoutTimer = window.setTimeout(() => {
+      const res = renderResolution(layout().s);
+      if (relayoutPending) renderer.relayout(res);
+      else renderer.setResolution(res);
+      relayoutPending = false;
+    }, 150);
   });
   let fxOn = true;
   try { fxOn = localStorage.getItem('blockrogue.fx') !== '0'; } catch { /* sin almacenamiento */ }
