@@ -3,6 +3,7 @@
 import { Game, TUTORIAL_HYPER_CHARGE, TUTORIAL_LINES } from '../core/game';
 import { keyLabels, type Action } from '../settings';
 import { L } from '../i18n';
+import { BOARD_W, BOARD_X, BOARD_Y, CELL, OX, OY } from '../fx/layout';
 
 interface Progress {
   moves: number;
@@ -131,6 +132,23 @@ const STEPS: Step[] = [
   },
 ];
 
+/** Pistas visuales de los pasos mover, soltar y girar: teclas grandes con ratón y teclado; gesto animado en táctil. */
+const esc = (x: string) => x.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const bigKeys = (keys: string[]) => keys.map((x) => `<kbd>${esc(x)}</kbd>`).join('');
+const cue = (body: string, label: string, cls: string) => `<div class="cue ${cls}">${body}</div><b class="cue-label">${label}</b>`;
+const finger = '<i class="cue-finger"></i>';
+const CUES: ((touch: boolean) => string)[] = [
+  (touch) => touch
+    ? cue(finger, L('Arrastra', 'Drag'), 'g-drag')
+    : cue(bigKeys([keyLabels('left')[0] ?? '←', keyLabels('right')[0] ?? '→']), L('Mover', 'Move'), 'k-move'),
+  (touch) => touch
+    ? cue(finger, L('Tirón abajo', 'Flick down'), 'g-flick')
+    : cue(bigKeys([keyLabels('hard')[0] ?? '–']), L('Soltar', 'Drop'), 'k-drop'),
+  (touch) => touch
+    ? cue(finger, L('Toca', 'Tap'), 'g-tap')
+    : cue(bigKeys([keyLabels('cw')[0] ?? '–']), L('Girar', 'Rotate'), 'k-turn'),
+];
+
 const OFFER_STEP = 4;
 const HYPER_STEP = 6;
 const OFFER2_STEP = 7;
@@ -164,11 +182,32 @@ export class Tutorial {
     document.querySelectorAll('.coach').forEach((el) => {
       el.addEventListener('click', (e) => {
         const act = (e.target as HTMLElement).closest<HTMLElement>('[data-coach]')?.dataset.coach;
-        if (act === 'skip' || act === 'home') this.hooks.onHome();
-        else if (act === 'play') this.hooks.onPlay();
+        if (act === 'home') this.hooks.onHome();
+        // saltar lleva a jugar, no a la portada: quien ya sabe jugar quiere empezar
+        else if (act === 'play' || act === 'skip') this.hooks.onPlay();
         else if (act === 'retry') this.hooks.onRetry();
       });
     });
+  }
+
+  private cueHtml = '';
+  /** Pista visual sobre el tablero (vacía la quita). Vive en el HUD, así que va en coordenadas del bloque de juego. */
+  private setCue(html: string) {
+    let el = document.getElementById('coach-cue');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'coach-cue';
+      el.className = 'coach-cue';
+      el.setAttribute('aria-hidden', 'true');
+      $('hud').appendChild(el);
+    }
+    el.style.left = `${BOARD_X - OX}px`;
+    el.style.width = `${BOARD_W}px`;
+    el.style.top = `${BOARD_Y - OY + CELL * 8}px`; // entre la pieza que sale y la pila; translúcida porque la pieza la cruza
+    el.hidden = !html;
+    if (html === this.cueHtml) return;
+    this.cueHtml = html;
+    el.innerHTML = html;
   }
 
   get isActive() {
@@ -190,6 +229,7 @@ export class Tutorial {
 
   private setVisible(v: boolean) {
     document.body.classList.toggle('tutorial', v);
+    if (!v) this.setCue('');
     if (!v) document.body.classList.remove('coach-wide');
     document.querySelectorAll<HTMLElement>('.coach').forEach((el) => (el.hidden = !v));
   }
@@ -242,9 +282,12 @@ export class Tutorial {
         body = extraOffer
           ? L('Otro nivel, otra mejora: cada elección cambia lo que te conviene después.', 'Another level, another upgrade: each pick changes what suits you next.')
           : STEPS[i].text(touch ? touchTexts() : desktop(), g);
-        actions = `<button type="button" class="coach-skip" data-coach="skip">${L('Salir', 'Exit')}</button>`;
+        actions = `<button type="button" class="coach-skip" data-coach="skip">${L('Saltar', 'Skip')}</button>`;
       }
     }
+    // pista grande sobre el tablero en los tres primeros pasos: el control a la vista, sin leer
+    const step = state === 'step' && g.state === 'playing' ? this.current() : -1;
+    this.setCue(step >= 0 && step <= 2 ? CUES[step](touch) : '');
     // con las cartas abiertas el cuadro se pone en una tira abajo para no tapar ninguna
     const wide = state === 'step' && g.state === 'choosing';
     const key = `${state}|${title}|${body}|${g.state === 'paused'}|${wide}`;
