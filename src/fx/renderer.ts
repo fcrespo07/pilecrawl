@@ -328,6 +328,8 @@ export class Renderer {
 
     this.app.stage.addChild(this.root);
     this.root.filterArea = new Rectangle(0, 0, W, H);
+    // el shader se creó con el tamaño por defecto; la disposición real (vertical, 4:3, 16:9) ya está puesta
+    this.post.resize(W, H);
     this.root.addChild(this.bg, this.world, this.overlay);
 
     this.buildBackground();
@@ -1065,7 +1067,7 @@ export class Renderer {
       for (const key of ['fx.hold', 'fx.next'] as Key[]) {
         const label = new Text({
           text: t(key),
-          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 9, fill: 0xffffff, letterSpacing: 0 },
+          style: { fontFamily: PIXEL_FONT, fontWeight: 'normal', fontSize: 10, fill: 0xffffff, letterSpacing: 0 },
           resolution: this.app.renderer.resolution,
         });
         label.anchor.set(0.5, 0.5);

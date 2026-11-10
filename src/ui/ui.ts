@@ -5,7 +5,7 @@ import { bossText, perkCons, perkName, perkNameById, perkPros, rarityName } from
 import type { HyperDef } from '../core/hypers';
 import { STREAK_MAX, streakTier } from '../core/streak';
 import { audio } from '../fx/audio';
-import { accentFor, BOARD_W, BOARD_X, BOARD_Y, hex, PORTRAIT } from '../fx/layout';
+import { accentFor, BOARD_W, BOARD_X, BOARD_Y, hex, OX, OY, PORTRAIT, W } from '../fx/layout';
 import { perkIcon, UI_ICONS } from './icons';
 import { loadMeta, UNLOCK_LEVEL } from '../core/meta';
 import { dailyNumber, MODES } from '../core/modes';
@@ -325,7 +325,7 @@ export class UI {
     $('bi-rule').textContent = rule;
     $('bi-goal').textContent = goal;
     el.classList.toggle('won', won);
-    this.placeOverBoard(el, PORTRAIT ? 78 : 8);
+    this.placeOverBoard(el, this.bossBarInside() ? 78 : 8); // bajo la barra del jefe si va dentro del tablero
     el.hidden = false;
     el.style.animation = 'none';
     void el.offsetWidth;
@@ -334,10 +334,16 @@ export class UI {
     this.introTimer = window.setTimeout(() => (el.hidden = true), won ? 2400 : 2800);
   }
 
+  /** La barra del jefe necesita 72 px sobre el tablero; si no los hay, va dentro. */
+  private bossBarInside() {
+    return PORTRAIT || BOARD_Y < 80;
+  }
+
   private placeOverBoard(el: HTMLElement, y: number) {
-    el.style.left = `${BOARD_X}px`;
+    // el HUD ya va desplazado con el bloque de juego (--ox, --oy): aquí, coordenadas dentro del bloque
+    el.style.left = `${BOARD_X - OX}px`;
     el.style.width = `${BOARD_W}px`;
-    el.style.top = `${BOARD_Y + y}px`;
+    el.style.top = `${BOARD_Y - OY + y}px`;
   }
 
   /** Barra del jefe sobre el tablero: su «vida» son las líneas que faltan para pasar el nivel. */
@@ -348,8 +354,10 @@ export class UI {
     if (!boss) return;
     const need = g.linesNeeded();
     const left = Math.max(0, need - g.linesIntoLevel);
-    // sobre el tablero cuando hay hueco (escritorio); en vertical, dentro del tablero, arriba
-    this.placeOverBoard(bar, PORTRAIT ? 6 : -72);
+    // sobre el tablero si hay hueco (escenario 4:3); si no (16:9, vertical), dentro, arriba y algo transparente
+    const inside = this.bossBarInside();
+    bar.classList.toggle('inside', inside);
+    this.placeOverBoard(bar, inside ? 6 : -72);
     $('bb-name').textContent = t('boss.bar', { name: bossText(boss).name.toUpperCase() });
     $('bb-left').textContent = left === 1 ? t('boss.left1') : t('boss.leftN', { n: left });
     $('bb-rule').textContent = bossText(boss).tip.join(' ');
@@ -514,8 +522,8 @@ export class UI {
       tip.innerHTML = `<div class="tt-head"><span class="tt-name">${perkName(p)}${n > 1 ? ` ×${n}` : ''}</span><span class="tt-rar">${rarityLabel(p)}</span></div>${effectsHTML(p, n, this.game.mode === 'expedition')}`;
       const r = chip.getBoundingClientRect();
       const stage = $('stage').getBoundingClientRect();
-      const scale = stage.width / 960;
-      tip.style.left = `${Math.min(700, (r.left - stage.left) / scale)}px`;
+      const scale = stage.width / W;
+      tip.style.left = `${Math.min(W - 260, (r.left - stage.left) / scale)}px`;
       tip.style.top = `${(r.top - stage.top) / scale - 8}px`;
       tip.classList.add('visible');
     });
@@ -607,7 +615,7 @@ export class UI {
           (x) =>
             `<div class="heat r-${x.r}"><span>${rarityName(x.r)}</span><div class="hy-bar"><i style="transform:scaleX(${x.heat / HEAT_MAX})"></i></div><b>${x.odd}</b></div>`,
         )
-        .join('') + (hyper > 0 ? `<span class="hy">Hiper <b>${pctTxt(hyper)}</b></span>` : '');
+        .join('') + (hyper > 0 ? `<span class="hy">${t('hud.hyper')} <b>${pctTxt(hyper)}</b></span>` : '');
   }
 
   update(dt: number) {

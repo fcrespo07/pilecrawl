@@ -23,6 +23,8 @@ interface CrazySdk {
     gameplayStop(): void;
     happytime(): void;
   };
+  /** Datos del jugador; `systemInfo.locale` es el idioma de la cuenta o del navegador (p. ej. «es-ES»). */
+  user?: { systemInfo?: { locale?: string } };
   /** Guardado del portal: como localStorage pero síncrono y ligado a la cuenta (los invitados caen en localStorage). */
   data?: {
     getItem(key: string): string | null;
@@ -134,6 +136,15 @@ function installSave() {
     };
   } catch {
     /* sin almacenamiento: el juego ya sabe vivir sin él */
+  }
+}
+
+/** Idioma que da el SDK de CrazyGames («es-ES», «en-US»...); vacío sin SDK o fuera de CrazyGames. */
+export function portalLocale(): string {
+  try {
+    return sdk?.user?.systemInfo?.locale ?? '';
+  } catch {
+    return '';
   }
 }
 

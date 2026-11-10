@@ -190,6 +190,7 @@ export class Tutorial {
 
   private setVisible(v: boolean) {
     document.body.classList.toggle('tutorial', v);
+    if (!v) document.body.classList.remove('coach-wide');
     document.querySelectorAll<HTMLElement>('.coach').forEach((el) => (el.hidden = !v));
   }
 
@@ -249,6 +250,7 @@ export class Tutorial {
     const key = `${state}|${title}|${body}|${g.state === 'paused'}|${wide}`;
     if (key === this.key) return;
     this.key = key;
+    document.body.classList.toggle('coach-wide', wide);
     document.querySelectorAll<HTMLElement>('.coach').forEach((el) => {
       el.dataset.state = state;
       el.classList.toggle('paused', g.state === 'paused');
