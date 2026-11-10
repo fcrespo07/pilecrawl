@@ -1628,3 +1628,23 @@ body[data-quick] .quick-keys kbd { font-size: 12px; }
 @media (max-height: 480px) { body[data-quick] .quick-keys { margin-top: 2px; font-size: 15px; } }
 /* en táctil no hay teclas 1, 2, 3: la pista de la elección sobra */
 @media (pointer: coarse) { .perk-actions .hint { display: none; } }
+/* Tutorial: pista grande sobre el tablero (mover, soltar, girar). Teclas que laten o un dedo que hace el gesto. */
+.coach-cue { position: absolute; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; animation: cue-in 0.3s steps(3) both; }
+.coach-cue[hidden] { display: none; }
+.coach-cue .cue { display: flex; gap: 10px; align-items: center; justify-content: center; min-height: 64px; }
+.coach-cue kbd { min-width: 40px; padding: 10px 12px 8px; font-family: var(--f-display); font-size: 20px; color: var(--on-hi, #11132a); background: var(--hi); border-color: var(--hi-deep, #b38a00); border-bottom-width: 6px; animation: cue-key 1.1s steps(2) infinite; }
+.coach-cue kbd + kbd { animation-delay: 0.55s; }
+.coach-cue .cue-label { font-family: var(--f-display); font-weight: 400; font-size: 16px; color: var(--hi); text-shadow: 3px 3px 0 var(--shade); letter-spacing: 0.06em; }
+.cue-finger { position: relative; display: block; width: 34px; height: 34px; background: var(--hi); box-shadow: inset -4px -4px 0 var(--hi-deep, #b38a00), 0 0 0 4px var(--shade); clip-path: var(--chamfer); }
+.g-drag { width: 180px; }
+.g-drag .cue-finger { animation: cue-drag 1.6s steps(8) infinite; }
+.g-flick .cue-finger { animation: cue-flick 1.2s steps(6) infinite; }
+.g-tap .cue-finger { animation: cue-tap 1s steps(2) infinite; }
+@keyframes cue-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes cue-key { 50% { transform: translateY(3px); border-bottom-width: 3px; } }
+@keyframes cue-drag { 0%, 100% { transform: translateX(-60px); } 50% { transform: translateX(60px); } }
+@keyframes cue-flick { 0% { transform: translateY(-14px); opacity: 1; } 70% { transform: translateY(40px); opacity: 1; } 100% { transform: translateY(40px); opacity: 0; } }
+@keyframes cue-tap { 50% { transform: scale(0.75); } }
+@media (prefers-reduced-motion: reduce) { .coach-cue kbd, .cue-finger { animation: none !important; } }
+body.portrait .coach-cue kbd { font-size: 24px; }
+body.portrait .coach-cue .cue-label { font-size: 18px; }

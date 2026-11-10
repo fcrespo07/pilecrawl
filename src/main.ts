@@ -79,7 +79,8 @@ const rankingUI = new RankingUI(
 );
 const modeSelect = new ModeSelect(document.getElementById('mode-select')!, portal.quickStart ? 'normal' : loadLastMode(), saveLastMode);
 const tutorial = new Tutorial(game, {
-  onPlay: () => void startRun(),
+  // tras el tutorial (o al saltarlo) se juega la partida elegida; en la primera visita el modo marcado es el propio tutorial
+  onPlay: () => void startRun(modeSelect.mode === 'tutorial' ? 'normal' : undefined),
   onRetry: () => { if (!endPressBlocked()) void startRun('tutorial'); },
   onHome: () => {
     // salir a mitad: la partida del tutorial se descarta para que Enter pueda empezar otra
@@ -479,7 +480,7 @@ function resumeRun() {
   setPaused(true);
 }
 
-async function startRun(forced?: 'tutorial' | 'expedition') {
+async function startRun(forced?: 'tutorial' | 'expedition' | 'normal') {
   if (starting) return;
   starting = true;
   // entre una partida acabada y la siguiente, el portal puede mostrar un anuncio (el tutorial no)
