@@ -1,0 +1,1 @@
+import"./modulepreload-polyfill-P2Xu9kJm.js";import{n as e,t}from"./statsOptOut-yHsXHPhp.js";/* empty css              */var n=document.getElementById(`stats-optout`);n.checked=e(),navigator.doNotTrack===`1`&&(n.disabled=!0),n.addEventListener(`change`,()=>t(n.checked));

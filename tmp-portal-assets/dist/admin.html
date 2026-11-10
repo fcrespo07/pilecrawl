@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Administración · Pilecrawl</title>
+    <style>main{max-width:1000px}table{border-collapse:collapse;width:100%;margin:8px 0 24px;font-size:15px}th,td{text-align:right;border-bottom:1px solid #2a3157;padding:3px 8px}th:first-child,td:first-child,td.l,th.l{text-align:left}th{color:#9aa3c7;font-weight:400}form,.row{flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;display:flex}input,select,button{font:inherit;color:inherit;background:#1c2240;border:1px solid #3a4375;border-radius:4px;padding:4px 8px}button{cursor:pointer}button.danger{color:#ff8f8f;border-color:#a04a4a}.neg,#err{color:#ff8f8f}#msg{color:#7fe0a0}#code{border:1px solid #7fe0a0;border-radius:6px;margin:12px 0;padding:10px 12px;display:none}#code code{word-break:break-all;-webkit-user-select:all;user-select:all;margin:6px 0;font-size:16px;display:block}.tabs button.on{background:#3a4375}#stats-out{overflow-x:auto}#stats-out svg{min-width:640px}[hidden]{display:none!important}.pos{color:#7fe0a0}.bar{vertical-align:middle;background:#4a6cf0;height:10px;display:inline-block}details{margin:8px 0 24px}summary{cursor:pointer;color:#9aa3c7}td.acts{white-space:nowrap}</style>
+    <script type="module" crossorigin src="./assets/admin-DWwIRVme.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-P2Xu9kJm.js">
+    <link rel="modulepreload" crossorigin href="./assets/modes-DUaoFQYN.js">
+    <link rel="stylesheet" crossorigin href="./assets/legal-D3Itqdhm.css">
+  </head>
+  <body>
+    <main>
+      <h1>Administración del ranking</h1>
+      <p class="note">Solo para el responsable. Necesita la clave de administrador (<code>ADMIN_TOKEN</code>); no se guarda en ningún sitio: al recargar hay que volver a pegarla (el gestor de contraseñas puede rellenarla).</p>
+      <div class="row">
+        <input id="token" type="password" placeholder="Clave" autocomplete="current-password" />
+      </div>
+      <p id="err"></p>
+      <p id="msg"></p>
+      <div id="code">
+        <b id="code-who"></b>: código nuevo de recuperación (se muestra solo ahora; el anterior ya no vale).
+        <code id="code-val"></code>
+        <button id="code-copy" type="button">Copiar</button> <button id="code-close" type="button">Cerrar</button>
+      </div>
+
+      <div class="row tabs">
+        <button type="button" data-tab="ranking" class="on">Ranking</button>
+        <button type="button" data-tab="stats">Estadísticas</button>
+      </div>
+      <section id="tab-ranking">
+      <h2>Tabla</h2>
+      <form id="board-f">
+        <select id="mode"></select>
+        <select id="scope"><option value="weekly">Semanal</option><option value="all">Siempre</option></select>
+        <input id="date" type="date" title="Día (o semana que lo contiene)" />
+        <input id="bq" placeholder="Filtrar por apodo" />
+        <button>Ver</button>
+      </form>
+      <div id="board"></div>
+
+      <h2>Jugadores</h2>
+      <form id="players-f">
+        <input id="pq" placeholder="Buscar apodo" />
+        <button>Buscar</button>
+      </form>
+      <div id="players"></div>
+      <div id="runs"></div>
+      </section>
+
+      <section id="tab-stats" hidden>
+      <h2>Estadísticas anónimas</h2>
+      <form id="stats-f">
+        <select id="days"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="400">Todo</option></select>
+        <select id="smode"></select>
+        <input id="rules" type="number" min="0" placeholder="Reglas (todas)" style="width: 9em" />
+        <button>Ver</button>
+      </form>
+      <div id="stats-out"></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+var e=`blockrogue.stats`,t=()=>{try{if(localStorage.getItem(e)===`0`)return!1}catch{}return navigator.doNotTrack!==`1`};function n(t){try{t?localStorage.removeItem(e):localStorage.setItem(e,`0`)}catch{}}export{t as n,n as t};
