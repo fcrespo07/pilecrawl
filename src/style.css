@@ -127,11 +127,11 @@ body.ready { opacity: 1; }
   left: 50%;
   top: 50%;
   width: 960px;
-  height: 720px;
+  height: 600px;
   transform-origin: center center;
 }
 
-#game { position: absolute; inset: 0; width: 960px; height: 720px; display: block; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 kbd {
   display: inline-block;
@@ -189,7 +189,10 @@ kbd {
 
 /* ───────────── HUD ───────────── */
 
+/* el HUD y el cuadro del tutorial se colocan sobre el bloque de 960×600, que el escenario centra (--ox, --oy; ver layout.ts) */
 #hud { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+/* se desplaza cada hijo, no #hud: con #hud desplazado y la barra del jefe asomando por encima, Chrome dejaba una franja sin pintar */
+#hud > *, .coach-d { translate: var(--ox, 0) var(--oy, 0); }
 #hud.visible { opacity: 1; }
 
 .num, .num-big, .lvl-meta b {
@@ -198,7 +201,7 @@ kbd {
   color: var(--ink);
 }
 
-.p-score { left: 18px; top: 136px; width: 184px; height: 106px; box-sizing: border-box; }
+.p-score { left: 18px; top: 32px; width: 184px; height: 106px; box-sizing: border-box; }
 .num-big {
   font-size: 23px;
   line-height: 1.15;
@@ -208,7 +211,7 @@ kbd {
 .sub { font-size: 10px; letter-spacing: 0.15em; color: var(--muted); margin-top: 1px; }
 .sub b { color: var(--text); letter-spacing: 0.02em; }
 
-.p-level { left: 18px; top: 250px; width: 184px; }
+.p-level { left: 18px; top: 146px; width: 184px; }
 .lvl-row { display: flex; align-items: flex-end; justify-content: space-between; }
 .lvl {
   font-family: var(--f-display);
@@ -231,7 +234,7 @@ kbd {
 .mini-grid {
   position: absolute;
   left: 18px;
-  top: 344px;
+  top: 240px;
   width: 288px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -249,7 +252,7 @@ kbd {
 #b2b-box .ico { color: var(--muted); opacity: 0.35; transition: all 0.2s; }
 #b2b-box.on .ico { color: #ffb13d; opacity: 1; filter: drop-shadow(0 0 6px #ff8a3d); }
 
-.p-perks { left: 18px; top: 452px; width: 288px; height: 232px; pointer-events: auto; display: flex; flex-direction: column; }
+.p-perks { left: 18px; top: 348px; width: 288px; height: 232px; pointer-events: auto; display: flex; flex-direction: column; }
 #perk-list { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; padding: 4px 4px 0 0; align-content: start; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--hi) transparent; }
 /* con muchas mejoras las filas se aprietan (22 caben a la vista) y, si aun así no caben, la lista se desplaza */
 #perk-list.compact { gap: 1px 10px; }
@@ -271,7 +274,7 @@ kbd {
 
 /* hiperperk: nombre, barra de carga (o de tiempo, activa) y estado */
 /* columna a la derecha de la cola: racha, con la hiperperk justo debajo (y la habilidad, si la hay). La cola puede crecer hacia abajo sin pisarla */
-.hud-side { position: absolute; left: 804px; top: 136px; width: 140px; display: flex; flex-direction: column; gap: 8px; }
+.hud-side { position: absolute; left: 804px; top: 32px; width: 140px; display: flex; flex-direction: column; gap: 8px; }
 .hud-side > .panel { position: relative; }
 .p-hyper { --c: var(--hyper); }
 .p-hyper > header kbd { margin-left: auto; }
@@ -937,8 +940,14 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 #perks.cursed .perk-title { text-shadow: 4px 4px 0 var(--shade); }
 #perks.hyper .perk-title { text-shadow: 4px 4px 0 var(--shade); }
 
-/* cartas: marco de 4 px del color de la rareza */
-.card { height: 372px; }
+/* cartas: marco de 4 px del color de la rareza. El escenario horizontal mide 600 de alto: título y cartas compactos */
+.card { height: 316px; }
+#perks { gap: 6px; }
+.perk-title, #perks .perk-title { font-size: 34px; line-height: 1.25; }
+#perks .perk-sub { margin-bottom: 0; }
+.perk-actions { margin-top: 6px; }
+/* tutorial con las cartas abiertas: su tira va abajo y el contenido sube para dejarle sitio */
+body.coach-wide #perks { padding-bottom: 64px; box-sizing: border-box; }
 .card-face { clip-path: var(--chamfer); }
 .card-front { background: var(--panel); box-shadow: inset 0 0 0 4px var(--c), inset 0 0 0 8px var(--paper), inset 0 -14px 0 var(--shade); }
 #perks.cursed .card-front { background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--curse) 14%, transparent) 0 4px, transparent 4px 12px), var(--panel); }
@@ -977,6 +986,27 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .over-stats div::before { background: var(--ink); }
 .over-stats div::after { inset: 3px; }
 .over-stats b { font-family: var(--f-display); font-size: 14px; line-height: 1.8; }
+
+/* Legibilidad: CrazyGames prueba en iframes de 821×462 a 907×510 con DPR 1, donde el escenario sale a ~0,8.
+   Ningún texto del HUD baja de 11 px en la fuente de recreativa ni de 15 px en VT323. */
+.panel > header { font-size: 12px; }
+.panel.mini > header { font-size: 11px; }
+.sub { font-size: 15px; }
+.lvl-meta small { font-size: 15px; letter-spacing: 0.02em; }
+.hy-name { font-size: 11px; }
+.hy-state { font-size: 15px; line-height: 1.05; }
+.st-tier { font-size: 11px; }
+.st-odds { font-size: 15px; }
+.heat span { width: 70px; font-size: 14px; }
+.heat { gap: 3px; }
+.sub { font-size: 16px; }
+.lvl-meta b, .lvl-meta small { font-size: 16px; }
+.st-chain, .hy-state { font-size: 16px; }
+.st-chain { font-size: 15px; }
+.coach-head { font-size: 10px; }
+.coach-text { font-size: 18px; }
+.coach-text kbd { font-size: 13px; }
+.coach-skip, .coach-btn { font-size: 10px; }
 
 /* En el móvil el escenario se encoge a menos de la mitad: los títulos de 10 px quedarían en 4 px.
    Se agrandan y la rejilla de mini paneles se ensancha hasta el borde del tablero para que quepan. */
@@ -1055,7 +1085,7 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
    y la lista de mejoras se encoge para dejarle sitio */
 .coach { z-index: 20; background: var(--panel); clip-path: var(--chamfer); box-shadow: inset 0 0 0 4px var(--hi), inset 0 -8px 0 var(--shade); color: var(--text); }
 .coach[hidden], .coach.paused { display: none; }
-.coach-d { position: absolute; left: 18px; top: 344px; width: 288px; height: 192px; padding: 14px 16px 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
+.coach-d { position: absolute; left: 18px; top: 240px; width: 288px; height: 192px; padding: 14px 16px 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
 .coach-head { font-family: var(--f-display); font-size: 9px; line-height: 1.5; color: var(--hi); display: flex; justify-content: space-between; gap: 8px; }
 .coach-head span { color: var(--hi2); text-align: right; }
 .coach-text { margin: 0; font-size: 16px; line-height: 1.2; flex: 1; overflow: hidden; }
@@ -1069,11 +1099,11 @@ kbd { border-radius: 0; border: 2px solid var(--ink); border-bottom-width: 4px; 
 .coach[data-state='end'] { box-shadow: inset 0 0 0 4px var(--pro), inset 0 -8px 0 var(--shade); }
 .coach[data-state='fail'] { box-shadow: inset 0 0 0 4px var(--hot), inset 0 -8px 0 var(--shade); }
 body.tutorial .mini-grid { display: none; }
-body.tutorial .p-perks { top: 546px; height: 138px; }
+body.tutorial .p-perks { top: 442px; height: 138px; }
 body.tutorial #perk-list .empty { display: none; }
 .coach-m { display: none; }
 /* con las cartas abiertas: tira en la franja de abajo, entre las cartas y el borde */
-.coach-d.wide { left: 150px; top: 664px; width: 660px; height: 50px; padding: 6px 14px; flex-direction: row; align-items: center; }
+.coach-d.wide { left: 50%; top: auto; bottom: 8px; translate: -50% 0; width: 660px; height: auto; min-height: 44px; padding: 6px 14px; flex-direction: row; align-items: center; }
 .coach-d.wide .coach-head, .coach-d.wide .coach-actions { display: none; }
 .coach-d.wide .coach-text { font-size: 16px; line-height: 1.1; }
 
@@ -1096,10 +1126,14 @@ body.tutorial #perk-list .empty { display: none; }
   body.tutorial .coach-m .coach-actions { margin-top: 0; }
   body.tutorial .coach-m .coach-skip { padding: 4px 8px 2px; }
 }
-/* en horizontal el escenario ocupa el centro: el cuadro va en el hueco de la izquierda */
+/* en horizontal el escenario llena la pantalla y no queda hueco fuera: el cuadro va dentro, en la columna izquierda,
+   como con ratón (sin tapar el marcador ni la reserva) */
 @media (pointer: coarse) and (orientation: landscape) {
-  .coach-m { top: 6px; left: 6px; width: max(150px, calc(50vw - 480px * var(--s, 0.4) - 12px)); max-height: calc(100vh - 12px); overflow: hidden; }
-  .coach-m .coach-text { font-size: 15px; }
+  .coach-m, .coach-m[hidden] { display: none; }
+  .coach-d { display: flex; }
+  .coach-d[hidden], .coach-d.paused { display: none; }
+  .coach-d .coach-text { font-size: 19px; line-height: 1.15; }
+  .coach-d .coach-skip, .coach-d .coach-btn { font-size: 12px; padding: 10px 12px 8px; }
 }
 
 /* ═════════════ Portada v2: la primera pantalla solo sirve para jugar ═════════════ */
@@ -1330,6 +1364,13 @@ body.portrait .mini-grid {
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;
 }
 body.portrait .mini-grid > :nth-child(4) { display: none; }
+/* en táctil la franja de mejoras va justo debajo: contadores en una sola línea (título y número) para no pisarla */
+@media (pointer: coarse) and (orientation: portrait) {
+  body.portrait .mini-grid { bottom: 148px; }
+  body.portrait .mini-grid > .panel.mini:not(:nth-child(4)) { display: flex; align-items: center; justify-content: space-between; gap: 6px; height: 30px; padding: 0 8px; box-sizing: border-box; }
+  body.portrait .mini-grid > .panel.mini > header { margin: 0; font-size: 11px; }
+  body.portrait .mini-grid > .panel.mini .num { font-size: 13px; line-height: 1; }
+}
 body.portrait .p-hyper { left: 8px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
 body.portrait .p-streak { left: 276px; top: auto; bottom: 8px; width: 256px; min-height: 104px; box-sizing: border-box; }
 body.portrait .p-skill { left: 424px; top: 6px; width: 108px; box-sizing: border-box; }
@@ -1507,6 +1548,11 @@ button.exp-press:disabled { cursor: default; opacity: 0.45; }
 /* Jefe: barra de vida y cartel de entrada */
 .boss-bar { position: absolute; z-index: 4; box-sizing: border-box; padding: 4px 8px 5px; background: var(--panel, #1b1d3a); border: 3px solid #ff6b6b; color: var(--text); font-family: var(--f-display); }
 .boss-bar[hidden], .boss-intro[hidden] { display: none; }
+/* dentro del tablero (16:9, vertical): una sola línea fina y translúcida para no tapar donde aparecen las piezas;
+   la regla ya sale en el cartel de entrada y el nombre del jefe en el panel de nivel */
+.boss-bar.inside { opacity: 0.75; padding: 2px 6px 3px; border-width: 2px; }
+.boss-bar.inside .bb-rule { display: none; }
+.boss-bar.inside .bb-track { height: 6px; margin-top: 2px; }
 .bb-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; letter-spacing: 0.04em; }
 .bb-top b { color: #ff6b6b; font-weight: normal; }
 .bb-top span { font-size: 9px; }
@@ -1543,3 +1589,42 @@ body[data-quick] #panel-right,
 body[data-quick] #panel-left,
 body[data-quick] #home-more-link,
 body[data-quick] #home-more { display: none !important; }
+/* Portada de un clic: cabe entera en el iframe más bajo de CrazyGames (800×450) sin desplazar.
+   Jugar ocupa la fila de arriba; Tutorial y Expedición, la segunda; Catálogo y Ajustes, la tercera. */
+body[data-quick] #home { overflow: hidden; }
+body[data-quick] .home-first { min-height: 100vh; min-height: 100svh; justify-content: center; padding: 12px 0 28px; box-sizing: border-box; }
+body[data-quick] .home-stage { display: flex; justify-content: center; }
+body[data-quick] .home-center { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(100%, 580px); }
+body[data-quick] .home-center > * { grid-column: 1 / -1; }
+body[data-quick] .home-center > :is(#home-tutorial, #home-exp, #catalog-open, #settings-open-home) { grid-column: auto; }
+body[data-quick] .home-center .home-btn { margin: 0; padding: 16px 12px; font-size: 16px; }
+body[data-quick] .home-center #home-play { padding: 22px 20px; font-size: 26px; }
+body[data-quick] .home-center :is(#catalog-open, #settings-open-home) { padding: 12px; font-size: 13px; }
+body[data-quick] .home-first .home-title { margin: 10px 0 14px; }
+body[data-quick] .home-foot { position: fixed; right: 10px; bottom: 6px; margin: 0; font-size: 12px; opacity: 0.7; }
+@media (max-height: 560px) {
+  body[data-quick] .home-first { padding: 8px 0 22px; }
+  body[data-quick] .home-first .home-title { font-size: 44px; margin: 4px 0 8px; text-shadow: 4px 4px 0 var(--hot), 8px 8px 0 var(--raise); }
+  body[data-quick] .home-center { gap: 8px; }
+  body[data-quick] .home-center .home-btn { padding: 12px 10px; font-size: 14px; }
+  body[data-quick] .home-center #home-play { padding: 16px 20px; font-size: 22px; }
+  body[data-quick] .home-center :is(#catalog-open, #settings-open-home) { padding: 10px; font-size: 12px; }
+}
+@media (max-width: 420px) {
+  body[data-quick] .home-center { grid-template-columns: 1fr; width: calc(100% - 32px); }
+  body[data-quick] .home-center > * { grid-column: 1 / -1 !important; }
+}
+/* tira de controles bajo los botones: teclas con ratón y teclado, gestos en táctil */
+.quick-keys { display: none; }
+body[data-quick] .quick-keys.kb-keys { display: flex; }
+@media (pointer: coarse) {
+  body[data-quick] .quick-keys.kb-keys { display: none; }
+  body[data-quick] .quick-keys.tc-keys { display: flex; }
+}
+body[data-quick] .quick-keys { flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 17px; color: var(--muted); }
+body[data-quick] .quick-keys li { display: flex; align-items: center; gap: 6px; }
+body[data-quick] .quick-keys.tc-keys li span:first-child { color: var(--hi); }
+body[data-quick] .quick-keys kbd { font-size: 12px; }
+@media (max-height: 480px) { body[data-quick] .quick-keys { margin-top: 2px; font-size: 15px; } }
+/* en táctil no hay teclas 1, 2, 3: la pista de la elección sobra */
+@media (pointer: coarse) { .perk-actions .hint { display: none; } }

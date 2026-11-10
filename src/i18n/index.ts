@@ -2,6 +2,7 @@
 // Cubre lo que pasa por `t()`, `L()` o lleva `data-i18n*` en index.html. El contenido de mejoras y jefes está en `content.ts`.
 import { en } from './en';
 import { es, type Key } from './es';
+import { portalLocale } from '../portal/portal';
 
 export type Lang = 'es' | 'en';
 export type LangSetting = Lang | 'auto';
@@ -12,9 +13,11 @@ const DICT: Record<Lang, Record<Key, string>> = { es, en };
 
 /** Idioma del navegador: español si empieza por «es», inglés en el resto de casos. */
 export function detectLang(): Lang {
-  // los builds de CrazyGames y Poki arrancan en inglés (los portales lo piden); se cambia en Ajustes
+  // CrazyGames pide seguir el idioma que da su SDK y caer en inglés si no lo da; Poki arranca siempre en inglés.
+  // El SDK ya está iniciado aquí: `portal/bootstrap.ts` lo espera antes de cargar el resto del juego.
   const portal = import.meta.env.VITE_PORTAL ?? '';
-  if (portal === 'crazygames' || portal === 'poki') return 'en';
+  if (portal === 'crazygames') return portalLocale().toLowerCase().startsWith('es') ? 'es' : 'en';
+  if (portal === 'poki') return 'en';
   let tag = '';
   try {
     tag = navigator.languages?.[0] ?? navigator.language ?? '';

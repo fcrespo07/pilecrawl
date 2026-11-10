@@ -3,7 +3,7 @@ import './portal/bootstrap';
 import './storage';
 import { Game, RULES_VERSION, STEP_MS } from './core/game';
 import { audio } from './fx/audio';
-import { BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, PORTRAIT, W, portraitHeight, setLayout } from './fx/layout';
+import { BOARD_X, BOARD_Y, CELL, H, HOLD_W, HOLD_X, HOLD_Y, OX, OY, PORTRAIT, PORTRAIT_W, W, landscapeSize, portraitHeight, setLayout } from './fx/layout';
 import { Gestures } from './gestures';
 import { Mouse } from './mouse';
 import { Renderer } from './fx/renderer';
@@ -58,6 +58,8 @@ function endPressBlocked(): boolean {
 }
 const ui = new UI(game);
 const lab = new Lab(game);
+// solo en desarrollo: acceso desde la consola y desde los scripts de capturas
+if (import.meta.env.DEV) Object.assign(window, { __pc: { game, ui, renderer } });
 const settingsUI = new SettingsUI(() => renderKeyHints());
 
 const stage = document.getElementById('stage')!;
@@ -120,17 +122,26 @@ const coarse = window.matchMedia('(pointer: coarse)');
  * la disposición, para que el renderer rehaga lo que depende del tamaño.
  */
 function layout() {
-  // en Poki el escenario siempre es el horizontal de 960×720, encajado con franjas (piden proporción fija); en el resto,
-  // incluido CrazyGames, un móvil de pie usa la disposición vertical
+  // en Poki el escenario siempre es horizontal (piden proporción fija); en el resto, incluido CrazyGames,
+  // un móvil de pie usa la disposición vertical
   const portrait = portal.id !== 'poki' && coarse.matches && window.innerHeight > window.innerWidth;
-  let wantH = portrait ? portraitHeight(window.innerHeight / window.innerWidth) : 720;
-  // la barra de direcciones del móvil sube y baja: pequeñas variaciones de alto no recomponen el escenario
-  if (portrait && PORTRAIT && Math.abs(wantH - H) < 120) wantH = H;
-  const changed = portrait !== PORTRAIT || (portrait && wantH !== H);
+  let wantW = PORTRAIT_W;
+  let wantH: number;
+  if (portrait) {
+    wantH = portraitHeight(window.innerHeight / window.innerWidth);
+    // la barra de direcciones del móvil sube y baja: pequeñas variaciones de alto no recomponen el escenario
+    if (PORTRAIT && Math.abs(wantH - H) < 120) wantH = H;
+  } else {
+    ({ w: wantW, h: wantH } = landscapeSize(window.innerWidth / window.innerHeight));
+  }
+  const changed = !laidOut || portrait !== PORTRAIT || wantH !== H || wantW !== W;
   if (changed) {
-    setLayout(portrait, wantH);
+    laidOut = true;
+    setLayout(portrait, wantH, wantW);
     stage.style.width = `${W}px`;
     stage.style.height = `${H}px`;
+    stage.style.setProperty('--ox', `${OX}px`);
+    stage.style.setProperty('--oy', `${OY}px`);
     document.body.classList.toggle('portrait', portrait);
   }
   const s = Math.min(window.innerWidth / W, window.innerHeight / H);
@@ -140,6 +151,9 @@ function layout() {
   stage.style.transform = `translate(-50%, -50%) scale(${s})`;
   return { s, changed };
 }
+let laidOut = false;
+let relayoutTimer = 0;
+let relayoutPending = false;
 
 let hitstop = 0;
 let stepAcc = 0;
@@ -639,9 +653,17 @@ async function boot() {
   window.addEventListener('resize', () => {
     // con el teclado del apodo abierto el alto se encoge: no se recompone hasta que se cierre
     if (document.activeElement?.matches('input, textarea')) return;
-    const { s, changed } = layout();
-    if (changed) renderer.relayout(renderResolution(s));
-    else renderer.setResolution(renderResolution(s));
+    const { changed } = layout();
+    // en horizontal el ancho sigue la proporción de la ventana: al arrastrar el borde cambia en cada evento.
+    // Rehacer fondo, colinas y texturas es caro, así que se espera a que el tamaño se quede quieto
+    clearTimeout(relayoutTimer);
+    if (changed) relayoutPending = true;
+    relayoutTimer = window.setTimeout(() => {
+      const res = renderResolution(layout().s);
+      if (relayoutPending) renderer.relayout(res);
+      else renderer.setResolution(res);
+      relayoutPending = false;
+    }, 150);
   });
   let fxOn = true;
   try { fxOn = localStorage.getItem('blockrogue.fx') !== '0'; } catch { /* sin almacenamiento */ }

@@ -53,6 +53,19 @@
               <button id="catalog-open" class="home-btn home-link ghost" type="button" data-i18n="home.catalog">Catálogo</button>
               <button id="settings-open-home" class="home-btn home-link ghost" type="button" data-i18n="home.settings">Ajustes</button>
               <button id="install-btn" class="home-btn home-link ghost" type="button" hidden data-i18n="home.install">Instalar en este dispositivo</button>
+              <!-- Controles a la vista en la portada de un clic (portales): CrazyGames pide enseñarlos sin texto largo -->
+              <ul class="quick-keys kb-keys" data-i18n-attr="aria-label=home.keysTitle">
+                <li><span data-keys="left right"></span><span data-i18n="keys.move">mover</span></li>
+                <li><span data-keys="cw" data-max="1"></span><span data-i18n="keys.cw">girar</span></li>
+                <li><span data-keys="hard"></span><span data-i18n="keys.hard">soltar</span></li>
+                <li><span data-keys="hold"></span><span data-i18n="keys.hold">reserva</span></li>
+              </ul>
+              <ul class="quick-keys tc-keys" data-i18n-attr="aria-label=home.keysTitle">
+                <li><span data-i18n="tc.drag">arrastrar</span><span data-i18n="keys.move">mover</span></li>
+                <li><span data-i18n="tc.tap">tocar</span><span data-i18n="keys.cw">girar</span></li>
+                <li><span data-i18n="tc.flick">tirón abajo</span><span data-i18n="keys.hard">soltar</span></li>
+                <li><span data-i18n="tc.swipe">deslizar arriba</span><span data-i18n="keys.hold">reserva</span></li>
+              </ul>
               <!-- Hueco de anuncio: vacío y plegado hasta que un proveedor lo rellene (src/ui/adSlot.ts).
                    Separado de Jugar a propósito: pegado al botón invita a clics sin querer. -->
               <aside id="ad-slot" class="ad-slot" data-state="empty" aria-label="Publicidad"></aside>
