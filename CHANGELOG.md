@@ -1,4 +1,6 @@
 ## Sin publicar
+
+## 0.42.9 — 2026-11-10
 - (#113) **Pulido para CrazyGames.** El escenario horizontal llena el iframe 16:9 (sin franjas a los lados) y quita el hueco vacío sobre el tablero: todo sale un 20 % más grande a 907×510. Textos pequeños del HUD agrandados. La portada de portal cabe sin desplazar en 800×450 y enseña los controles. Las cartas de mejora caben con el consejo del tutorial (antes se salía por abajo). En móvil horizontal el consejo del tutorial va dentro del escenario y no tapa el marcador; en vertical los contadores ya no quedan tapados. La barra del jefe va sobre el tablero cuando cabe. CrazyGames sigue el idioma de su SDK. «Hiper» de la racha se traduce.
 
 ## 0.42.8 — 2026-11-09
