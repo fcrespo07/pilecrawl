@@ -133,7 +133,8 @@ const STEPS: Step[] = [
 ];
 
 /** Pistas visuales de los pasos mover, soltar y girar: teclas grandes con ratón y teclado; gesto animado en táctil. */
-const bigKeys = (keys: string[]) => keys.map((x) => `<kbd>${x}</kbd>`).join('');
+const esc = (x: string) => x.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+const bigKeys = (keys: string[]) => keys.map((x) => `<kbd>${esc(x)}</kbd>`).join('');
 const cue = (body: string, label: string, cls: string) => `<div class="cue ${cls}">${body}</div><b class="cue-label">${label}</b>`;
 const finger = '<i class="cue-finger"></i>';
 const CUES: ((touch: boolean) => string)[] = [
@@ -202,7 +203,7 @@ export class Tutorial {
     }
     el.style.left = `${BOARD_X - OX}px`;
     el.style.width = `${BOARD_W}px`;
-    el.style.top = `${BOARD_Y - OY + CELL * 6}px`;
+    el.style.top = `${BOARD_Y - OY + CELL * 8}px`; // entre la pieza que sale y la pila; translúcida porque la pieza la cruza
     el.hidden = !html;
     if (html === this.cueHtml) return;
     this.cueHtml = html;
