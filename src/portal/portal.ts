@@ -48,6 +48,9 @@ const SAVE_KEYS = [
   'best', 'best.timed', 'best.exp', 'daily', 'mode', 'meta', 'exp', 'save', 'audio', 'fx', 'keys', 'handling', 'mouse', 'tutorial', 'played', 'lang',
 ].map((k) => `blockrogue.${k}`);
 
+/** Lo máximo que el arranque espera al guardado del portal. */
+const SAVE_WAIT_MS = 1500;
+
 let sdk: CrazySdk | null = null;
 let poki: PokiSdk | null = null;
 let started: Promise<void> | null = null;
@@ -150,7 +153,9 @@ export function portalLocale(): string {
 
 /** Arranque con guardado del portal: lo usa `bootstrap.ts`, que se importa antes que el resto del juego. */
 export async function initPortalSave(): Promise<void> {
-  await initPortal();
+  // El SDK no puede retrasar el arranque: si tarda más de 1,5 s el juego empieza con el guardado local
+  // (el portal mide el tiempo de carga y pide menos de 20 s) y el SDK sigue iniciándose en segundo plano.
+  await Promise.race([initPortal(), new Promise<void>((r) => setTimeout(r, SAVE_WAIT_MS))]);
   installSave();
 }
 
