@@ -1,5 +1,8 @@
 ## Sin publicar
 
+## 0.42.11 — 2026-11-27
+- (#115) Portal: el SDK de CrazyGames ya no retrasa el arranque del juego. Se espera como mucho 1,5 s al guardado del portal; si tarda más, el juego empieza con el guardado local. Baja el tiempo de carga que mide el QA del portal (29 s, límite 20 s).
+
 ## 0.42.10 — 2026-11-10
 - (#114) Tutorial más visual: en los pasos de mover, soltar y girar sale sobre el tablero la tecla en grande (o el gesto animado en táctil). «Salir» pasa a «Saltar» y empieza una partida en vez de volver a la portada. Tras el tutorial, «Jugar partida» ya no repite el tutorial en la primera visita.
 
